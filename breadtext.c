@@ -8,17 +8,77 @@
 
 #define SHOULD_RUN_TESTS true
 
+typedef struct textAllocation {
+    int8_t *text;
+    int64_t length;
+    int64_t allocationSize;
+} textAllocation_t;
+
 typedef struct textLine textLine_t;
 struct textLine {
     textLine_t *parent;
     textLine_t *leftChild;
     textLine_t *rightChild;
-    int8_t *text;
-    int64_t textLength;
-    int64_t textAllocationSize;
+    textAllocation_t textAllocation;
     int8_t depth;
     int64_t lineCount;
 };
+
+void copyData(int8_t *destination, int8_t *source, int64_t amount) {
+    if (destination < source) {
+        int64_t index = 0;
+        while (index < amount) {
+            destination[index] = source[index];
+            index += 1;
+        }
+    } else {
+        int64_t index = amount - 1;
+        while (index >= 0) {
+            destination[index] = source[index];
+            index -= 1;
+        }
+    }
+}
+
+void resizeTextAllocation(textAllocation_t *allocation, int64_t size) {
+    int8_t *tempText = malloc(size);
+    int64_t tempSize;
+    if (size < allocation->allocationSize) {
+        tempSize = size;
+    } else {
+        tempSize = allocation->allocationSize;
+    }
+    copyData(tempText, allocation->text, tempSize);
+    free(allocation->text);
+    allocation->text = tempText;
+}
+
+void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, int8_t *text, int64_t amount) {
+    int64_t tempLength = allocation->length + amount;
+    if (tempLength > allocation->allocationSize) {
+        resizeTextAllocation(allocation, tempLength * 2);
+    }
+    int64_t tempAmount = allocation->length - index;
+    copyData(allocation->text + index + amount, allocation->text + index, tempAmount);
+    copyData(allocation->text + index, text, amount);
+    allocation->length = tempLength;
+}
+
+void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, int64_t amount) {
+    int64_t tempLength = allocation->length - amount;
+    if (tempLength < allocation->allocationSize / 4) {
+        resizeTextAllocation(allocation, tempLength * 2);
+    }
+    int64_t tempAmount = allocation->length - index;
+    copyData(allocation->text + index, allocation->text + index + amount, tempAmount);
+    allocation->length = tempLength;
+}
+
+void cleanUpTextAllocation(textAllocation_t *allocation) {
+    if (allocation->text != NULL) {
+        free(allocation->text);
+    }
+}
 
 textLine_t *rootTextLine = NULL;
 WINDOW *window;
@@ -30,9 +90,9 @@ textLine_t *createEmptyTextLine() {
     output->parent = NULL;
     output->leftChild = NULL;
     output->rightChild = NULL;
-    output->text = NULL;
-    output->textLength = 0;
-    output->textAllocationSize = 0;
+    output->textAllocation.text = NULL;
+    output->textAllocation.length = 0;
+    output->textAllocation.allocationSize = 0;
     output->depth = 1;
     output->lineCount = 1;
     return output;
@@ -219,9 +279,7 @@ void insertTextLineRight(textLine_t *parent, textLine_t *child) {
 }
 
 void deleteTextLine(textLine_t *line) {
-    if (line->text != NULL) {
-        free(line->text);
-    }
+    cleanUpTextAllocation(&(line->textAllocation));
     textLine_t *tempLineToBalance;
     textLine_t *tempChild1 = line->rightChild;
     textLine_t *tempChild2 = line->leftChild;
