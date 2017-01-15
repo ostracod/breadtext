@@ -2,11 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <curses.h>
+#include <string.h>
 
 #define true 1
 #define false 0
 
-#define SHOULD_RUN_TESTS true
+#define SHOULD_RUN_TESTS false
 
 typedef struct textAllocation {
     int8_t *text;
@@ -23,6 +24,12 @@ struct textLine {
     int8_t depth;
     int64_t lineCount;
 };
+
+textLine_t *rootTextLine = NULL;
+WINDOW *window;
+int32_t windowWidth = -1;
+int32_t windowHeight = -1;
+int8_t *filePath;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     if (destination < source) {
@@ -79,11 +86,6 @@ void cleanUpTextAllocation(textAllocation_t *allocation) {
         free(allocation->text);
     }
 }
-
-textLine_t *rootTextLine = NULL;
-WINDOW *window;
-int32_t windowWidth = -1;
-int32_t windowHeight = -1;
 
 textLine_t *createEmptyTextLine() {
     textLine_t *output = malloc(sizeof(textLine_t));
@@ -490,6 +492,49 @@ int main(int argc, const char *argv[]) {
         runTests();
         return 0;
     }
+    
+    if (argc != 2) {
+        printf("Usage: breadtext [file path]\n");
+        return 0;
+    }
+    
+    int8_t *tempText = malloc(50000);
+    realpath(argv[1], (char *)tempText);
+    filePath = malloc(strlen((char *)tempText) + 1);
+    strcpy((char *)filePath, (char *)tempText);
+    free(tempText);
+    
+    FILE *tempFile = fopen((char *)filePath, "r");
+    if (tempFile == NULL) {
+        rootTextLine = createEmptyTextLine();
+    } else {
+        rootTextLine = NULL;
+        while (true) {
+            int8_t *tempText = NULL;
+            size_t tempSize = 0;
+            int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
+            if (tempCount < 0) {
+                break;
+            }
+            if (tempText[tempCount - 1] == '\n') {
+                tempCount -= 1;
+            }
+            textLine_t *tempTextLine = createEmptyTextLine();
+            insertTextIntoTextAllocation(&(tempTextLine->textAllocation), 0, tempText, tempCount);
+            free(tempText);
+            if (rootTextLine == NULL) {
+                rootTextLine = tempTextLine;
+            } else {
+                textLine_t *tempTextLine2 = getRightmostTextLine(rootTextLine);
+                insertTextLineRight(tempTextLine2, tempTextLine);
+            }
+        }
+        if (rootTextLine == NULL) {
+            rootTextLine = createEmptyTextLine();
+        }
+        fclose(tempFile);
+    }
+    return 0;
     
     window = initscr();
     handleResize();
