@@ -26,9 +26,13 @@ struct textLine {
 };
 
 textLine_t *rootTextLine = NULL;
+textLine_t *topTextLine = NULL;
+int64_t topTextLineRow = 0;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
+int32_t viewPortWidth = -1;
+int32_t viewPortHeight = -1;
 int8_t *filePath;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
@@ -317,6 +321,44 @@ void deleteTextLine(textLine_t *line) {
     free(line);
 }
 
+textLine_t *getPreviousTextLine(textLine_t *line) {
+    textLine_t *tempChild = line->leftChild;
+    if (tempChild == NULL) {
+        textLine_t *tempLine = line;
+        while (true) {
+            textLine_t *tempParent = tempLine->parent;
+            if (tempParent == NULL) {
+                return NULL;
+            }
+            if (tempParent->rightChild == tempLine) {
+                return tempParent;
+            }
+            tempLine = tempParent;
+        }
+    } else {
+        return getRightmostTextLine(tempChild);
+    }
+}
+
+textLine_t *getNextTextLine(textLine_t *line) {
+    textLine_t *tempChild = line->rightChild;
+    if (tempChild == NULL) {
+        textLine_t *tempLine = line;
+        while (true) {
+            textLine_t *tempParent = tempLine->parent;
+            if (tempParent == NULL) {
+                return NULL;
+            }
+            if (tempParent->leftChild == tempLine) {
+                return tempParent;
+            }
+            tempLine = tempParent;
+        }
+    } else {
+        return getLeftmostTextLine(tempChild);
+    }
+}
+
 int8_t textLineTreeIsBalanced(textLine_t *line) {
     textLine_t *tempChild;
     tempChild = line->leftChild;
@@ -473,6 +515,54 @@ void runTests() {
     printf("Passed test 8.\n");
 }
 
+// Returns the next Y position.
+int64_t displayTextLine(int64_t posY, textLine_t *line) {
+    int64_t tempRowCount = line->textAllocation.length / viewPortWidth + 1;
+    if (posY + tempRowCount <= 0 || posY >= viewPortHeight) {
+        return posY + tempRowCount;
+    }
+    int64_t tempStartRow;
+    if (posY < 0) {
+        tempStartRow = -posY;
+    } else {
+        tempStartRow = 0;
+    }
+    int64_t tempEndRow;
+    if (posY + tempRowCount > viewPortHeight) {
+        tempEndRow = viewPortHeight - posY;
+    } else {
+        tempEndRow = tempRowCount;
+    }
+    int64_t tempLength = (tempEndRow - tempStartRow) * viewPortWidth;
+    int64_t tempSize = tempLength + 1;
+    int8_t tempBuffer[tempSize];
+    tempBuffer[tempSize - 1] = 0;
+    int64_t tempStartIndex = tempStartRow * viewPortWidth;
+    int64_t tempEndIndex = tempEndRow * viewPortWidth;
+    if (tempEndIndex > line->textAllocation.length) {
+        tempEndIndex = line->textAllocation.length;
+    }
+    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    copyData(tempBuffer, line->textAllocation.text + tempStartIndex, tempAmount);
+    int64_t index = tempAmount;
+    while (index < tempLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    mvprintw(posY + tempStartRow, 0, "%s", tempBuffer);
+    return posY + tempEndRow;
+}
+
+void displayAllTextLines() {
+    clear();
+    textLine_t *tempLine = topTextLine;
+    int64_t tempPosY = -topTextLineRow;
+    while (tempPosY < viewPortHeight && tempLine != NULL) {
+        tempPosY = displayTextLine(tempPosY, tempLine);
+        tempLine = getNextTextLine(tempLine);
+    }
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -482,10 +572,11 @@ void handleResize() {
     }
     windowWidth = tempWidth;
     windowHeight = tempHeight;
+    viewPortWidth = windowWidth;
+    viewPortHeight = windowHeight;
+    topTextLineRow = 0;
     
-    // TODO: Redraw everything.
-    clear();
-    printw("%d %d", windowWidth, windowHeight);
+    displayAllTextLines();
 }
 
 int main(int argc, const char *argv[]) {
@@ -536,7 +627,8 @@ int main(int argc, const char *argv[]) {
         }
         fclose(tempFile);
     }
-    return 0;
+    topTextLine = getLeftmostTextLine(rootTextLine);
+    topTextLineRow = 0;
     
     window = initscr();
     handleResize();
