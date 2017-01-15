@@ -189,27 +189,33 @@ void balanceTextLinesToRoot(textLine_t *line) {
 }
 
 void insertTextLineLeft(textLine_t *parent, textLine_t *child) {
+    textLine_t *tempLineToBalance;
     if (parent->leftChild == NULL) {
+        tempLineToBalance = parent;
         parent->leftChild = child;
         child->parent = parent;
     } else {
         textLine_t *tempLine = getRightmostTextLine(parent->leftChild);
+        tempLineToBalance = tempLine;
         tempLine->rightChild = child;
         child->parent = tempLine;
     }
-    balanceTextLinesToRoot(parent);
+    balanceTextLinesToRoot(tempLineToBalance);
 }
 
 void insertTextLineRight(textLine_t *parent, textLine_t *child) {
+    textLine_t *tempLineToBalance;
     if (parent->rightChild == NULL) {
+        tempLineToBalance = parent;
         parent->rightChild = child;
         child->parent = parent;
     } else {
         textLine_t *tempLine = getLeftmostTextLine(parent->rightChild);
+        tempLineToBalance = tempLine;
         tempLine->leftChild = child;
         child->parent = tempLine;
     }
-    balanceTextLinesToRoot(parent);
+    balanceTextLinesToRoot(tempLineToBalance);
 }
 
 void deleteTextLine(textLine_t *line) {
@@ -233,7 +239,7 @@ void deleteTextLine(textLine_t *line) {
             }
         } else {
             tempLineToBalance = tempChild3->parent;
-            replaceTextLine(tempChild3, NULL);
+            replaceTextLine(tempChild3, tempChild3->rightChild);
             replaceTextLine(line, tempChild3);
             tempChild3->leftChild = tempChild1;
             if (tempChild1 != NULL) {
@@ -292,7 +298,7 @@ void printTextLineStructure(textLine_t *line) {
 void runTests() {
     int32_t tempCount;
     tempCount = 0;
-    while (tempCount < 12) {
+    while (tempCount < 100) {
         if (rootTextLine == NULL) {
             rootTextLine = createEmptyTextLine();
         } else {
@@ -349,6 +355,60 @@ void runTests() {
         }
     }
     printf("Passed test 4.\n");
+    tempCount = 0;
+    while (tempCount < 100) {
+        if (rootTextLine == NULL) {
+            rootTextLine = createEmptyTextLine();
+        } else {
+            textLine_t *tempLine2 = createEmptyTextLine();
+            insertTextLineLeft(rootTextLine, tempLine2);
+        }
+        if (rootTextLine != NULL) {
+            if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 5.\n");
+                return;
+            }
+        }
+        tempCount += 1;
+    }
+    printf("Passed test 5.\n");
+    while (rootTextLine != NULL) {
+        deleteTextLine(rootTextLine);
+        if (rootTextLine != NULL) {
+            if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 6.\n");
+                return;
+            }
+        }
+    }
+    printf("Passed test 6.\n");
+    tempCount = 0;
+    while (tempCount < 100) {
+        if (rootTextLine == NULL) {
+            rootTextLine = createEmptyTextLine();
+        } else {
+            textLine_t *tempLine2 = createEmptyTextLine();
+            insertTextLineRight(rootTextLine, tempLine2);
+        }
+        if (rootTextLine != NULL) {
+            if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 7.\n");
+                return;
+            }
+        }
+        tempCount += 1;
+    }
+    printf("Passed test 7.\n");
+    while (rootTextLine != NULL) {
+        deleteTextLine(rootTextLine);
+        if (rootTextLine != NULL) {
+            if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 8.\n");
+                return;
+            }
+        }
+    }
+    printf("Passed test 8.\n");
 }
 
 void handleResize() {
