@@ -1,4 +1,5 @@
 breadtext
 *.dSYM
 test.txt
+*.swp
 

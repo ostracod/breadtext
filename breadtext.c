@@ -28,6 +28,10 @@ struct textLine {
 textLine_t *rootTextLine = NULL;
 textLine_t *topTextLine = NULL;
 int64_t topTextLineRow = 0;
+textLine_t *cursorTextLine = NULL;
+int64_t cursorTextLineRow = 0;
+int64_t cursorTextLineColumn = 0;
+int64_t cursorTextLineSnapColumn = 0;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -515,9 +519,27 @@ void runTests() {
     printf("Passed test 8.\n");
 }
 
+int64_t getTextLineRowCount(textLine_t *line) {
+    return line->textAllocation.length / viewPortWidth + 1;
+}
+
+int64_t getCursorPosY() {
+    textLine_t *tempLine = topTextLine;
+    int64_t tempPosY = -topTextLineRow;
+    while (tempLine != cursorTextLine) {
+        tempPosY += getTextLineRowCount(tempLine);
+        tempLine = getNextTextLine(tempLine);
+    }
+    return tempPosY + cursorTextLineRow;
+}
+
+void moveCursorToCorrectPos() {
+    move(getCursorPosY(), cursorTextLineColumn);
+}
+
 // Returns the next Y position.
 int64_t displayTextLine(int64_t posY, textLine_t *line) {
-    int64_t tempRowCount = line->textAllocation.length / viewPortWidth + 1;
+    int64_t tempRowCount = getTextLineRowCount(line);
     if (posY + tempRowCount <= 0 || posY >= viewPortHeight) {
         return posY + tempRowCount;
     }
@@ -554,13 +576,122 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
 }
 
 void displayAllTextLines() {
-    clear();
     textLine_t *tempLine = topTextLine;
     int64_t tempPosY = -topTextLineRow;
     while (tempPosY < viewPortHeight && tempLine != NULL) {
         tempPosY = displayTextLine(tempPosY, tempLine);
         tempLine = getNextTextLine(tempLine);
     }
+    int64_t tempLength = (viewPortHeight - tempPosY) * viewPortWidth;
+    int64_t tempSize = tempLength + 1;
+    int8_t tempBuffer[tempSize];
+    tempBuffer[tempSize - 1] = 0;
+    int64_t index = 0;
+    while (index < tempLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    mvprintw(tempPosY, 0, "%s", tempBuffer);
+}
+
+void redrawEverything() {
+    displayAllTextLines();
+    moveCursorToCorrectPos();
+}
+
+void moveCursorLeft() {
+    if (cursorTextLineRow <= 0 && cursorTextLineColumn <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
+        if (tempLine == NULL) {
+            return;
+        }
+        cursorTextLine = tempLine;
+        int64_t tempLength = cursorTextLine->textAllocation.length;
+        cursorTextLineColumn = tempLength % viewPortWidth;
+        cursorTextLineRow = tempLength / viewPortWidth;
+    } else if (cursorTextLineColumn <= 0) {
+        cursorTextLineColumn = viewPortWidth - 1;
+        cursorTextLineRow -= 1;
+    } else {
+        cursorTextLineColumn -= 1;
+    }
+    cursorTextLineSnapColumn = cursorTextLineColumn;
+    moveCursorToCorrectPos();
+}
+
+void moveCursorRight() {
+    int64_t tempLength = cursorTextLine->textAllocation.length;
+    if (cursorTextLineRow * viewPortWidth + cursorTextLineColumn >= tempLength) {
+        textLine_t *tempLine = getNextTextLine(cursorTextLine);
+        if (tempLine == NULL) {
+            return;
+        }
+        cursorTextLine = tempLine;
+        cursorTextLineColumn = 0;
+        cursorTextLineRow = 0;
+    } else if (cursorTextLineColumn >= viewPortWidth - 1) {
+        cursorTextLineColumn = 0;
+        cursorTextLineRow += 1;
+    } else {
+        cursorTextLineColumn += 1;
+    }
+    cursorTextLineSnapColumn = cursorTextLineColumn;
+    moveCursorToCorrectPos();
+}
+
+void moveCursorUp() {
+    if (cursorTextLineColumn < cursorTextLineSnapColumn) {
+        cursorTextLineColumn = cursorTextLineSnapColumn;
+    }
+    if (cursorTextLineRow <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
+        if (tempLine == NULL) {
+            return;
+        }
+        cursorTextLine = tempLine;
+        int64_t tempLength = cursorTextLine->textAllocation.length;
+        int64_t tempColumn = tempLength % viewPortWidth;
+        if (cursorTextLineColumn > tempColumn) {
+            cursorTextLineColumn = tempColumn;
+        }
+        cursorTextLineRow = tempLength / viewPortWidth;
+    } else {
+        cursorTextLineRow -= 1;
+    }
+    moveCursorToCorrectPos();
+}
+
+void moveCursorDown() {
+    if (cursorTextLineColumn < cursorTextLineSnapColumn) {
+        cursorTextLineColumn = cursorTextLineSnapColumn;
+    }
+    int64_t tempRowCount = getTextLineRowCount(cursorTextLine);
+    if (cursorTextLineRow >= tempRowCount - 1) {
+        textLine_t *tempLine = getNextTextLine(cursorTextLine);
+        if (tempLine == NULL) {
+            return;
+        }
+        cursorTextLine = tempLine;
+        int64_t tempLength = cursorTextLine->textAllocation.length;
+        int64_t tempRowCount2 = getTextLineRowCount(cursorTextLine);
+        if (tempRowCount2 <= 1) {
+            int64_t tempColumn = tempLength % viewPortWidth;
+            if (cursorTextLineColumn > tempColumn) {
+                cursorTextLineColumn = tempColumn;
+            }
+        }
+        cursorTextLineRow = 0;
+    } else {
+        cursorTextLineRow += 1;
+        if (cursorTextLineRow >= tempRowCount - 1) {
+            int64_t tempLength = cursorTextLine->textAllocation.length;
+            int64_t tempColumn = tempLength % viewPortWidth;
+            if (cursorTextLineColumn > tempColumn) {
+                cursorTextLineColumn = tempColumn;
+            }
+        }
+    }
+    moveCursorToCorrectPos();
 }
 
 void handleResize() {
@@ -575,8 +706,12 @@ void handleResize() {
     viewPortWidth = windowWidth;
     viewPortHeight = windowHeight;
     topTextLineRow = 0;
+    cursorTextLine = topTextLine;
+    cursorTextLineRow = 0;
+    cursorTextLineColumn = 0;
+    cursorTextLineSnapColumn = 0;
     
-    displayAllTextLines();
+    redrawEverything();
 }
 
 int main(int argc, const char *argv[]) {
@@ -629,8 +764,13 @@ int main(int argc, const char *argv[]) {
     }
     topTextLine = getLeftmostTextLine(rootTextLine);
     topTextLineRow = 0;
+    cursorTextLine = topTextLine;
+    cursorTextLineRow = 0;
+    cursorTextLineColumn = 0;
+    cursorTextLineSnapColumn = 0;
     
     window = initscr();
+    noecho();
     handleResize();
     
     while (true) {
@@ -640,6 +780,18 @@ int main(int argc, const char *argv[]) {
         }
         if (tempKey == 'q') {
             break;
+        }
+        if (tempKey == 'j') {
+            moveCursorLeft();
+        }
+        if (tempKey == 'l') {
+            moveCursorRight();
+        }
+        if (tempKey == 'i') {
+            moveCursorUp();
+        }
+        if (tempKey == 'k') {
+            moveCursorDown();
         }
     }
     
