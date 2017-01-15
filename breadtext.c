@@ -47,23 +47,25 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     }
 }
 
-void resizeTextAllocation(textAllocation_t *allocation, int64_t size) {
+void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
     int8_t *tempText = malloc(size);
-    int64_t tempSize;
-    if (size < allocation->allocationSize) {
-        tempSize = size;
-    } else {
-        tempSize = allocation->allocationSize;
+    if (allocation->text != NULL) {
+        int64_t tempSize;
+        if (size < allocation->allocationSize) {
+            tempSize = size;
+        } else {
+            tempSize = allocation->allocationSize;
+        }
+        copyData(tempText, allocation->text, tempSize);
+        free(allocation->text);
     }
-    copyData(tempText, allocation->text, tempSize);
-    free(allocation->text);
     allocation->text = tempText;
 }
 
 void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, int8_t *text, int64_t amount) {
     int64_t tempLength = allocation->length + amount;
-    if (tempLength > allocation->allocationSize) {
-        resizeTextAllocation(allocation, tempLength * 2);
+    if (tempLength > allocation->allocationSize || allocation->text == NULL) {
+        setTextAllocationSize(allocation, tempLength * 2);
     }
     int64_t tempAmount = allocation->length - index;
     copyData(allocation->text + index + amount, allocation->text + index, tempAmount);
@@ -73,11 +75,11 @@ void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, i
 
 void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, int64_t amount) {
     int64_t tempLength = allocation->length - amount;
-    if (tempLength < allocation->allocationSize / 4) {
-        resizeTextAllocation(allocation, tempLength * 2);
-    }
     int64_t tempAmount = allocation->length - index;
     copyData(allocation->text + index, allocation->text + index + amount, tempAmount);
+    if (tempLength < allocation->allocationSize / 4) {
+        setTextAllocationSize(allocation, tempLength * 2);
+    }
     allocation->length = tempLength;
 }
 
