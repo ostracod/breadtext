@@ -308,8 +308,8 @@ void insertTextLineRight(textLine_t *parent, textLine_t *child) {
 void deleteTextLine(textLine_t *line) {
     cleanUpTextAllocation(&(line->textAllocation));
     textLine_t *tempLineToBalance;
-    textLine_t *tempChild1 = line->rightChild;
-    textLine_t *tempChild2 = line->leftChild;
+    textLine_t *tempChild1 = line->leftChild;
+    textLine_t *tempChild2 = line->rightChild;
     if (tempChild2 == NULL) {
         tempLineToBalance = line->parent;
         replaceTextLine(line, tempChild1);
@@ -419,6 +419,23 @@ int8_t textLineTreeIsBalanced(textLine_t *line) {
     return (tempBalance >= -1 && tempBalance <= 1);
 }
 
+int8_t textLineTreeIsInOrder(textLine_t *line) {
+    textLine_t *tempChild;
+    tempChild = line->leftChild;
+    if (tempChild != NULL) {
+        if (tempChild->textAllocation.length > line->textAllocation.length) {
+            return false;
+        }
+    }
+    tempChild = line->rightChild;
+    if (tempChild != NULL) {
+        if (tempChild->textAllocation.length < line->textAllocation.length) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void printTextLineStructure(textLine_t *line) {
     if (line == NULL) {
         return;
@@ -433,7 +450,7 @@ void printTextLineStructure(textLine_t *line) {
         printf("|");
         tempCount += 1;
     }
-    printf("O\n");
+    printf("%lld\n", line->textAllocation.length);
     tempChild = line->rightChild;
     if (tempChild != NULL) {
         printTextLineStructure(tempChild);
@@ -446,13 +463,19 @@ void runTests() {
     while (tempCount < 100) {
         if (rootTextLine == NULL) {
             rootTextLine = createEmptyTextLine();
+            rootTextLine->textAllocation.length = tempCount;
         } else {
             textLine_t *tempLine = getRightmostTextLine(rootTextLine);
             textLine_t *tempLine2 = createEmptyTextLine();
+            tempLine2->textAllocation.length = tempCount;
             insertTextLineRight(tempLine, tempLine2);
         }
         if (rootTextLine != NULL) {
             if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 1.\n");
+                return;
+            }
+            if (!textLineTreeIsInOrder(rootTextLine)) {
                 printf("FAILED TEST 1.\n");
                 return;
             }
@@ -468,6 +491,10 @@ void runTests() {
                 printf("FAILED TEST 2.\n");
                 return;
             }
+            if (!textLineTreeIsInOrder(rootTextLine)) {
+                printf("FAILED TEST 2.\n");
+                return;
+            }
         }
     }
     printf("Passed test 2.\n");
@@ -475,13 +502,19 @@ void runTests() {
     while (tempCount < 100) {
         if (rootTextLine == NULL) {
             rootTextLine = createEmptyTextLine();
+            rootTextLine->textAllocation.length = 100000 - tempCount;
         } else {
             textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
             textLine_t *tempLine2 = createEmptyTextLine();
+            tempLine2->textAllocation.length = 100000 - tempCount;
             insertTextLineLeft(tempLine, tempLine2);
         }
         if (rootTextLine != NULL) {
             if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 3.\n");
+                return;
+            }
+            if (!textLineTreeIsInOrder(rootTextLine)) {
                 printf("FAILED TEST 3.\n");
                 return;
             }
@@ -494,6 +527,10 @@ void runTests() {
         deleteTextLine(tempLine);
         if (rootTextLine != NULL) {
             if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 4.\n");
+                return;
+            }
+            if (!textLineTreeIsInOrder(rootTextLine)) {
                 printf("FAILED TEST 4.\n");
                 return;
             }
@@ -554,6 +591,33 @@ void runTests() {
         }
     }
     printf("Passed test 8.\n");
+    tempCount = 0;
+    while (tempCount < 100) {
+        if (rootTextLine == NULL) {
+            rootTextLine = createEmptyTextLine();
+            rootTextLine->textAllocation.length = tempCount;
+        } else {
+            textLine_t *tempLine = getRightmostTextLine(rootTextLine);
+            textLine_t *tempLine2 = createEmptyTextLine();
+            tempLine2->textAllocation.length = tempCount;
+            insertTextLineRight(tempLine, tempLine2);
+        }
+        tempCount += 1;
+    }
+    while (rootTextLine != NULL) {
+        deleteTextLine(rootTextLine);
+        if (rootTextLine != NULL) {
+            if (!textLineTreeIsBalanced(rootTextLine)) {
+                printf("FAILED TEST 9.\n");
+                return;
+            }
+            if (!textLineTreeIsInOrder(rootTextLine)) {
+                printf("FAILED TEST 9.\n");
+                return;
+            }
+        }
+    }
+    printf("Passed test 9.\n");
 }
 
 int64_t getTextLineRowCount(textLine_t *line) {
@@ -933,6 +997,46 @@ void insertCharacterUnderCursor(int8_t character) {
     displayCursor();
 }
 
+void deleteCharacterBeforeCursor() {
+    int64_t index = cursorTextLineRow * viewPortWidth + cursorTextLineColumn - 1;
+    if (index < 0) {
+        textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
+        if (tempLine == NULL) {
+            return;
+        }
+        index = tempLine->textAllocation.length;
+        insertTextIntoTextAllocation(&(tempLine->textAllocation), index, cursorTextLine->textAllocation.text, cursorTextLine->textAllocation.length);
+        deleteTextLine(cursorTextLine);
+        cursorTextLineColumn = index % viewPortWidth;
+        cursorTextLineRow = index / viewPortWidth;
+        cursorTextLineSnapColumn = cursorTextLineColumn;
+        if (topTextLine == cursorTextLine) {
+            topTextLine = tempLine;
+        }
+        cursorTextLine = tempLine;
+        int64_t tempPosY = getTextLinePosY(cursorTextLine);
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+        displayCursor();
+    } else {
+        int64_t tempOldRowCount = getTextLineRowCount(cursorTextLine);
+        removeTextFromTextAllocation(&(cursorTextLine->textAllocation), index, 1);
+        cursorTextLineColumn -= 1;
+        if (cursorTextLineColumn < 0) {
+            cursorTextLineColumn = viewPortWidth - 1;
+            cursorTextLineRow -= 1;
+        }
+        cursorTextLineSnapColumn = cursorTextLineColumn;
+        int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
+        int64_t tempPosY = getTextLinePosY(cursorTextLine);
+        if (tempNewRowCount == tempOldRowCount) {
+            displayTextLine(tempPosY, cursorTextLine);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+        }
+        displayCursor();
+    }
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -1055,12 +1159,17 @@ int main(int argc, const char *argv[]) {
             if (tempKey == 't') {
                 setActivityMode(TEXT_ENTRY_MODE);
             }
+            // Backspace.
+            if (tempKey == 127) {
+                deleteCharacterBeforeCursor();
+            }
         } else if (activityMode == TEXT_ENTRY_MODE) {
             // Escape.
             if (tempKey == 27) {
                 setActivityMode(COMMAND_MODE);
             }
             if (tempKey == ',' && tempLastKey == ',') {
+                deleteCharacterBeforeCursor();
                 setActivityMode(COMMAND_MODE);
             } else if (tempKey >= 32 && tempKey <= 126) {
                 insertCharacterUnderCursor((int8_t)tempKey);
@@ -1076,6 +1185,10 @@ int main(int argc, const char *argv[]) {
             }
             if (tempKey == KEY_DOWN) {
                 moveCursorDown(1);
+            }
+            // Backspace.
+            if (tempKey == 127) {
+                deleteCharacterBeforeCursor();
             }
         }
         tempLastKey = tempKey;
