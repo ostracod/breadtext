@@ -7,6 +7,15 @@
 #define true 1
 #define false 0
 
+#define BLACK_ON_WHITE 1
+#define WHITE_ON_BLACK 2
+
+#define COMMAND_MODE 1
+#define TEXT_ENTRY_MODE 2
+#define HIGHLIGHT_CHARACTER_MODE 3
+#define HIGHLIGHT_WORD_MODE 4
+#define HIGHLIGHT_LINE_MODE 5
+
 #define SHOULD_RUN_TESTS false
 
 typedef struct textAllocation {
@@ -32,11 +41,14 @@ textLine_t *cursorTextLine = NULL;
 int64_t cursorTextLineRow = 0;
 int64_t cursorTextLineColumn = 0;
 int64_t cursorTextLineSnapColumn = 0;
+int8_t activityMode = COMMAND_MODE;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
 int32_t viewPortWidth = -1;
 int32_t viewPortHeight = -1;
+int8_t primaryColorPair = BLACK_ON_WHITE;
+int8_t secondaryColorPair = WHITE_ON_BLACK;
 int8_t *filePath;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
@@ -533,8 +545,25 @@ int64_t getCursorPosY() {
     return tempPosY + cursorTextLineRow;
 }
 
-void moveCursorToCorrectPos() {
-    move(getCursorPosY(), cursorTextLineColumn);
+int8_t getCursorCharacter() {
+    int64_t index = cursorTextLineRow * viewPortWidth + cursorTextLineColumn;
+    if (index < cursorTextLine->textAllocation.length) {
+        return cursorTextLine->textAllocation.text[index];
+    } else {
+        return ' ';
+    }
+}
+
+void eraseCursor() {
+    attron(COLOR_PAIR(primaryColorPair));
+    mvprintw(getCursorPosY(), cursorTextLineColumn, "%c", (char)getCursorCharacter());
+    attroff(COLOR_PAIR(primaryColorPair));
+}
+
+void displayCursor() {
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(getCursorPosY(), cursorTextLineColumn, "%c", (char)getCursorCharacter());
+    attroff(COLOR_PAIR(secondaryColorPair));
 }
 
 // Returns the next Y position.
@@ -571,7 +600,9 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         tempBuffer[index] = ' ';
         index += 1;
     }
+    attron(COLOR_PAIR(primaryColorPair));
     mvprintw(posY + tempStartRow, 0, "%s", tempBuffer);
+    attroff(COLOR_PAIR(primaryColorPair));
     return posY + tempEndRow;
 }
 
@@ -591,18 +622,54 @@ void displayAllTextLines() {
         tempBuffer[index] = ' ';
         index += 1;
     }
+    attron(COLOR_PAIR(primaryColorPair));
     mvprintw(tempPosY, 0, "%s", tempBuffer);
+    attroff(COLOR_PAIR(primaryColorPair));
+}
+
+void eraseStatusBar() {
+    int32_t tempLength = windowWidth;
+    int32_t tempSize = tempLength + 1;
+    int8_t tempBuffer[tempSize];
+    tempBuffer[tempSize - 1] = 0;
+    int32_t index = 0;
+    while (index < tempLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(windowHeight - 1, 0, "%s", tempBuffer);
+    attroff(COLOR_PAIR(secondaryColorPair));
+}
+
+void displayActivityMode() {
+    attron(COLOR_PAIR(secondaryColorPair));
+    if (activityMode == COMMAND_MODE) {
+        mvprintw(windowHeight - 1, 0, "Command Mode");
+    }
+    if (activityMode == TEXT_ENTRY_MODE) {
+        mvprintw(windowHeight - 1, 0, "Text Entry Mode");
+    }
+    attroff(COLOR_PAIR(secondaryColorPair));
+}
+
+void displayStatusBar() {
+    eraseStatusBar();
+    displayActivityMode();
 }
 
 void redrawEverything() {
     displayAllTextLines();
-    moveCursorToCorrectPos();
+    displayStatusBar();
+    displayCursor();
 }
 
 void moveCursorLeft() {
+    eraseCursor();
     if (cursorTextLineRow <= 0 && cursorTextLineColumn <= 0) {
         textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
         if (tempLine == NULL) {
+            displayCursor();
             return;
         }
         cursorTextLine = tempLine;
@@ -616,14 +683,16 @@ void moveCursorLeft() {
         cursorTextLineColumn -= 1;
     }
     cursorTextLineSnapColumn = cursorTextLineColumn;
-    moveCursorToCorrectPos();
+    displayCursor();
 }
 
 void moveCursorRight() {
+    eraseCursor();
     int64_t tempLength = cursorTextLine->textAllocation.length;
     if (cursorTextLineRow * viewPortWidth + cursorTextLineColumn >= tempLength) {
         textLine_t *tempLine = getNextTextLine(cursorTextLine);
         if (tempLine == NULL) {
+            displayCursor();
             return;
         }
         cursorTextLine = tempLine;
@@ -636,16 +705,20 @@ void moveCursorRight() {
         cursorTextLineColumn += 1;
     }
     cursorTextLineSnapColumn = cursorTextLineColumn;
-    moveCursorToCorrectPos();
+    displayCursor();
 }
 
 void moveCursorUp() {
+    eraseCursor();
+    int64_t tempOldColumn = cursorTextLineColumn;
     if (cursorTextLineColumn < cursorTextLineSnapColumn) {
         cursorTextLineColumn = cursorTextLineSnapColumn;
     }
     if (cursorTextLineRow <= 0) {
         textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
         if (tempLine == NULL) {
+            cursorTextLineColumn = tempOldColumn;
+            displayCursor();
             return;
         }
         cursorTextLine = tempLine;
@@ -658,10 +731,12 @@ void moveCursorUp() {
     } else {
         cursorTextLineRow -= 1;
     }
-    moveCursorToCorrectPos();
+    displayCursor();
 }
 
 void moveCursorDown() {
+    eraseCursor();
+    int64_t tempOldColumn = cursorTextLineColumn;
     if (cursorTextLineColumn < cursorTextLineSnapColumn) {
         cursorTextLineColumn = cursorTextLineSnapColumn;
     }
@@ -669,6 +744,8 @@ void moveCursorDown() {
     if (cursorTextLineRow >= tempRowCount - 1) {
         textLine_t *tempLine = getNextTextLine(cursorTextLine);
         if (tempLine == NULL) {
+            cursorTextLineColumn = tempOldColumn;
+            displayCursor();
             return;
         }
         cursorTextLine = tempLine;
@@ -691,7 +768,7 @@ void moveCursorDown() {
             }
         }
     }
-    moveCursorToCorrectPos();
+    displayCursor();
 }
 
 void handleResize() {
@@ -704,7 +781,7 @@ void handleResize() {
     windowWidth = tempWidth;
     windowHeight = tempHeight;
     viewPortWidth = windowWidth;
-    viewPortHeight = windowHeight;
+    viewPortHeight = windowHeight - 1;
     topTextLineRow = 0;
     cursorTextLine = topTextLine;
     cursorTextLineRow = 0;
@@ -771,6 +848,10 @@ int main(int argc, const char *argv[]) {
     
     window = initscr();
     noecho();
+    curs_set(0);
+    start_color();
+    init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
+    init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
     handleResize();
     
     while (true) {
