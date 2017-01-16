@@ -42,6 +42,8 @@ int64_t cursorTextLineRow = 0;
 int64_t cursorTextLineColumn = 0;
 int64_t cursorTextLineSnapColumn = 0;
 int8_t activityMode = COMMAND_MODE;
+int32_t activityModeTextLength = 0;
+int32_t lineNumberTextLength = 0;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -375,6 +377,28 @@ textLine_t *getNextTextLine(textLine_t *line) {
     }
 }
 
+int64_t getTextLineNumber(textLine_t *line) {
+    int64_t output = 1;
+    textLine_t *tempChild = line->leftChild;
+    if (tempChild != NULL) {
+        output += tempChild->lineCount;
+    }
+    tempChild = line;
+    textLine_t *tempParent = line->parent;
+    while (tempParent != NULL) {
+        textLine_t *tempChild2 = tempParent->leftChild;
+        if (tempChild2 != tempChild) {
+            output += 1;
+            if (tempChild2 != NULL) {
+                output += tempChild2->lineCount;
+            }
+        }
+        tempChild = tempParent;
+        tempParent = tempChild->parent;
+    }
+    return output;
+}
+
 int8_t textLineTreeIsBalanced(textLine_t *line) {
     textLine_t *tempChild;
     tempChild = line->leftChild;
@@ -642,20 +666,60 @@ void eraseStatusBar() {
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
+void eraseActivityMode() {
+    int8_t tempBuffer[activityModeTextLength + 1];
+    tempBuffer[activityModeTextLength] = 0;
+    int32_t index = 0;
+    while (index <= activityModeTextLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
+    attroff(COLOR_PAIR(secondaryColorPair));
+}
+
 void displayActivityMode() {
     attron(COLOR_PAIR(secondaryColorPair));
     if (activityMode == COMMAND_MODE) {
-        mvprintw(windowHeight - 1, 0, "Command Mode");
+        int8_t tempMessage[] = "Command Mode";
+        mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
+        activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }
     if (activityMode == TEXT_ENTRY_MODE) {
-        mvprintw(windowHeight - 1, 0, "Text Entry Mode");
+        int8_t tempMessage[] = "Text Entry Mode";
+        mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
+        activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }
+    attroff(COLOR_PAIR(secondaryColorPair));
+}
+
+void eraseLineNumber() {
+    int8_t tempBuffer[lineNumberTextLength + 1];
+    tempBuffer[lineNumberTextLength] = 0;
+    int32_t index = 0;
+    while (index <= lineNumberTextLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempBuffer);
+    attroff(COLOR_PAIR(secondaryColorPair));
+}
+
+void displayLineNumber() {
+    attron(COLOR_PAIR(secondaryColorPair));
+    int8_t tempMessage[100];
+    sprintf((char *)tempMessage, "Line %lld", getTextLineNumber(cursorTextLine));
+    lineNumberTextLength = (int32_t)strlen((char *)tempMessage);
+    mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempMessage);
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
 void displayStatusBar() {
     eraseStatusBar();
     displayActivityMode();
+    displayLineNumber();
 }
 
 void redrawEverything() {
@@ -665,110 +729,154 @@ void redrawEverything() {
 }
 
 void moveCursorLeft() {
-    eraseCursor();
-    if (cursorTextLineRow <= 0 && cursorTextLineColumn <= 0) {
-        textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
+    textLine_t *tempNextTextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    if (tempNextRow <= 0 && tempNextColumn <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(tempNextTextLine);
         if (tempLine == NULL) {
-            displayCursor();
             return;
         }
-        cursorTextLine = tempLine;
-        int64_t tempLength = cursorTextLine->textAllocation.length;
-        cursorTextLineColumn = tempLength % viewPortWidth;
-        cursorTextLineRow = tempLength / viewPortWidth;
-    } else if (cursorTextLineColumn <= 0) {
-        cursorTextLineColumn = viewPortWidth - 1;
-        cursorTextLineRow -= 1;
+        eraseLineNumber();
+        tempNextTextLine = tempLine;
+        int64_t tempLength = tempNextTextLine->textAllocation.length;
+        tempNextColumn = tempLength % viewPortWidth;
+        tempNextRow = tempLength / viewPortWidth;
+    } else if (tempNextColumn <= 0) {
+        tempNextColumn = viewPortWidth - 1;
+        tempNextRow -= 1;
     } else {
-        cursorTextLineColumn -= 1;
+        tempNextColumn -= 1;
     }
-    cursorTextLineSnapColumn = cursorTextLineColumn;
-    displayCursor();
+    if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
+        eraseCursor();
+        if (tempNextTextLine != cursorTextLine) {
+            eraseLineNumber();
+            cursorTextLine = tempNextTextLine;
+            displayLineNumber();
+        }
+        cursorTextLineColumn = tempNextColumn;
+        cursorTextLineRow = tempNextRow;
+        cursorTextLineSnapColumn = cursorTextLineColumn;
+        displayCursor();
+    }
 }
 
 void moveCursorRight() {
-    eraseCursor();
-    int64_t tempLength = cursorTextLine->textAllocation.length;
-    if (cursorTextLineRow * viewPortWidth + cursorTextLineColumn >= tempLength) {
-        textLine_t *tempLine = getNextTextLine(cursorTextLine);
+    textLine_t *tempNextTextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    int64_t tempLength = tempNextTextLine->textAllocation.length;
+    if (tempNextRow * viewPortWidth + tempNextColumn >= tempLength) {
+        textLine_t *tempLine = getNextTextLine(tempNextTextLine);
         if (tempLine == NULL) {
-            displayCursor();
             return;
         }
-        cursorTextLine = tempLine;
-        cursorTextLineColumn = 0;
-        cursorTextLineRow = 0;
-    } else if (cursorTextLineColumn >= viewPortWidth - 1) {
-        cursorTextLineColumn = 0;
-        cursorTextLineRow += 1;
+        eraseLineNumber();
+        tempNextTextLine = tempLine;
+        tempNextColumn = 0;
+        tempNextRow = 0;
+    } else if (tempNextColumn >= viewPortWidth - 1) {
+        tempNextColumn = 0;
+        tempNextRow += 1;
     } else {
-        cursorTextLineColumn += 1;
+        tempNextColumn += 1;
     }
-    cursorTextLineSnapColumn = cursorTextLineColumn;
-    displayCursor();
+    if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
+        eraseCursor();
+        if (tempNextTextLine != cursorTextLine) {
+            eraseLineNumber();
+            cursorTextLine = tempNextTextLine;
+            displayLineNumber();
+        }
+        cursorTextLineColumn = tempNextColumn;
+        cursorTextLineRow = tempNextRow;
+        cursorTextLineSnapColumn = cursorTextLineColumn;
+        displayCursor();
+    }
 }
 
 void moveCursorUp() {
-    eraseCursor();
-    int64_t tempOldColumn = cursorTextLineColumn;
-    if (cursorTextLineColumn < cursorTextLineSnapColumn) {
-        cursorTextLineColumn = cursorTextLineSnapColumn;
+    textLine_t *tempNextTextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    if (tempNextColumn < cursorTextLineSnapColumn) {
+        tempNextColumn = cursorTextLineSnapColumn;
     }
-    if (cursorTextLineRow <= 0) {
-        textLine_t *tempLine = getPreviousTextLine(cursorTextLine);
+    if (tempNextRow <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(tempNextTextLine);
         if (tempLine == NULL) {
-            cursorTextLineColumn = tempOldColumn;
-            displayCursor();
             return;
         }
-        cursorTextLine = tempLine;
-        int64_t tempLength = cursorTextLine->textAllocation.length;
+        eraseLineNumber();
+        tempNextTextLine = tempLine;
+        int64_t tempLength = tempNextTextLine->textAllocation.length;
         int64_t tempColumn = tempLength % viewPortWidth;
-        if (cursorTextLineColumn > tempColumn) {
-            cursorTextLineColumn = tempColumn;
+        if (tempNextColumn > tempColumn) {
+            tempNextColumn = tempColumn;
         }
-        cursorTextLineRow = tempLength / viewPortWidth;
+        tempNextRow = tempLength / viewPortWidth;
     } else {
-        cursorTextLineRow -= 1;
+        tempNextRow -= 1;
     }
-    displayCursor();
+    if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
+        eraseCursor();
+        if (tempNextTextLine != cursorTextLine) {
+            eraseLineNumber();
+            cursorTextLine = tempNextTextLine;
+            displayLineNumber();
+        }
+        cursorTextLineColumn = tempNextColumn;
+        cursorTextLineRow = tempNextRow;
+        displayCursor();
+    }
 }
 
 void moveCursorDown() {
-    eraseCursor();
-    int64_t tempOldColumn = cursorTextLineColumn;
-    if (cursorTextLineColumn < cursorTextLineSnapColumn) {
-        cursorTextLineColumn = cursorTextLineSnapColumn;
+    textLine_t *tempNextTextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    if (tempNextColumn < cursorTextLineSnapColumn) {
+        tempNextColumn = cursorTextLineSnapColumn;
     }
-    int64_t tempRowCount = getTextLineRowCount(cursorTextLine);
-    if (cursorTextLineRow >= tempRowCount - 1) {
-        textLine_t *tempLine = getNextTextLine(cursorTextLine);
+    int64_t tempRowCount = getTextLineRowCount(tempNextTextLine);
+    if (tempNextRow >= tempRowCount - 1) {
+        textLine_t *tempLine = getNextTextLine(tempNextTextLine);
         if (tempLine == NULL) {
-            cursorTextLineColumn = tempOldColumn;
-            displayCursor();
             return;
         }
-        cursorTextLine = tempLine;
-        int64_t tempLength = cursorTextLine->textAllocation.length;
-        int64_t tempRowCount2 = getTextLineRowCount(cursorTextLine);
+        eraseLineNumber();
+        tempNextTextLine = tempLine;
+        int64_t tempLength = tempNextTextLine->textAllocation.length;
+        int64_t tempRowCount2 = getTextLineRowCount(tempNextTextLine);
         if (tempRowCount2 <= 1) {
             int64_t tempColumn = tempLength % viewPortWidth;
-            if (cursorTextLineColumn > tempColumn) {
-                cursorTextLineColumn = tempColumn;
+            if (tempNextColumn > tempColumn) {
+                tempNextColumn = tempColumn;
             }
         }
-        cursorTextLineRow = 0;
+        tempNextRow = 0;
     } else {
-        cursorTextLineRow += 1;
-        if (cursorTextLineRow >= tempRowCount - 1) {
-            int64_t tempLength = cursorTextLine->textAllocation.length;
+        tempNextRow += 1;
+        if (tempNextRow >= tempRowCount - 1) {
+            int64_t tempLength = tempNextTextLine->textAllocation.length;
             int64_t tempColumn = tempLength % viewPortWidth;
-            if (cursorTextLineColumn > tempColumn) {
-                cursorTextLineColumn = tempColumn;
+            if (tempNextColumn > tempColumn) {
+                tempNextColumn = tempColumn;
             }
         }
     }
-    displayCursor();
+    if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
+        eraseCursor();
+        if (tempNextTextLine != cursorTextLine) {
+            eraseLineNumber();
+            cursorTextLine = tempNextTextLine;
+            displayLineNumber();
+        }
+        cursorTextLineColumn = tempNextColumn;
+        cursorTextLineRow = tempNextRow;
+        displayCursor();
+    }
 }
 
 void handleResize() {
