@@ -82,6 +82,7 @@ void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
         free(allocation->text);
     }
     allocation->text = tempText;
+    allocation->allocationSize = size;
 }
 
 void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, int8_t *text, int64_t amount) {
@@ -559,14 +560,19 @@ int64_t getTextLineRowCount(textLine_t *line) {
     return line->textAllocation.length / viewPortWidth + 1;
 }
 
-int64_t getCursorPosY() {
+// The line must be equal to or under the top line.
+int64_t getTextLinePosY(textLine_t *line) {
     textLine_t *tempLine = topTextLine;
     int64_t tempPosY = -topTextLineRow;
     while (tempLine != cursorTextLine) {
         tempPosY += getTextLineRowCount(tempLine);
         tempLine = getNextTextLine(tempLine);
     }
-    return tempPosY + cursorTextLineRow;
+    return tempPosY;
+}
+
+int64_t getCursorPosY() {
+    return getTextLinePosY(cursorTextLine) + cursorTextLineRow;
 }
 
 int8_t getCursorCharacter() {
@@ -630,25 +636,31 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
     return posY + tempEndRow;
 }
 
-void displayAllTextLines() {
-    textLine_t *tempLine = topTextLine;
-    int64_t tempPosY = -topTextLineRow;
+void displayTextLinesUnderAndIncludingTextLine(int64_t posY, textLine_t *line) {
+    textLine_t *tempLine = line;
+    int64_t tempPosY = posY;
     while (tempPosY < viewPortHeight && tempLine != NULL) {
         tempPosY = displayTextLine(tempPosY, tempLine);
         tempLine = getNextTextLine(tempLine);
     }
-    int64_t tempLength = (viewPortHeight - tempPosY) * viewPortWidth;
-    int64_t tempSize = tempLength + 1;
-    int8_t tempBuffer[tempSize];
-    tempBuffer[tempSize - 1] = 0;
-    int64_t index = 0;
-    while (index < tempLength) {
-        tempBuffer[index] = ' ';
-        index += 1;
+    if (tempPosY < viewPortHeight) {
+        int64_t tempLength = (viewPortHeight - tempPosY) * viewPortWidth;
+        int64_t tempSize = tempLength + 1;
+        int8_t tempBuffer[tempSize];
+        tempBuffer[tempSize - 1] = 0;
+        int64_t index = 0;
+        while (index < tempLength) {
+            tempBuffer[index] = ' ';
+            index += 1;
+        }
+        attron(COLOR_PAIR(primaryColorPair));
+        mvprintw(tempPosY, 0, "%s", tempBuffer);
+        attroff(COLOR_PAIR(primaryColorPair));
     }
-    attron(COLOR_PAIR(primaryColorPair));
-    mvprintw(tempPosY, 0, "%s", tempBuffer);
-    attroff(COLOR_PAIR(primaryColorPair));
+}
+
+void displayAllTextLines() {
+    displayTextLinesUnderAndIncludingTextLine(-topTextLineRow, topTextLine);
 }
 
 void eraseStatusBar() {
@@ -901,6 +913,26 @@ void moveCursorDown(int32_t amount) {
     }
 }
 
+void insertCharacterUnderCursor(int8_t character) {
+    int64_t tempOldRowCount = getTextLineRowCount(cursorTextLine);
+    int64_t index = cursorTextLineRow * viewPortWidth + cursorTextLineColumn;
+    insertTextIntoTextAllocation(&(cursorTextLine->textAllocation), index, &character, 1);
+    cursorTextLineColumn += 1;
+    if (cursorTextLineColumn >= viewPortWidth) {
+        cursorTextLineColumn = 0;
+        cursorTextLineRow += 1;
+    }
+    cursorTextLineSnapColumn = cursorTextLineColumn;
+    int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
+    int64_t tempPosY = getTextLinePosY(cursorTextLine);
+    if (tempNewRowCount == tempOldRowCount) {
+        displayTextLine(tempPosY, cursorTextLine);
+    } else {
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+    }
+    displayCursor();
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -1030,6 +1062,8 @@ int main(int argc, const char *argv[]) {
             }
             if (tempKey == ',' && tempLastKey == ',') {
                 setActivityMode(COMMAND_MODE);
+            } else if (tempKey >= 32 && tempKey <= 126) {
+                insertCharacterUnderCursor((int8_t)tempKey);
             }
             if (tempKey == KEY_LEFT) {
                 moveCursorLeft(1);
