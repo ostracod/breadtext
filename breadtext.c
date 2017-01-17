@@ -44,6 +44,8 @@ int64_t cursorTextLineSnapColumn = 0;
 int8_t activityMode = COMMAND_MODE;
 int32_t activityModeTextLength = 0;
 int32_t lineNumberTextLength = 0;
+int8_t isShowingNotification = false;
+int32_t notificationTextLength = 0;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -52,6 +54,7 @@ int32_t viewPortHeight = -1;
 int8_t primaryColorPair = BLACK_ON_WHITE;
 int8_t secondaryColorPair = WHITE_ON_BLACK;
 int8_t *filePath;
+int8_t textBufferIsDirty = false;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     if (destination < source) {
@@ -815,6 +818,28 @@ void displayLineNumber() {
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
+void eraseNotification() {
+    int8_t tempBuffer[notificationTextLength + 1];
+    tempBuffer[notificationTextLength] = 0;
+    int32_t index = 0;
+    while (index < notificationTextLength) {
+        tempBuffer[index] = ' ';
+        index += 1;
+    }
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
+    attroff(COLOR_PAIR(secondaryColorPair));
+    isShowingNotification = false;
+}
+
+void displayNotification(int8_t *message) {
+    attron(COLOR_PAIR(secondaryColorPair));
+    notificationTextLength = (int32_t)strlen((char *)message);
+    mvprintw(windowHeight - 1, 0, "%s", (char *)message);
+    attroff(COLOR_PAIR(secondaryColorPair));
+    isShowingNotification = true;
+}
+
 void displayStatusBar() {
     eraseStatusBar();
     displayActivityMode();
@@ -1106,6 +1131,7 @@ void insertCharacterUnderCursor(int8_t character) {
         }
         displayCursor();
     }
+    textBufferIsDirty = true;
 }
 
 void deleteCharacterBeforeCursor() {
@@ -1152,6 +1178,7 @@ void deleteCharacterBeforeCursor() {
             displayCursor();
         }
     }
+    textBufferIsDirty = true;
 }
 
 void insertNewlineBeforeCursor() {
@@ -1172,6 +1199,27 @@ void insertNewlineBeforeCursor() {
         displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine2);
         displayCursor();
     }
+    textBufferIsDirty = true;
+}
+
+void saveFile() {
+    eraseActivityMode();
+    displayNotification((int8_t *)"Saving...");
+    int8_t tempNewline = '\n';
+    FILE *tempFile = fopen((char *)filePath, "w");
+    textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
+    while (tempLine != NULL) {
+        textLine_t *tempNextLine = getNextTextLine(tempLine);
+        fwrite(tempLine->textAllocation.text, 1, tempLine->textAllocation.length, tempFile);
+        if (tempNextLine != NULL) {
+            fwrite(&tempNewline, 1, 1, tempFile);
+        }
+        tempLine = tempNextLine;
+    }
+    fclose(tempFile);
+    eraseNotification();
+    displayNotification((int8_t *)"Saved File.");
+    textBufferIsDirty = false;
 }
 
 void handleResize() {
@@ -1222,6 +1270,9 @@ int main(int argc, const char *argv[]) {
             size_t tempSize = 0;
             int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
             if (tempCount < 0) {
+                textLine_t *tempTextLine = createEmptyTextLine();
+                textLine_t *tempTextLine2 = getRightmostTextLine(rootTextLine);
+                insertTextLineRight(tempTextLine2, tempTextLine);
                 break;
             }
             if (tempText[tempCount - 1] == '\n') {
@@ -1262,6 +1313,10 @@ int main(int argc, const char *argv[]) {
     int32_t tempLastKey = 0;
     while (true) {
         int32_t tempKey = getch();
+        if (isShowingNotification) {
+            eraseNotification();
+            displayActivityMode();
+        }
         if (tempKey == KEY_RESIZE) {
             handleResize();
         }
@@ -1302,6 +1357,9 @@ int main(int argc, const char *argv[]) {
             }
             if (tempKey == '\n') {
                 insertNewlineBeforeCursor();
+            }
+            if (tempKey == 's') {
+                saveFile();
             }
         } else if (activityMode == TEXT_ENTRY_MODE) {
             // Escape.

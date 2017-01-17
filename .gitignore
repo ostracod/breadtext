@@ -2,4 +2,5 @@ breadtext
 *.dSYM
 test.txt
 *.swp
+.DS_store
 
