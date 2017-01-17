@@ -426,10 +426,16 @@ int8_t textLineTreeIsInOrder(textLine_t *line) {
         if (tempChild->textAllocation.length > line->textAllocation.length) {
             return false;
         }
+        if (!textLineTreeIsInOrder(tempChild)) {
+            return false;
+        }
     }
     tempChild = line->rightChild;
     if (tempChild != NULL) {
         if (tempChild->textAllocation.length < line->textAllocation.length) {
+            return false;
+        }
+        if (!textLineTreeIsInOrder(tempChild)) {
             return false;
         }
     }
