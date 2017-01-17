@@ -636,7 +636,7 @@ int64_t getTextLinePosY(textLine_t *line) {
     if (tempLineNumber1 > tempLineNumber2) {
         textLine_t *tempLine = topTextLine;
         int64_t tempPosY = -topTextLineRow;
-        while (tempLine != cursorTextLine) {
+        while (tempLine != line) {
             tempPosY += getTextLineRowCount(tempLine);
             tempLine = getNextTextLine(tempLine);
         }
@@ -644,7 +644,7 @@ int64_t getTextLinePosY(textLine_t *line) {
     } else {
         textLine_t *tempLine = topTextLine;
         int64_t tempPosY = -topTextLineRow;
-        while (tempLine != cursorTextLine) {
+        while (tempLine != line) {
             tempLine = getPreviousTextLine(tempLine);
             tempPosY -= getTextLineRowCount(tempLine);
         }
@@ -1154,6 +1154,26 @@ void deleteCharacterBeforeCursor() {
     }
 }
 
+void insertNewlineBeforeCursor() {
+    textLine_t *tempLine = createEmptyTextLine();
+    textLine_t *tempLine2 = cursorTextLine;
+    int64_t index = cursorTextLineRow * viewPortWidth + cursorTextLineColumn;
+    int64_t tempAmount = cursorTextLine->textAllocation.length - index;
+    insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextLine->textAllocation.text + index, tempAmount);
+    removeTextFromTextAllocation(&(cursorTextLine->textAllocation), index, tempAmount);
+    insertTextLineRight(cursorTextLine, tempLine);
+    cursorTextLine = tempLine;
+    cursorTextLineColumn = 0;
+    cursorTextLineRow = 0;
+    cursorTextLineSnapColumn = cursorTextLineColumn;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempPosY = getTextLinePosY(tempLine2);
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine2);
+        displayCursor();
+    }
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -1280,6 +1300,9 @@ int main(int argc, const char *argv[]) {
             if (tempKey == 127) {
                 deleteCharacterBeforeCursor();
             }
+            if (tempKey == '\n') {
+                insertNewlineBeforeCursor();
+            }
         } else if (activityMode == TEXT_ENTRY_MODE) {
             // Escape.
             if (tempKey == 27) {
@@ -1306,6 +1329,9 @@ int main(int argc, const char *argv[]) {
             // Backspace.
             if (tempKey == 127) {
                 deleteCharacterBeforeCursor();
+            }
+            if (tempKey == '\n') {
+                insertNewlineBeforeCursor();
             }
         }
         tempLastKey = tempKey;
