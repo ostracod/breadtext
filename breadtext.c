@@ -630,15 +630,26 @@ int64_t getTextLineRowCount(textLine_t *line) {
     return line->textAllocation.length / viewPortWidth + 1;
 }
 
-// The line must be equal to or under the top line.
 int64_t getTextLinePosY(textLine_t *line) {
-    textLine_t *tempLine = topTextLine;
-    int64_t tempPosY = -topTextLineRow;
-    while (tempLine != cursorTextLine) {
-        tempPosY += getTextLineRowCount(tempLine);
-        tempLine = getNextTextLine(tempLine);
+    int64_t tempLineNumber1 = getTextLineNumber(line);
+    int64_t tempLineNumber2 = getTextLineNumber(topTextLine);
+    if (tempLineNumber1 > tempLineNumber2) {
+        textLine_t *tempLine = topTextLine;
+        int64_t tempPosY = -topTextLineRow;
+        while (tempLine != cursorTextLine) {
+            tempPosY += getTextLineRowCount(tempLine);
+            tempLine = getNextTextLine(tempLine);
+        }
+        return tempPosY;
+    } else {
+        textLine_t *tempLine = topTextLine;
+        int64_t tempPosY = -topTextLineRow;
+        while (tempLine != cursorTextLine) {
+            tempLine = getPreviousTextLine(tempLine);
+            tempPosY -= getTextLineRowCount(tempLine);
+        }
+        return tempPosY;
     }
-    return tempPosY;
 }
 
 int64_t getCursorPosY() {
@@ -816,7 +827,57 @@ void redrawEverything() {
     displayCursor();
 }
 
+int8_t scrollCursorOntoScreen() {
+    int64_t tempPosY = getCursorPosY();
+    int64_t tempScrollOffset = 8;
+    if (tempScrollOffset > viewPortHeight / 2) {
+        tempScrollOffset = viewPortHeight / 2;
+    }
+    if (tempPosY < 0) {
+        while (tempPosY < tempScrollOffset) {
+            if (topTextLineRow <= 0) {
+                textLine_t *tempLine = getPreviousTextLine(topTextLine);
+                if (tempLine == NULL) {
+                    break;
+                }
+                topTextLine = tempLine;
+                topTextLineRow = getTextLineRowCount(topTextLine) - 1;
+            } else {
+                topTextLineRow -= 1;
+            }
+            tempPosY += 1;
+        }
+        displayAllTextLines();
+        displayCursor();
+        return true;
+    }
+    if (tempPosY >= viewPortHeight) {
+        int64_t tempRowCount = getTextLineRowCount(topTextLine);
+        while (tempPosY >= viewPortHeight - tempScrollOffset) {
+            if (topTextLineRow >= tempRowCount - 1) {
+                textLine_t *tempLine = getNextTextLine(topTextLine);
+                if (tempLine == NULL) {
+                    break;
+                }
+                topTextLine = tempLine;
+                topTextLineRow = 0;
+                tempRowCount = getTextLineRowCount(topTextLine);
+            } else {
+                topTextLineRow += 1;
+            }
+            tempPosY -= 1;
+        }
+        displayAllTextLines();
+        displayCursor();
+        return true;
+    }
+    return false;
+}
+
 void moveCursorLeft(int32_t amount) {
+    textLine_t *tempPreviousTextLine = cursorTextLine;
+    int64_t tempPreviousColumn = cursorTextLineColumn;
+    int64_t tempPreviousRow = cursorTextLineRow;
     textLine_t *tempNextTextLine = cursorTextLine;
     int64_t tempNextColumn = cursorTextLineColumn;
     int64_t tempNextRow = cursorTextLineRow;
@@ -827,7 +888,6 @@ void moveCursorLeft(int32_t amount) {
             if (tempLine == NULL) {
                 return;
             }
-            eraseLineNumber();
             tempNextTextLine = tempLine;
             int64_t tempLength = tempNextTextLine->textAllocation.length;
             tempNextColumn = tempLength % viewPortWidth;
@@ -841,20 +901,32 @@ void moveCursorLeft(int32_t amount) {
         tempCount += 1;
     }
     if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
-        eraseCursor();
-        if (tempNextTextLine != cursorTextLine) {
-            eraseLineNumber();
-            cursorTextLine = tempNextTextLine;
-            displayLineNumber();
-        }
+        cursorTextLineSnapColumn = tempNextColumn;
+        cursorTextLine = tempNextTextLine;
         cursorTextLineColumn = tempNextColumn;
         cursorTextLineRow = tempNextRow;
-        cursorTextLineSnapColumn = cursorTextLineColumn;
-        displayCursor();
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            cursorTextLine = tempPreviousTextLine;
+            cursorTextLineColumn = tempPreviousColumn;
+            cursorTextLineRow = tempPreviousRow;
+            eraseCursor();
+            if (tempNextTextLine != cursorTextLine) {
+                eraseLineNumber();
+                cursorTextLine = tempNextTextLine;
+                displayLineNumber();
+            }
+            cursorTextLineColumn = tempNextColumn;
+            cursorTextLineRow = tempNextRow;
+            displayCursor();
+        }
     }
 }
 
 void moveCursorRight(int32_t amount) {
+    textLine_t *tempPreviousTextLine = cursorTextLine;
+    int64_t tempPreviousColumn = cursorTextLineColumn;
+    int64_t tempPreviousRow = cursorTextLineRow;
     textLine_t *tempNextTextLine = cursorTextLine;
     int64_t tempNextColumn = cursorTextLineColumn;
     int64_t tempNextRow = cursorTextLineRow;
@@ -866,7 +938,6 @@ void moveCursorRight(int32_t amount) {
             if (tempLine == NULL) {
                 return;
             }
-            eraseLineNumber();
             tempNextTextLine = tempLine;
             tempNextColumn = 0;
             tempNextRow = 0;
@@ -879,20 +950,32 @@ void moveCursorRight(int32_t amount) {
         tempCount += 1;
     }
     if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
-        eraseCursor();
-        if (tempNextTextLine != cursorTextLine) {
-            eraseLineNumber();
-            cursorTextLine = tempNextTextLine;
-            displayLineNumber();
-        }
+        cursorTextLineSnapColumn = tempNextColumn;
+        cursorTextLine = tempNextTextLine;
         cursorTextLineColumn = tempNextColumn;
         cursorTextLineRow = tempNextRow;
-        cursorTextLineSnapColumn = cursorTextLineColumn;
-        displayCursor();
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            cursorTextLine = tempPreviousTextLine;
+            cursorTextLineColumn = tempPreviousColumn;
+            cursorTextLineRow = tempPreviousRow;
+            eraseCursor();
+            if (tempNextTextLine != cursorTextLine) {
+                eraseLineNumber();
+                cursorTextLine = tempNextTextLine;
+                displayLineNumber();
+            }
+            cursorTextLineColumn = tempNextColumn;
+            cursorTextLineRow = tempNextRow;
+            displayCursor();
+        }
     }
 }
 
 void moveCursorUp(int32_t amount) {
+    textLine_t *tempPreviousTextLine = cursorTextLine;
+    int64_t tempPreviousColumn = cursorTextLineColumn;
+    int64_t tempPreviousRow = cursorTextLineRow;
     textLine_t *tempNextTextLine = cursorTextLine;
     int64_t tempNextColumn = cursorTextLineColumn;
     int64_t tempNextRow = cursorTextLineRow;
@@ -906,7 +989,6 @@ void moveCursorUp(int32_t amount) {
             if (tempLine == NULL) {
                 return;
             }
-            eraseLineNumber();
             tempNextTextLine = tempLine;
             int64_t tempLength = tempNextTextLine->textAllocation.length;
             int64_t tempColumn = tempLength % viewPortWidth;
@@ -920,19 +1002,31 @@ void moveCursorUp(int32_t amount) {
         tempCount += 1;
     }
     if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
-        eraseCursor();
-        if (tempNextTextLine != cursorTextLine) {
-            eraseLineNumber();
-            cursorTextLine = tempNextTextLine;
-            displayLineNumber();
-        }
+        cursorTextLine = tempNextTextLine;
         cursorTextLineColumn = tempNextColumn;
         cursorTextLineRow = tempNextRow;
-        displayCursor();
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            cursorTextLine = tempPreviousTextLine;
+            cursorTextLineColumn = tempPreviousColumn;
+            cursorTextLineRow = tempPreviousRow;
+            eraseCursor();
+            if (tempNextTextLine != cursorTextLine) {
+                eraseLineNumber();
+                cursorTextLine = tempNextTextLine;
+                displayLineNumber();
+            }
+            cursorTextLineColumn = tempNextColumn;
+            cursorTextLineRow = tempNextRow;
+            displayCursor();
+        }
     }
 }
 
 void moveCursorDown(int32_t amount) {
+    textLine_t *tempPreviousTextLine = cursorTextLine;
+    int64_t tempPreviousColumn = cursorTextLineColumn;
+    int64_t tempPreviousRow = cursorTextLineRow;
     textLine_t *tempNextTextLine = cursorTextLine;
     int64_t tempNextColumn = cursorTextLineColumn;
     int64_t tempNextRow = cursorTextLineRow;
@@ -947,7 +1041,6 @@ void moveCursorDown(int32_t amount) {
             if (tempLine == NULL) {
                 return;
             }
-            eraseLineNumber();
             tempNextTextLine = tempLine;
             int64_t tempLength = tempNextTextLine->textAllocation.length;
             int64_t tempRowCount2 = getTextLineRowCount(tempNextTextLine);
@@ -971,15 +1064,24 @@ void moveCursorDown(int32_t amount) {
         tempCount += 1;
     }
     if (tempNextTextLine != cursorTextLine || tempNextColumn != cursorTextLineColumn || tempNextRow != cursorTextLineRow) {
-        eraseCursor();
-        if (tempNextTextLine != cursorTextLine) {
-            eraseLineNumber();
-            cursorTextLine = tempNextTextLine;
-            displayLineNumber();
-        }
+        cursorTextLine = tempNextTextLine;
         cursorTextLineColumn = tempNextColumn;
         cursorTextLineRow = tempNextRow;
-        displayCursor();
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            cursorTextLine = tempPreviousTextLine;
+            cursorTextLineColumn = tempPreviousColumn;
+            cursorTextLineRow = tempPreviousRow;
+            eraseCursor();
+            if (tempNextTextLine != cursorTextLine) {
+                eraseLineNumber();
+                cursorTextLine = tempNextTextLine;
+                displayLineNumber();
+            }
+            cursorTextLineColumn = tempNextColumn;
+            cursorTextLineRow = tempNextRow;
+            displayCursor();
+        }
     }
 }
 
@@ -993,14 +1095,17 @@ void insertCharacterUnderCursor(int8_t character) {
         cursorTextLineRow += 1;
     }
     cursorTextLineSnapColumn = cursorTextLineColumn;
-    int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
-    int64_t tempPosY = getTextLinePosY(cursorTextLine);
-    if (tempNewRowCount == tempOldRowCount) {
-        displayTextLine(tempPosY, cursorTextLine);
-    } else {
-        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
+        int64_t tempPosY = getTextLinePosY(cursorTextLine);
+        if (tempNewRowCount == tempOldRowCount) {
+            displayTextLine(tempPosY, cursorTextLine);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+        }
+        displayCursor();
     }
-    displayCursor();
 }
 
 void deleteCharacterBeforeCursor() {
@@ -1020,9 +1125,12 @@ void deleteCharacterBeforeCursor() {
             topTextLine = tempLine;
         }
         cursorTextLine = tempLine;
-        int64_t tempPosY = getTextLinePosY(cursorTextLine);
-        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
-        displayCursor();
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            int64_t tempPosY = getTextLinePosY(cursorTextLine);
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+            displayCursor();
+        }
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextLine);
         removeTextFromTextAllocation(&(cursorTextLine->textAllocation), index, 1);
@@ -1032,14 +1140,17 @@ void deleteCharacterBeforeCursor() {
             cursorTextLineRow -= 1;
         }
         cursorTextLineSnapColumn = cursorTextLineColumn;
-        int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
-        int64_t tempPosY = getTextLinePosY(cursorTextLine);
-        if (tempNewRowCount == tempOldRowCount) {
-            displayTextLine(tempPosY, cursorTextLine);
-        } else {
-            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            int64_t tempNewRowCount = getTextLineRowCount(cursorTextLine);
+            int64_t tempPosY = getTextLinePosY(cursorTextLine);
+            if (tempNewRowCount == tempOldRowCount) {
+                displayTextLine(tempPosY, cursorTextLine);
+            } else {
+                displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextLine);
+            }
+            displayCursor();
         }
-        displayCursor();
     }
 }
 
