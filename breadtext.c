@@ -680,6 +680,7 @@ void eraseCursor() {
 }
 
 void displayCursor() {
+    refresh();
     attron(COLOR_PAIR(secondaryColorPair));
     mvaddch(getCursorPosY(), cursorTextLineColumn, (char)getCursorCharacter());
     attroff(COLOR_PAIR(secondaryColorPair));
