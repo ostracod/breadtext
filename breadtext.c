@@ -675,13 +675,13 @@ int8_t getCursorCharacter() {
 
 void eraseCursor() {
     attron(COLOR_PAIR(primaryColorPair));
-    mvprintw(getCursorPosY(), cursorTextLineColumn, "%c", (char)getCursorCharacter());
+    mvaddch(getCursorPosY(), cursorTextLineColumn, (char)getCursorCharacter());
     attroff(COLOR_PAIR(primaryColorPair));
 }
 
 void displayCursor() {
     attron(COLOR_PAIR(secondaryColorPair));
-    mvprintw(getCursorPosY(), cursorTextLineColumn, "%c", (char)getCursorCharacter());
+    mvaddch(getCursorPosY(), cursorTextLineColumn, (char)getCursorCharacter());
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
@@ -1148,6 +1148,7 @@ void insertNewlineBeforeCursor() {
 void saveFile() {
     eraseActivityMode();
     displayNotification((int8_t *)"Saving...");
+    refresh();
     int8_t tempNewline = '\n';
     FILE *tempFile = fopen((char *)filePath, "w");
     textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
@@ -1163,6 +1164,45 @@ void saveFile() {
     eraseNotification();
     displayNotification((int8_t *)"Saved file.");
     textBufferIsDirty = false;
+}
+
+void moveCursorToBeginningOfLine() {
+    textLine_t *tempNextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    tempNextColumn = 0;
+    tempNextRow = 0;
+    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+}
+
+void moveCursorToEndOfLine() {
+    textLine_t *tempNextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    int64_t tempLength = tempNextLine->textAllocation.length;
+    tempNextColumn = tempLength % viewPortWidth;
+    tempNextRow = tempLength / viewPortWidth;
+    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+}
+
+void moveCursorToBeginningOfFile() {
+    textLine_t *tempNextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    tempNextLine = getLeftmostTextLine(rootTextLine);
+    tempNextColumn = 0;
+    tempNextRow = 0;
+    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+}
+
+void moveCursorToEndOfFile() {
+    textLine_t *tempNextLine = cursorTextLine;
+    int64_t tempNextColumn = cursorTextLineColumn;
+    int64_t tempNextRow = cursorTextLineRow;
+    tempNextLine = getRightmostTextLine(rootTextLine);
+    tempNextColumn = 0;
+    tempNextRow = 0;
+    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
 }
 
 void handleResize() {
@@ -1310,6 +1350,18 @@ int main(int argc, const char *argv[]) {
             }
             if (tempKey == 's') {
                 saveFile();
+            }
+            if (tempKey == '[') {
+                moveCursorToBeginningOfLine();
+            }
+            if (tempKey == ']') {
+                moveCursorToEndOfLine();
+            }
+            if (tempKey == '{') {
+                moveCursorToBeginningOfFile();
+            }
+            if (tempKey == '}') {
+                moveCursorToEndOfFile();
             }
         } else if (activityMode == TEXT_ENTRY_MODE) {
             // Escape.
