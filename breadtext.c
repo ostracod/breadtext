@@ -403,6 +403,13 @@ int64_t getTextLineNumber(textLine_t *line) {
     return output;
 }
 
+// Returns true iff line1 is after line2.
+int8_t textLineIsAfterTextLine(textLine_t *line1, textLine_t *line2) {
+    int64_t tempLineNumber1 = getTextLineNumber(line1);
+    int64_t tempLineNumber2 = getTextLineNumber(line2);
+    return (tempLineNumber1 > tempLineNumber2);
+}
+
 int8_t textLineTreeIsBalanced(textLine_t *line) {
     textLine_t *tempChild;
     tempChild = line->leftChild;
@@ -634,9 +641,7 @@ int64_t getTextLineRowCount(textLine_t *line) {
 }
 
 int64_t getTextLinePosY(textLine_t *line) {
-    int64_t tempLineNumber1 = getTextLineNumber(line);
-    int64_t tempLineNumber2 = getTextLineNumber(topTextLine);
-    if (tempLineNumber1 > tempLineNumber2) {
+    if (textLineIsAfterTextLine(line, topTextLine)) {
         textLine_t *tempLine = topTextLine;
         int64_t tempPosY = -topTextLineRow;
         while (tempLine != line) {
