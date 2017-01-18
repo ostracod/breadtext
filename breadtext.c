@@ -1218,7 +1218,7 @@ void saveFile() {
     }
     fclose(tempFile);
     eraseNotification();
-    displayNotification((int8_t *)"Saved File.");
+    displayNotification((int8_t *)"Saved file.");
     textBufferIsDirty = false;
 }
 
@@ -1322,6 +1322,13 @@ int main(int argc, const char *argv[]) {
         }
         if (activityMode == COMMAND_MODE) {
             if (tempKey == 'q') {
+                if (textBufferIsDirty) {
+                    displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+                } else {
+                    break;
+                }
+            }
+            if (tempKey == 'Q') {
                 break;
             }
             if (tempKey == 'j' || tempKey == KEY_LEFT) {
