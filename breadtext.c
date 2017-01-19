@@ -940,7 +940,7 @@ void moveCursorLeft(int32_t amount) {
         if (tempNextRow <= 0 && tempNextColumn <= 0) {
             textLine_t *tempLine = getPreviousTextLine(tempNextLine);
             if (tempLine == NULL) {
-                return;
+                break;
             }
             tempNextLine = tempLine;
             int64_t tempLength = tempNextLine->textAllocation.length;
@@ -968,7 +968,7 @@ void moveCursorRight(int32_t amount) {
         if (tempNextRow * viewPortWidth + tempNextColumn >= tempLength) {
             textLine_t *tempLine = getNextTextLine(tempNextLine);
             if (tempLine == NULL) {
-                return;
+                break;
             }
             tempNextLine = tempLine;
             tempNextColumn = 0;
@@ -997,7 +997,7 @@ void moveCursorUp(int32_t amount) {
         if (tempNextRow <= 0) {
             textLine_t *tempLine = getPreviousTextLine(tempNextLine);
             if (tempLine == NULL) {
-                return;
+                break;
             }
             tempNextLine = tempLine;
             int64_t tempLength = tempNextLine->textAllocation.length;
@@ -1027,7 +1027,7 @@ void moveCursorDown(int32_t amount) {
         if (tempNextRow >= tempRowCount - 1) {
             textLine_t *tempLine = getNextTextLine(tempNextLine);
             if (tempLine == NULL) {
-                return;
+                break;
             }
             tempNextLine = tempLine;
             int64_t tempLength = tempNextLine->textAllocation.length;
