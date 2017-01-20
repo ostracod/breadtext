@@ -57,6 +57,7 @@ int32_t windowWidth = -1;
 int32_t windowHeight = -1;
 int32_t viewPortWidth = -1;
 int32_t viewPortHeight = -1;
+int32_t lastKey = 0;
 int8_t primaryColorPair = BLACK_ON_WHITE;
 int8_t secondaryColorPair = WHITE_ON_BLACK;
 int8_t *filePath;
@@ -1405,6 +1406,107 @@ void handleResize() {
     redrawEverything();
 }
 
+// Returns true if the user has quit.
+int8_t handleKey(int32_t key) {
+    if (key == KEY_RESIZE) {
+        handleResize();
+    }
+    if (activityMode == TEXT_ENTRY_MODE) {
+        if (key == ',' && lastKey == ',') {
+            deleteCharacterBeforeCursor();
+            setActivityMode(COMMAND_MODE);
+        } else if (key >= 32 && key <= 126) {
+            insertCharacterUnderCursor((int8_t)key);
+        }
+    }
+    // Escape.
+    if (key == 27) {
+        setActivityMode(COMMAND_MODE);
+    }
+    if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
+        if (key == KEY_LEFT) {
+            moveCursorLeft(1);
+        }
+        if (key == KEY_RIGHT) {
+            moveCursorRight(1);
+        }
+        if (key == KEY_UP) {
+            moveCursorUp(1);
+        }
+        if (key == KEY_DOWN) {
+            moveCursorDown(1);
+        }
+    }
+    if (activityMode != TEXT_ENTRY_MODE) {
+        if (key == 'q') {
+            if (textBufferIsDirty) {
+                displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+            } else {
+                return true;
+            }
+        }
+        if (key == 'Q') {
+            return true;
+        }
+        if (key == 'j') {
+            moveCursorLeft(1);
+        }
+        if (key == 'l') {
+            moveCursorRight(1);
+        }
+        if (key == 'i') {
+            moveCursorUp(1);
+        }
+        if (key == 'k') {
+            moveCursorDown(1);
+        }
+        if (key == 'J') {
+            moveCursorLeft(10);
+        }
+        if (key == 'L') {
+            moveCursorRight(10);
+        }
+        if (key == 'I') {
+            moveCursorUp(10);
+        }
+        if (key == 'K') {
+            moveCursorDown(10);
+        }
+        if (key == 't') {
+            setActivityMode(TEXT_ENTRY_MODE);
+        }
+        if (key == 's') {
+            saveFile();
+        }
+        if (key == '[') {
+            moveCursorToBeginningOfLine();
+        }
+        if (key == ']') {
+            moveCursorToEndOfLine();
+        }
+        if (key == '{') {
+            moveCursorToBeginningOfFile();
+        }
+        if (key == '}') {
+            moveCursorToEndOfFile();
+        }
+        if (key == 'h') {
+            setActivityMode(HIGHLIGHT_CHARACTER_MODE);
+        }
+    }
+    if (!isHighlighting) {
+        // Backspace.
+        if (key == 127) {
+            deleteCharacterBeforeCursor();
+        }
+        if (key == '\n') {
+            insertNewlineBeforeCursor();
+        }
+    }
+    lastKey = key;
+    return false;
+}
+
 int main(int argc, const char *argv[]) {
     
     if (SHOULD_RUN_TESTS) {
@@ -1473,140 +1575,16 @@ int main(int argc, const char *argv[]) {
     init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
     handleResize();
     
-    int32_t tempLastKey = 0;
     while (true) {
         int32_t tempKey = getch();
         if (isShowingNotification) {
             eraseNotification();
             displayActivityMode();
         }
-        if (tempKey == KEY_RESIZE) {
-            handleResize();
+        int8_t tempResult = handleKey(tempKey);
+        if (tempResult) {
+            break;
         }
-        if (activityMode == COMMAND_MODE) {
-            if (tempKey == 'q') {
-                if (textBufferIsDirty) {
-                    displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
-                } else {
-                    break;
-                }
-            }
-            if (tempKey == 'Q') {
-                break;
-            }
-            if (tempKey == 'j' || tempKey == KEY_LEFT) {
-                moveCursorLeft(1);
-            }
-            if (tempKey == 'l' || tempKey == KEY_RIGHT) {
-                moveCursorRight(1);
-            }
-            if (tempKey == 'i' || tempKey == KEY_UP) {
-                moveCursorUp(1);
-            }
-            if (tempKey == 'k' || tempKey == KEY_DOWN) {
-                moveCursorDown(1);
-            }
-            if (tempKey == 'J') {
-                moveCursorLeft(10);
-            }
-            if (tempKey == 'L') {
-                moveCursorRight(10);
-            }
-            if (tempKey == 'I') {
-                moveCursorUp(10);
-            }
-            if (tempKey == 'K') {
-                moveCursorDown(10);
-            }
-            if (tempKey == 't') {
-                setActivityMode(TEXT_ENTRY_MODE);
-            }
-            // Backspace.
-            if (tempKey == 127) {
-                deleteCharacterBeforeCursor();
-            }
-            if (tempKey == '\n') {
-                insertNewlineBeforeCursor();
-            }
-            if (tempKey == 's') {
-                saveFile();
-            }
-            if (tempKey == '[') {
-                moveCursorToBeginningOfLine();
-            }
-            if (tempKey == ']') {
-                moveCursorToEndOfLine();
-            }
-            if (tempKey == '{') {
-                moveCursorToBeginningOfFile();
-            }
-            if (tempKey == '}') {
-                moveCursorToEndOfFile();
-            }
-            if (tempKey == 'h') {
-                setActivityMode(HIGHLIGHT_CHARACTER_MODE);
-            }
-        } else if (activityMode == TEXT_ENTRY_MODE) {
-            // Escape.
-            if (tempKey == 27) {
-                setActivityMode(COMMAND_MODE);
-            }
-            if (tempKey == ',' && tempLastKey == ',') {
-                deleteCharacterBeforeCursor();
-                setActivityMode(COMMAND_MODE);
-            } else if (tempKey >= 32 && tempKey <= 126) {
-                insertCharacterUnderCursor((int8_t)tempKey);
-            }
-            if (tempKey == KEY_LEFT) {
-                moveCursorLeft(1);
-            }
-            if (tempKey == KEY_RIGHT) {
-                moveCursorRight(1);
-            }
-            if (tempKey == KEY_UP) {
-                moveCursorUp(1);
-            }
-            if (tempKey == KEY_DOWN) {
-                moveCursorDown(1);
-            }
-            // Backspace.
-            if (tempKey == 127) {
-                deleteCharacterBeforeCursor();
-            }
-            if (tempKey == '\n') {
-                insertNewlineBeforeCursor();
-            }
-        } else if (activityMode == HIGHLIGHT_CHARACTER_MODE) {
-            if (tempKey == 'j' || tempKey == KEY_LEFT) {
-                moveCursorLeft(1);
-            }
-            if (tempKey == 'l' || tempKey == KEY_RIGHT) {
-                moveCursorRight(1);
-            }
-            if (tempKey == 'i' || tempKey == KEY_UP) {
-                moveCursorUp(1);
-            }
-            if (tempKey == 'k' || tempKey == KEY_DOWN) {
-                moveCursorDown(1);
-            }
-            if (tempKey == 'J') {
-                moveCursorLeft(10);
-            }
-            if (tempKey == 'L') {
-                moveCursorRight(10);
-            }
-            if (tempKey == 'I') {
-                moveCursorUp(10);
-            }
-            if (tempKey == 'K') {
-                moveCursorDown(10);
-            }
-            // Escape.
-            if (tempKey == 27) {
-                setActivityMode(COMMAND_MODE);
-            }
-        }
-        tempLastKey = tempKey;
     }
     
     endwin();
