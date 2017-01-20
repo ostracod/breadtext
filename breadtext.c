@@ -62,6 +62,8 @@ int8_t primaryColorPair = BLACK_ON_WHITE;
 int8_t secondaryColorPair = WHITE_ON_BLACK;
 int8_t *filePath;
 int8_t textBufferIsDirty = false;
+int8_t *clipboardFilePath;
+int8_t *rcFilePath;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     if (destination < source) {
@@ -77,6 +79,26 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
             index -= 1;
         }
     }
+}
+
+int8_t *mallocRealpath(int8_t *path) {
+    int8_t tempText[50000];
+    realpath((char *)path, (char *)tempText);
+    int8_t *output = malloc(strlen((char *)tempText) + 1);
+    strcpy((char *)output, (char *)tempText);
+    return output;
+}
+
+void systemCopyClipboardFile() {
+    int8_t tempCommand[5000];
+    sprintf((char *)tempCommand, "cat \"%s\" | pbcopy", (char *)clipboardFilePath);
+    system((char *)tempCommand);
+}
+
+void systemPasteClipboardFile() {
+    int8_t tempCommand[5000];
+    sprintf((char *)tempCommand, "pbpaste > \"%s\"", (char *)clipboardFilePath);
+    system((char *)tempCommand);
 }
 
 void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
@@ -1519,11 +1541,9 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
     
-    int8_t *tempText = malloc(50000);
-    realpath(argv[1], (char *)tempText);
-    filePath = malloc(strlen((char *)tempText) + 1);
-    strcpy((char *)filePath, (char *)tempText);
-    free(tempText);
+    filePath = mallocRealpath((int8_t *)(argv[1]));
+    clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
+    rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
     
     FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
