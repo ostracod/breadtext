@@ -1786,6 +1786,11 @@ int8_t handleKey(int32_t key) {
         if (key == '\n') {
             insertNewlineBeforeCursor();
         }
+    } else {
+        // Backspace.
+        if (key == 127) {
+            deleteSelection();
+        }
     }
     lastKey = key;
     return false;
