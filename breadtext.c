@@ -81,6 +81,20 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     }
 }
 
+void convertTabsToSpaces(int8_t *text) {
+    int64_t index = 0;
+    while (true) {
+        int8_t tempCharacter = text[index];
+        if (tempCharacter == 0) {
+            break;
+        }
+        if (tempCharacter == '\t') {
+            text[index] = ' ';
+        }
+        index += 1;
+    }
+}
+
 int8_t *mallocRealpath(int8_t *path) {
     int8_t tempText[50000];
     realpath((char *)path, (char *)tempText);
@@ -696,7 +710,11 @@ int64_t getCursorPosY() {
 int8_t getCursorCharacter() {
     int64_t index = cursorTextPos.row * viewPortWidth + cursorTextPos.column;
     if (index < cursorTextPos.line->textAllocation.length) {
-        return cursorTextPos.line->textAllocation.text[index];
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[index];
+        if (tempCharacter == '\t') {
+            return ' ';
+        }
+        return tempCharacter;
     } else {
         return ' ';
     }
@@ -796,6 +814,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         if (tempAmount2 > 0) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
             tempBuffer[tempAmount2] = 0;
+            convertTabsToSpaces(tempBuffer);
             attron(COLOR_PAIR(primaryColorPair));
             mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
             attroff(COLOR_PAIR(primaryColorPair));
@@ -824,6 +843,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
             tempBuffer[tempAmount2] = 0;
             attron(COLOR_PAIR(secondaryColorPair));
+            convertTabsToSpaces(tempBuffer);
             mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
             attroff(COLOR_PAIR(secondaryColorPair));
         }
@@ -837,6 +857,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
             tempBuffer[tempAmount2] = 0;
             attron(COLOR_PAIR(primaryColorPair));
+            convertTabsToSpaces(tempBuffer);
             mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
             attroff(COLOR_PAIR(primaryColorPair));
         }
@@ -871,6 +892,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         }
         tempBuffer[tempLength] = 0;
         attron(COLOR_PAIR(primaryColorPair));
+        convertTabsToSpaces(tempBuffer);
         mvprintw(posY + tempStartRow, 0, "%s", tempBuffer);
         attroff(COLOR_PAIR(primaryColorPair));
     }
