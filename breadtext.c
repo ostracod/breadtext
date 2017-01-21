@@ -7,6 +7,9 @@
 #define true 1
 #define false 0
 
+#define PLATFORM_MAC 1
+#define PLATFORM_LINUX 2
+
 #define BLACK_ON_WHITE 1
 #define WHITE_ON_BLACK 2
 
@@ -64,6 +67,7 @@ int8_t *filePath;
 int8_t textBufferIsDirty = false;
 int8_t *clipboardFilePath;
 int8_t *rcFilePath;
+int8_t applicationPlatform;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     if (destination < source) {
@@ -104,15 +108,29 @@ int8_t *mallocRealpath(int8_t *path) {
 }
 
 void systemCopyClipboardFile() {
-    int8_t tempCommand[5000];
-    sprintf((char *)tempCommand, "cat \"%s\" | pbcopy", (char *)clipboardFilePath);
-    system((char *)tempCommand);
+    if (applicationPlatform == PLATFORM_MAC) {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "cat \"%s\" | pbcopy", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    }
+    if (applicationPlatform == PLATFORM_LINUX) {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "xclip \"%s\"", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    }
 }
 
 void systemPasteClipboardFile() {
-    int8_t tempCommand[5000];
-    sprintf((char *)tempCommand, "pbpaste > \"%s\"", (char *)clipboardFilePath);
-    system((char *)tempCommand);
+    if (applicationPlatform == PLATFORM_MAC) {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "pbpaste > \"%s\"", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    }
+    if (applicationPlatform == PLATFORM_LINUX) {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "xclip -o > \"%s\"", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    }
 }
 
 void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
@@ -941,6 +959,8 @@ void eraseStatusBar() {
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
+void eraseActivityModeOrNotification();
+
 void eraseActivityMode() {
     int8_t tempBuffer[activityModeTextLength + 1];
     tempBuffer[activityModeTextLength] = 0;
@@ -975,7 +995,7 @@ void displayActivityMode() {
 }
 
 void setActivityMode(int8_t mode) {
-    eraseActivityMode();
+    eraseActivityModeOrNotification();
     activityMode = mode;
     if (mode == HIGHLIGHT_CHARACTER_MODE) {
         highlightTextPos.line = cursorTextPos.line;
@@ -1037,6 +1057,14 @@ void displayNotification(int8_t *message) {
     mvprintw(windowHeight - 1, 0, "%s", (char *)message);
     attroff(COLOR_PAIR(secondaryColorPair));
     isShowingNotification = true;
+}
+
+void eraseActivityModeOrNotification() {
+    if (isShowingNotification) {
+        eraseNotification();
+    } else {
+        eraseActivityMode();
+    }
 }
 
 void displayStatusBar() {
@@ -1371,7 +1399,7 @@ void insertNewlineBeforeCursor() {
 }
 
 void saveFile() {
-    eraseActivityMode();
+    eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Saving...");
     refresh();
     int8_t tempNewline = '\n';
@@ -1386,7 +1414,7 @@ void saveFile() {
         tempLine = tempNextLine;
     }
     fclose(tempFile);
-    eraseNotification();
+    eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Saved file.");
     textBufferIsDirty = false;
 }
@@ -1430,6 +1458,57 @@ void moveCursorToEndOfFile() {
     moveCursor(tempNextLine, tempNextColumn, tempNextRow);
 }
 
+void copySelection() {
+    FILE *tempFile = fopen((char *)clipboardFilePath, "w");
+    textPos_t *tempFirstTextPos;
+    textPos_t *tempLastTextPos;
+    if (isHighlighting) {
+        tempFirstTextPos = getFirstHighlightTextPos();
+        tempLastTextPos = getLastHighlightTextPos();
+    } else {
+        tempFirstTextPos = &cursorTextPos;
+        tempLastTextPos = &cursorTextPos;
+    }
+    textLine_t *tempLine = tempFirstTextPos->line;
+    while (true) {
+        int64_t tempStartIndex;
+        int64_t tempEndIndex;
+        if (tempLine == tempFirstTextPos->line) {
+            tempStartIndex = tempFirstTextPos->row * viewPortWidth + tempFirstTextPos->column;
+        } else {
+            tempStartIndex = 0;
+        }
+        if (tempLine == tempLastTextPos->line) {
+            tempEndIndex = tempLastTextPos->row * viewPortWidth + tempLastTextPos->column + 1;
+        } else {
+            tempEndIndex = tempLine->textAllocation.length + 1;
+        }
+        int8_t tempShouldWriteNewline;
+        if (tempEndIndex > tempLine->textAllocation.length) {
+            tempShouldWriteNewline = true;
+            tempEndIndex = tempLine->textAllocation.length;
+        } else {
+            tempShouldWriteNewline = false;
+        }
+        int64_t tempAmount = tempEndIndex - tempStartIndex;
+        fwrite(tempLine->textAllocation.text + tempStartIndex, 1, tempAmount, tempFile);
+        if (tempShouldWriteNewline) {
+            fwrite("\n", 1, 1, tempFile);
+        }
+        if (tempLine == tempLastTextPos->line) {
+            break;
+        }
+        tempLine = getNextTextLine(tempLine);
+    }
+    fclose(tempFile);
+    systemCopyClipboardFile();
+    remove((char *)clipboardFilePath);
+    eraseActivityModeOrNotification();
+    
+    setActivityMode(COMMAND_MODE);
+    displayNotification((int8_t *)"Copied selection.");
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -1447,6 +1526,7 @@ void handleResize() {
     cursorTextPos.column = 0;
     cursorSnapColumn = 0;
     
+    setActivityMode(COMMAND_MODE);
     redrawEverything();
 }
 
@@ -1537,6 +1617,9 @@ int8_t handleKey(int32_t key) {
         if (key == 'h') {
             setActivityMode(HIGHLIGHT_CHARACTER_MODE);
         }
+        if (key == 'c') {
+            copySelection();
+        }
     }
     if (!isHighlighting) {
         // Backspace.
@@ -1552,6 +1635,12 @@ int8_t handleKey(int32_t key) {
 }
 
 int main(int argc, const char *argv[]) {
+    
+    #ifdef __APPLE__
+    applicationPlatform = PLATFORM_MAC;
+    #else
+    applicationPlatform = PLATFORM_LINUX;
+    #endif
     
     if (SHOULD_RUN_TESTS) {
         runTests();
