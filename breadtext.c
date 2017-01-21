@@ -1393,6 +1393,38 @@ void deleteCharacterBeforeCursor() {
     textBufferIsDirty = true;
 }
 
+void deleteCharacterAfterCursor() {
+    int64_t index = getTextPosIndex(&cursorTextPos);
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    if (index >= tempLength) {
+        textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
+        if (tempLine == NULL) {
+            return;
+        }
+        insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
+        deleteTextLine(tempLine);
+        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+        if (!isHighlighting) {
+            displayCursor();
+        }
+    } else {
+        int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
+        removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, 1);
+        int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
+        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+        if (tempNewRowCount == tempOldRowCount) {
+            displayTextLine(tempPosY, cursorTextPos.line);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+        }
+        if (!isHighlighting) {
+            displayCursor();
+        }
+    }
+    textBufferIsDirty = true;
+}
+
 void insertNewlineBeforeCursor() {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
@@ -1467,7 +1499,7 @@ void moveCursorToEndOfFile() {
     moveCursor(&tempNextTextPos);
 }
 
-void copySelection() {
+void copySelectionHelper() {
     FILE *tempFile = fopen((char *)clipboardFilePath, "w");
     textPos_t *tempFirstTextPos;
     textPos_t *tempLastTextPos;
@@ -1512,16 +1544,79 @@ void copySelection() {
     fclose(tempFile);
     systemCopyClipboardFile();
     remove((char *)clipboardFilePath);
-    eraseActivityModeOrNotification();
-    
+}
+
+void copySelection() {
+    copySelectionHelper();
     setActivityMode(COMMAND_MODE);
+    eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Copied selection.");
+}
+
+void deleteSelectionHelper() {
+    if (!isHighlighting) {
+        deleteCharacterAfterCursor();
+        return;
+    }
+    textPos_t tempFirstTextPos = *(getFirstHighlightTextPos());
+    textPos_t tempLastTextPos = *(getLastHighlightTextPos());
+    int64_t index = getTextPosIndex(&tempLastTextPos);
+    if (index >= tempLastTextPos.line->textAllocation.length) {
+        textLine_t *tempLine = getNextTextLine(tempLastTextPos.line);
+        if (tempLine != NULL) {
+            tempLastTextPos.line = tempLine;
+            tempLastTextPos.row = 0;
+            tempLastTextPos.column = 0;
+        }
+    } else {
+        setTextPosIndex(&tempLastTextPos, index + 1);
+    }
+    int64_t tempStartIndex = getTextPosIndex(&tempFirstTextPos);
+    int64_t tempEndIndex = getTextPosIndex(&tempLastTextPos);
+    if (tempFirstTextPos.line == tempLastTextPos.line) {
+        int64_t tempAmount = tempEndIndex - tempStartIndex;
+        removeTextFromTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempAmount);
+    } else {
+        textLine_t *tempLine = getNextTextLine(tempFirstTextPos.line);
+        while (tempLine != tempLastTextPos.line) {
+            textLine_t *tempNextLine = getNextTextLine(tempLine);
+            deleteTextLine(tempLine);
+            tempLine = tempNextLine;
+        }
+        int64_t tempAmount;
+        tempAmount = tempFirstTextPos.line->textAllocation.length - tempStartIndex;
+        removeTextFromTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempAmount);
+        tempAmount = tempLastTextPos.line->textAllocation.length - tempEndIndex;
+        insertTextIntoTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempLastTextPos.line->textAllocation.text + tempEndIndex, tempAmount);
+        deleteTextLine(tempLastTextPos.line);
+    }
+    cursorTextPos = tempFirstTextPos;
+    cursorSnapColumn = cursorTextPos.column;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstTextPos.line), tempFirstTextPos.line);
+        displayCursor();
+    }
+    textBufferIsDirty = true;
+}
+
+void deleteSelection() {
+    deleteSelectionHelper();
+    setActivityMode(COMMAND_MODE);
+}
+
+void cutSelection() {
+    copySelectionHelper();
+    deleteSelectionHelper();
+    setActivityMode(COMMAND_MODE);
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Cut selection.");
 }
 
 void pasteBeforeCursor() {
     textLine_t *tempFirstLine = cursorTextPos.line;
     if (isHighlighting) {
-        // Delete selection.
+        deleteSelection();
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
@@ -1538,6 +1633,7 @@ void pasteBeforeCursor() {
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
         index += tempCount;
         setTextPosIndex(&cursorTextPos, index);
+        cursorSnapColumn = cursorTextPos.column;
         if (tempContainsNewline) {
             insertNewlineBeforeCursor();
         }
@@ -1669,11 +1765,17 @@ int8_t handleKey(int32_t key) {
         if (key == 'c') {
             copySelection();
         }
+        if (key == 'C') {
+            cutSelection();
+        }
         if (key == 'p') {
             pasteAfterCursor();
         }
         if (key == 'P') {
             pasteBeforeCursor();
+        }
+        if (key == 'd') {
+            deleteSelection();
         }
     }
     if (!isHighlighting) {
