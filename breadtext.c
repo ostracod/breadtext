@@ -1560,9 +1560,17 @@ int main(int argc, const char *argv[]) {
                 insertTextLineRight(tempTextLine2, tempTextLine);
                 break;
             }
-            if (tempText[tempCount - 1] == '\n') {
-                tempCount -= 1;
+            int64_t tempIndex1 = 0;
+            int64_t tempIndex2 = 0;
+            while (tempIndex1 < tempCount) {
+                int8_t tempCharacter = tempText[tempIndex1];
+                if ((tempCharacter >= 32 && tempCharacter <= 126) || tempCharacter == '\t') {
+                    tempText[tempIndex2] = tempCharacter;
+                    tempIndex2 += 1;
+                }
+                tempIndex1 += 1;
             }
+            tempCount = tempIndex2;
             textLine_t *tempTextLine = createEmptyTextLine();
             insertTextIntoTextAllocation(&(tempTextLine->textAllocation), 0, tempText, tempCount);
             free(tempText);
