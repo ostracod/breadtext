@@ -85,6 +85,27 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     }
 }
 
+int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline) {
+    *containsNewline = false;
+    int64_t tempIndex1 = 0;
+    int64_t tempIndex2 = 0;
+    while (true) {
+        int8_t tempCharacter = text[tempIndex1];
+        if (tempCharacter == 0) {
+            break;
+        }
+        if (tempCharacter == '\n') {
+            *containsNewline = true;
+        }
+        if ((tempCharacter >= 32 && tempCharacter <= 126) || tempCharacter == '\t') {
+            text[tempIndex2] = tempCharacter;
+            tempIndex2 += 1;
+        }
+        tempIndex1 += 1;
+    }
+    return tempIndex2;
+}
+
 void convertTabsToSpaces(int8_t *text) {
     int64_t index = 0;
     while (true) {
@@ -697,6 +718,19 @@ void runTests() {
     printf("Passed test 9.\n");
 }
 
+int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2) {
+    return (pos1->line == pos2->line && pos1->row == pos2->row && pos1->column == pos2->column);
+}
+
+int64_t getTextPosIndex(textPos_t *pos) {
+    return pos->row * viewPortWidth + pos->column;
+}
+
+void setTextPosIndex(textPos_t *pos, int64_t index) {
+    pos->row = index / viewPortWidth;
+    pos->column = index % viewPortWidth;
+}
+
 int64_t getTextLineRowCount(textLine_t *line) {
     return line->textAllocation.length / viewPortWidth + 1;
 }
@@ -726,7 +760,7 @@ int64_t getCursorPosY() {
 }
 
 int8_t getCursorCharacter() {
-    int64_t index = cursorTextPos.row * viewPortWidth + cursorTextPos.column;
+    int64_t index = getTextPosIndex(&cursorTextPos);
     if (index < cursorTextPos.line->textAllocation.length) {
         int8_t tempCharacter = cursorTextPos.line->textAllocation.text[index];
         if (tempCharacter == '\t') {
@@ -826,8 +860,8 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         } else {
             tempEndTextPos = tempStartTextPos;
         }
-        tempStartIndex2 = tempStartTextPos.row * viewPortWidth + tempStartTextPos.column;
-        tempEndIndex2 = tempEndTextPos.row * viewPortWidth + tempEndTextPos.column;
+        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
+        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
         tempAmount2 = tempEndIndex2 - tempStartIndex2;
         if (tempAmount2 > 0) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
@@ -854,8 +888,8 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         } else {
             tempEndTextPos = tempStartTextPos;
         }
-        tempStartIndex2 = tempStartTextPos.row * viewPortWidth + tempStartTextPos.column;
-        tempEndIndex2 = tempEndTextPos.row * viewPortWidth + tempEndTextPos.column;
+        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
+        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
         tempAmount2 = tempEndIndex2 - tempStartIndex2;
         if (tempAmount2 > 0) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
@@ -868,8 +902,8 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         tempStartTextPos = tempEndTextPos;
         tempEndTextPos.row = tempEndRow - 1;
         tempEndTextPos.column = tempEndColumn;
-        tempStartIndex2 = tempStartTextPos.row * viewPortWidth + tempStartTextPos.column;
-        tempEndIndex2 = tempEndTextPos.row * viewPortWidth + tempEndTextPos.column;
+        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
+        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
         tempAmount2 = tempEndIndex2 - tempStartIndex2;
         if (tempAmount2 > 0) {
             copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
@@ -1126,18 +1160,14 @@ int8_t scrollCursorOntoScreen() {
     return false;
 }
 
-void moveCursor(textLine_t *line, int64_t column, int64_t row) {
-    textLine_t *tempPreviousTextLine = cursorTextPos.line;
-    int64_t tempPreviousColumn = cursorTextPos.column;
-    int64_t tempPreviousRow = cursorTextPos.row;
-    if (line != tempPreviousTextLine || column != tempPreviousColumn || row != tempPreviousRow) {
-        cursorTextPos.line = line;
-        cursorTextPos.column = column;
-        cursorTextPos.row = row;
+void moveCursor(textPos_t *pos) {
+    textPos_t tempPreviousTextPos = cursorTextPos;
+    if (!equalTextPos(pos, &tempPreviousTextPos)) {
+        cursorTextPos = *pos;
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
             if (isHighlighting) {
-                textLine_t *tempLine = tempPreviousTextLine;
+                textLine_t *tempLine = tempPreviousTextPos.line;
                 displayTextLine(getTextLinePosY(tempLine), tempLine);
                 while (textLineIsAfterTextLine(tempLine, cursorTextPos.line)) {
                     tempLine = getPreviousTextLine(tempLine);
@@ -1148,19 +1178,17 @@ void moveCursor(textLine_t *line, int64_t column, int64_t row) {
                     displayTextLine(getTextLinePosY(tempLine), tempLine);
                 }
             } else {
-                cursorTextPos.line = tempPreviousTextLine;
-                cursorTextPos.column = tempPreviousColumn;
-                cursorTextPos.row = tempPreviousRow;
+                cursorTextPos = tempPreviousTextPos;
                 if (!isHighlighting) {
                     eraseCursor();
                 }
-                if (line != cursorTextPos.line) {
+                if (pos->line != cursorTextPos.line) {
                     eraseLineNumber();
-                    cursorTextPos.line = line;
+                    cursorTextPos.line = pos->line;
                     displayLineNumber();
                 }
-                cursorTextPos.column = column;
-                cursorTextPos.row = row;
+                cursorTextPos.column = pos->column;
+                cursorTextPos.row = pos->row;
                 if (!isHighlighting) {
                     displayCursor();
                 }
@@ -1170,137 +1198,128 @@ void moveCursor(textLine_t *line, int64_t column, int64_t row) {
 }
 
 void moveCursorLeft(int32_t amount) {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
+    textPos_t tempNextTextPos = cursorTextPos;
     int32_t tempCount = 0;
     while (tempCount < amount) {
-        if (tempNextRow <= 0 && tempNextColumn <= 0) {
-            textLine_t *tempLine = getPreviousTextLine(tempNextLine);
+        if (tempNextTextPos.row <= 0 && tempNextTextPos.column <= 0) {
+            textLine_t *tempLine = getPreviousTextLine(tempNextTextPos.line);
             if (tempLine == NULL) {
                 break;
             }
-            tempNextLine = tempLine;
-            int64_t tempLength = tempNextLine->textAllocation.length;
-            tempNextColumn = tempLength % viewPortWidth;
-            tempNextRow = tempLength / viewPortWidth;
-        } else if (tempNextColumn <= 0) {
-            tempNextColumn = viewPortWidth - 1;
-            tempNextRow -= 1;
+            tempNextTextPos.line = tempLine;
+            int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+            setTextPosIndex(&tempNextTextPos, tempLength);
+        } else if (tempNextTextPos.column <= 0) {
+            tempNextTextPos.column = viewPortWidth - 1;
+            tempNextTextPos.row -= 1;
         } else {
-            tempNextColumn -= 1;
+            tempNextTextPos.column -= 1;
         }
         tempCount += 1;
     }
-    cursorSnapColumn = tempNextColumn;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    cursorSnapColumn = tempNextTextPos.column;
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorRight(int32_t amount) {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
+    textPos_t tempNextTextPos = cursorTextPos;
     int32_t tempCount = 0;
     while (tempCount < amount) {
-        int64_t tempLength = tempNextLine->textAllocation.length;
-        if (tempNextRow * viewPortWidth + tempNextColumn >= tempLength) {
-            textLine_t *tempLine = getNextTextLine(tempNextLine);
+        int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+        if (tempNextTextPos.row * viewPortWidth + tempNextTextPos.column >= tempLength) {
+            textLine_t *tempLine = getNextTextLine(tempNextTextPos.line);
             if (tempLine == NULL) {
                 break;
             }
-            tempNextLine = tempLine;
-            tempNextColumn = 0;
-            tempNextRow = 0;
-        } else if (tempNextColumn >= viewPortWidth - 1) {
-            tempNextColumn = 0;
-            tempNextRow += 1;
+            tempNextTextPos.line = tempLine;
+            tempNextTextPos.column = 0;
+            tempNextTextPos.row = 0;
+        } else if (tempNextTextPos.column >= viewPortWidth - 1) {
+            tempNextTextPos.column = 0;
+            tempNextTextPos.row += 1;
         } else {
-            tempNextColumn += 1;
+            tempNextTextPos.column += 1;
         }
         tempCount += 1;
     }
-    cursorSnapColumn = tempNextColumn;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    cursorSnapColumn = tempNextTextPos.column;
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorUp(int32_t amount) {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
+    textPos_t tempNextTextPos = cursorTextPos;
     int32_t tempCount = 0;
     while (tempCount < amount) {
-        if (tempNextRow <= 0) {
-            textLine_t *tempLine = getPreviousTextLine(tempNextLine);
+        if (tempNextTextPos.row <= 0) {
+            textLine_t *tempLine = getPreviousTextLine(tempNextTextPos.line);
             if (tempLine == NULL) {
                 break;
             }
-            if (tempNextColumn < cursorSnapColumn) {
-                tempNextColumn = cursorSnapColumn;
+            if (tempNextTextPos.column < cursorSnapColumn) {
+                tempNextTextPos.column = cursorSnapColumn;
             }
-            tempNextLine = tempLine;
-            int64_t tempLength = tempNextLine->textAllocation.length;
+            tempNextTextPos.line = tempLine;
+            int64_t tempLength = tempNextTextPos.line->textAllocation.length;
             int64_t tempColumn = tempLength % viewPortWidth;
-            if (tempNextColumn > tempColumn) {
-                tempNextColumn = tempColumn;
+            if (tempNextTextPos.column > tempColumn) {
+                tempNextTextPos.column = tempColumn;
             }
-            tempNextRow = tempLength / viewPortWidth;
+            tempNextTextPos.row = tempLength / viewPortWidth;
         } else {
-            if (tempNextColumn < cursorSnapColumn) {
-                tempNextColumn = cursorSnapColumn;
+            if (tempNextTextPos.column < cursorSnapColumn) {
+                tempNextTextPos.column = cursorSnapColumn;
             }
-            tempNextRow -= 1;
+            tempNextTextPos.row -= 1;
         }
         tempCount += 1;
     }
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorDown(int32_t amount) {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
+    textPos_t tempNextTextPos = cursorTextPos;
     int32_t tempCount = 0;
     while (tempCount < amount) {
-        int64_t tempRowCount = getTextLineRowCount(tempNextLine);
-        if (tempNextRow >= tempRowCount - 1) {
-            textLine_t *tempLine = getNextTextLine(tempNextLine);
+        int64_t tempRowCount = getTextLineRowCount(tempNextTextPos.line);
+        if (tempNextTextPos.row >= tempRowCount - 1) {
+            textLine_t *tempLine = getNextTextLine(tempNextTextPos.line);
             if (tempLine == NULL) {
                 break;
             }
-            if (tempNextColumn < cursorSnapColumn) {
-                tempNextColumn = cursorSnapColumn;
+            if (tempNextTextPos.column < cursorSnapColumn) {
+                tempNextTextPos.column = cursorSnapColumn;
             }
-            tempNextLine = tempLine;
-            int64_t tempLength = tempNextLine->textAllocation.length;
-            int64_t tempRowCount2 = getTextLineRowCount(tempNextLine);
+            tempNextTextPos.line = tempLine;
+            int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+            int64_t tempRowCount2 = getTextLineRowCount(tempNextTextPos.line);
             if (tempRowCount2 <= 1) {
                 int64_t tempColumn = tempLength % viewPortWidth;
-                if (tempNextColumn > tempColumn) {
-                    tempNextColumn = tempColumn;
+                if (tempNextTextPos.column > tempColumn) {
+                    tempNextTextPos.column = tempColumn;
                 }
             }
-            tempNextRow = 0;
+            tempNextTextPos.row = 0;
         } else {
-            if (tempNextColumn < cursorSnapColumn) {
-                tempNextColumn = cursorSnapColumn;
+            if (tempNextTextPos.column < cursorSnapColumn) {
+                tempNextTextPos.column = cursorSnapColumn;
             }
-            tempNextRow += 1;
-            if (tempNextRow >= tempRowCount - 1) {
-                int64_t tempLength = tempNextLine->textAllocation.length;
+            tempNextTextPos.row += 1;
+            if (tempNextTextPos.row >= tempRowCount - 1) {
+                int64_t tempLength = tempNextTextPos.line->textAllocation.length;
                 int64_t tempColumn = tempLength % viewPortWidth;
-                if (tempNextColumn > tempColumn) {
-                    tempNextColumn = tempColumn;
+                if (tempNextTextPos.column > tempColumn) {
+                    tempNextTextPos.column = tempColumn;
                 }
             }
         }
         tempCount += 1;
     }
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    moveCursor(&tempNextTextPos);
 }
 
 void insertCharacterUnderCursor(int8_t character) {
     int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
-    int64_t index = cursorTextPos.row * viewPortWidth + cursorTextPos.column;
+    int64_t index = getTextPosIndex(&cursorTextPos);
     insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, &character, 1);
     cursorTextPos.column += 1;
     if (cursorTextPos.column >= viewPortWidth) {
@@ -1325,7 +1344,7 @@ void insertCharacterUnderCursor(int8_t character) {
 }
 
 void deleteCharacterBeforeCursor() {
-    int64_t index = cursorTextPos.row * viewPortWidth + cursorTextPos.column - 1;
+    int64_t index = getTextPosIndex(&cursorTextPos) - 1;
     if (index < 0) {
         textLine_t *tempLine = getPreviousTextLine(cursorTextPos.line);
         if (tempLine == NULL) {
@@ -1334,8 +1353,7 @@ void deleteCharacterBeforeCursor() {
         index = tempLine->textAllocation.length;
         insertTextIntoTextAllocation(&(tempLine->textAllocation), index, cursorTextPos.line->textAllocation.text, cursorTextPos.line->textAllocation.length);
         deleteTextLine(cursorTextPos.line);
-        cursorTextPos.column = index % viewPortWidth;
-        cursorTextPos.row = index / viewPortWidth;
+        setTextPosIndex(&cursorTextPos, index);
         cursorSnapColumn = cursorTextPos.column;
         if (topTextLine == cursorTextPos.line) {
             topTextLine = tempLine;
@@ -1378,7 +1396,7 @@ void deleteCharacterBeforeCursor() {
 void insertNewlineBeforeCursor() {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
-    int64_t index = cursorTextPos.row * viewPortWidth + cursorTextPos.column;
+    int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempAmount = cursorTextPos.line->textAllocation.length - index;
     insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextPos.line->textAllocation.text + index, tempAmount);
     removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, tempAmount);
@@ -1420,42 +1438,33 @@ void saveFile() {
 }
 
 void moveCursorToBeginningOfLine() {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
-    tempNextColumn = 0;
-    tempNextRow = 0;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    textPos_t tempNextTextPos = cursorTextPos;
+    tempNextTextPos.column = 0;
+    tempNextTextPos.row = 0;
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorToEndOfLine() {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
-    int64_t tempLength = tempNextLine->textAllocation.length;
-    tempNextColumn = tempLength % viewPortWidth;
-    tempNextRow = tempLength / viewPortWidth;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    textPos_t tempNextTextPos = cursorTextPos;
+    int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+    setTextPosIndex(&tempNextTextPos, tempLength);
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorToBeginningOfFile() {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
-    tempNextLine = getLeftmostTextLine(rootTextLine);
-    tempNextColumn = 0;
-    tempNextRow = 0;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    textPos_t tempNextTextPos = cursorTextPos;
+    tempNextTextPos.line = getLeftmostTextLine(rootTextLine);
+    tempNextTextPos.column = 0;
+    tempNextTextPos.row = 0;
+    moveCursor(&tempNextTextPos);
 }
 
 void moveCursorToEndOfFile() {
-    textLine_t *tempNextLine = cursorTextPos.line;
-    int64_t tempNextColumn = cursorTextPos.column;
-    int64_t tempNextRow = cursorTextPos.row;
-    tempNextLine = getRightmostTextLine(rootTextLine);
-    tempNextColumn = 0;
-    tempNextRow = 0;
-    moveCursor(tempNextLine, tempNextColumn, tempNextRow);
+    textPos_t tempNextTextPos = cursorTextPos;
+    tempNextTextPos.line = getRightmostTextLine(rootTextLine);
+    tempNextTextPos.column = 0;
+    tempNextTextPos.row = 0;
+    moveCursor(&tempNextTextPos);
 }
 
 void copySelection() {
@@ -1474,12 +1483,12 @@ void copySelection() {
         int64_t tempStartIndex;
         int64_t tempEndIndex;
         if (tempLine == tempFirstTextPos->line) {
-            tempStartIndex = tempFirstTextPos->row * viewPortWidth + tempFirstTextPos->column;
+            tempStartIndex = getTextPosIndex(tempFirstTextPos);
         } else {
             tempStartIndex = 0;
         }
         if (tempLine == tempLastTextPos->line) {
-            tempEndIndex = tempLastTextPos->row * viewPortWidth + tempLastTextPos->column + 1;
+            tempEndIndex = getTextPosIndex(tempLastTextPos) + 1;
         } else {
             tempEndIndex = tempLine->textAllocation.length + 1;
         }
@@ -1507,6 +1516,46 @@ void copySelection() {
     
     setActivityMode(COMMAND_MODE);
     displayNotification((int8_t *)"Copied selection.");
+}
+
+void pasteBeforeCursor() {
+    textLine_t *tempFirstLine = cursorTextPos.line;
+    if (isHighlighting) {
+        // Delete selection.
+    }
+    systemPasteClipboardFile();
+    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    while (true) {
+        int8_t *tempText = NULL;
+        size_t tempSize = 0;
+        int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
+        if (tempCount < 0) {
+            break;
+        }
+        int8_t tempContainsNewline;
+        tempCount = removeBadCharacters(tempText, &tempContainsNewline);
+        int64_t index = getTextPosIndex(&cursorTextPos);
+        insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
+        index += tempCount;
+        setTextPosIndex(&cursorTextPos, index);
+        if (tempContainsNewline) {
+            insertNewlineBeforeCursor();
+        }
+        free(tempText);
+    }
+    fclose(tempFile);
+    remove((char *)clipboardFilePath);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstLine), tempFirstLine);
+        displayCursor();
+    }
+    textBufferIsDirty = true;
+}
+
+void pasteAfterCursor() {
+    moveCursorRight(1);
+    pasteBeforeCursor();
 }
 
 void handleResize() {
@@ -1620,6 +1669,12 @@ int8_t handleKey(int32_t key) {
         if (key == 'c') {
             copySelection();
         }
+        if (key == 'p') {
+            pasteAfterCursor();
+        }
+        if (key == 'P') {
+            pasteBeforeCursor();
+        }
     }
     if (!isHighlighting) {
         // Backspace.
@@ -1660,28 +1715,26 @@ int main(int argc, const char *argv[]) {
     if (tempFile == NULL) {
         rootTextLine = createEmptyTextLine();
     } else {
+        int8_t tempLastContainsNewline = true;
         rootTextLine = NULL;
         while (true) {
             int8_t *tempText = NULL;
             size_t tempSize = 0;
             int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
             if (tempCount < 0) {
-                textLine_t *tempTextLine = createEmptyTextLine();
-                textLine_t *tempTextLine2 = getRightmostTextLine(rootTextLine);
-                insertTextLineRight(tempTextLine2, tempTextLine);
+                if (tempLastContainsNewline) {
+                    textLine_t *tempTextLine = createEmptyTextLine();
+                    if (rootTextLine == NULL) {
+                        rootTextLine = tempTextLine;
+                    } else {
+                        textLine_t *tempTextLine2 = getRightmostTextLine(rootTextLine);
+                        insertTextLineRight(tempTextLine2, tempTextLine);
+                    }
+                }
                 break;
             }
-            int64_t tempIndex1 = 0;
-            int64_t tempIndex2 = 0;
-            while (tempIndex1 < tempCount) {
-                int8_t tempCharacter = tempText[tempIndex1];
-                if ((tempCharacter >= 32 && tempCharacter <= 126) || tempCharacter == '\t') {
-                    tempText[tempIndex2] = tempCharacter;
-                    tempIndex2 += 1;
-                }
-                tempIndex1 += 1;
-            }
-            tempCount = tempIndex2;
+            int8_t tempContainsNewline;
+            tempCount = removeBadCharacters(tempText, &tempContainsNewline);
             textLine_t *tempTextLine = createEmptyTextLine();
             insertTextIntoTextAllocation(&(tempTextLine->textAllocation), 0, tempText, tempCount);
             free(tempText);
@@ -1691,6 +1744,7 @@ int main(int argc, const char *argv[]) {
                 textLine_t *tempTextLine2 = getRightmostTextLine(rootTextLine);
                 insertTextLineRight(tempTextLine2, tempTextLine);
             }
+            tempLastContainsNewline = tempContainsNewline;
         }
         if (rootTextLine == NULL) {
             rootTextLine = createEmptyTextLine();
