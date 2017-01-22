@@ -966,11 +966,16 @@ void addHistoryFrame() {
         historyFrameListLength = index;
     } else if (historyFrameListIndex == 0) {
         int32_t index = historyFrameListLength - 1;
+        if (index + 1 >= MAXIMUM_HISTORY_DEPTH) {
+            index = MAXIMUM_HISTORY_DEPTH - 2;
+            historyFrameListLength = MAXIMUM_HISTORY_DEPTH;
+        } else {
+            historyFrameListLength += 1;
+        }
         while (index >= 0) {
             historyFrameList[index + 1] = historyFrameList[index];
             index -= 1;
         }
-        historyFrameListLength += 1;
     }
     historyFrameListIndex = 0;
     historyFrameList[historyFrameListIndex] = createEmptyHistoryFrame();
