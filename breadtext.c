@@ -1342,6 +1342,16 @@ void displayActivityMode() {
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
         activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }
+    if (activityMode == HIGHLIGHT_LINE_MODE) {
+        int8_t tempMessage[] = "Line Highlight Mode";
+        mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
+        activityModeTextLength = (int32_t)strlen((char *)tempMessage);
+    }
+    if (activityMode == HIGHLIGHT_WORD_MODE) {
+        int8_t tempMessage[] = "Word Highlight Mode";
+        mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
+        activityModeTextLength = (int32_t)strlen((char *)tempMessage);
+    }
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
@@ -1364,6 +1374,13 @@ void setActivityMode(int8_t mode) {
         highlightTextPos.column = cursorTextPos.column;
         highlightTextPos.row = cursorTextPos.row;
     }
+    if (mode == HIGHLIGHT_LINE_MODE) {
+        highlightTextPos.line = cursorTextPos.line;
+        int64_t tempLength = cursorTextPos.line->textAllocation.length;
+        setTextPosIndex(&highlightTextPos, tempLength);
+        cursorTextPos.row = 0;
+        cursorTextPos.column = 0;
+    }
     int8_t tempOldIsHighlighting = isHighlighting;
     isHighlighting = (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE || mode == HIGHLIGHT_LINE_MODE);
     if (tempOldIsHighlighting || mode == HIGHLIGHT_LINE_MODE) {
@@ -1372,6 +1389,7 @@ void setActivityMode(int8_t mode) {
         displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
     }
     displayActivityMode();
+    historyFrameIsConsecutive = false;
 }
 
 void eraseLineNumber() {
@@ -1636,6 +1654,52 @@ void moveCursorDown(int32_t amount) {
         }
         tempCount += 1;
     }
+    moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
+}
+
+void adjustLineSelectionBoundaries(textPos_t *nextCursorPos) {
+    if (textLineIsAfterTextLine(nextCursorPos->line, highlightTextPos.line)) {
+        highlightTextPos.row = 0;
+        highlightTextPos.column = 0;
+        int64_t tempLength = nextCursorPos->line->textAllocation.length;
+        setTextPosIndex(nextCursorPos, tempLength);
+    } else {
+        nextCursorPos->row = 0;
+        nextCursorPos->column = 0;
+        int64_t tempLength = highlightTextPos.line->textAllocation.length;
+        setTextPosIndex(&highlightTextPos, tempLength);
+    }
+}
+
+void moveLineSelectionUp(int32_t amount) {
+    textPos_t tempNextTextPos = cursorTextPos;
+    int32_t tempCount = 0;
+    while (tempCount < amount) {
+        textLine_t *tempLine = getPreviousTextLine(tempNextTextPos.line);
+        if (tempLine == NULL) {
+            break;
+        }
+        tempNextTextPos.line = tempLine;
+        tempCount += 1;
+    }
+    adjustLineSelectionBoundaries(&tempNextTextPos);
+    moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
+}
+
+void moveLineSelectionDown(int32_t amount) {
+    textPos_t tempNextTextPos = cursorTextPos;
+    int32_t tempCount = 0;
+    while (tempCount < amount) {
+        textLine_t *tempLine = getNextTextLine(tempNextTextPos.line);
+        if (tempLine == NULL) {
+            break;
+        }
+        tempNextTextPos.line = tempLine;
+        tempCount += 1;
+    }
+    adjustLineSelectionBoundaries(&tempNextTextPos);
     moveCursor(&tempNextTextPos);
     historyFrameIsConsecutive = false;
 }
@@ -2124,17 +2188,7 @@ int8_t handleKey(int32_t key) {
             moveCursorDown(1);
         }
     }
-    if (activityMode != TEXT_ENTRY_MODE) {
-        if (key == 'q') {
-            if (textBufferIsDirty) {
-                displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
-            } else {
-                return true;
-            }
-        }
-        if (key == 'Q') {
-            return true;
-        }
+    if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
         if (key == 'j') {
             moveCursorLeft(1);
         }
@@ -2159,6 +2213,38 @@ int8_t handleKey(int32_t key) {
         if (key == 'K') {
             moveCursorDown(10);
         }
+    }
+    if (activityMode == HIGHLIGHT_LINE_MODE) {
+        if (key == KEY_UP) {
+            moveLineSelectionUp(1);
+        }
+        if (key == KEY_DOWN) {
+            moveLineSelectionDown(1);
+        }
+        if (key == 'i') {
+            moveLineSelectionUp(1);
+        }
+        if (key == 'k') {
+            moveLineSelectionDown(1);
+        }
+        if (key == 'I') {
+            moveLineSelectionUp(10);
+        }
+        if (key == 'K') {
+            moveLineSelectionDown(10);
+        }
+    }
+    if (activityMode != TEXT_ENTRY_MODE) {
+        if (key == 'q') {
+            if (textBufferIsDirty) {
+                displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+            } else {
+                return true;
+            }
+        }
+        if (key == 'Q') {
+            return true;
+        }
         if (key == 't') {
             setActivityMode(TEXT_ENTRY_MODE);
         }
@@ -2179,6 +2265,9 @@ int8_t handleKey(int32_t key) {
         }
         if (key == 'h') {
             setActivityMode(HIGHLIGHT_CHARACTER_MODE);
+        }
+        if (key == 'H') {
+            setActivityMode(HIGHLIGHT_LINE_MODE);
         }
         if (key == 'c') {
             copySelection();
