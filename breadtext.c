@@ -23,6 +23,7 @@
 #define HISTORY_ACTION_DELETE 2
 
 #define MAXIMUM_HISTORY_DEPTH 300
+#define MAXIMUM_MACRO_LENGTH 100
 
 #define SHOULD_RUN_TESTS false
 
@@ -87,6 +88,9 @@ int8_t historyFrameIsConsecutive = false;
 int8_t isStartOfNonconsecutiveEscapeSequence = false;
 historyAction_t firstNonconsecutiveEscapeSequenceAction;
 historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
+int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
+int32_t macroKeyListLength = 0;
+int8_t isRecordingMacro = false;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -2241,8 +2245,22 @@ void handleResize() {
     redrawEverything();
 }
 
+void playMacro();
+
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key) {
+    if (isRecordingMacro && key != 'M') {
+        if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
+            isRecordingMacro = false;
+        } else {
+            macroKeyList[macroKeyListLength] = key;
+            macroKeyListLength += 1;
+        }
+    }
+    if (isShowingNotification) {
+        eraseNotification();
+        displayActivityMode();
+    }
     if (key == KEY_RESIZE) {
         handleResize();
     }
@@ -2329,6 +2347,7 @@ int8_t handleKey(int32_t key) {
     if (activityMode != TEXT_ENTRY_MODE) {
         if (key == 'q') {
             if (textBufferIsDirty) {
+                eraseActivityModeOrNotification();
                 displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
             } else {
                 return true;
@@ -2385,6 +2404,19 @@ int8_t handleKey(int32_t key) {
         if (key == 'U') {
             redoLastAction();
         }
+        if (key == 'm') {
+            playMacro();
+        }
+        if (key == 'M') {
+            eraseActivityModeOrNotification();
+            if (isRecordingMacro) {
+                displayNotification((int8_t *)"Finished recording.");
+            } else {
+                macroKeyListLength = 0;
+                displayNotification((int8_t *)"Recording macro.");
+            }
+            isRecordingMacro = !isRecordingMacro;
+        }
     }
     if (!isHighlighting) {
         // Backspace.
@@ -2402,6 +2434,15 @@ int8_t handleKey(int32_t key) {
     }
     lastKey = key;
     return false;
+}
+
+void playMacro() {
+    int64_t index = 0;
+    while (index < macroKeyListLength) {
+        int32_t tempKey = macroKeyList[index];
+        handleKey(tempKey);
+        index += 1;
+    }
 }
 
 int main(int argc, const char *argv[]) {
@@ -2486,10 +2527,6 @@ int main(int argc, const char *argv[]) {
     
     while (true) {
         int32_t tempKey = getch();
-        if (isShowingNotification) {
-            eraseNotification();
-            displayActivityMode();
-        }
         int8_t tempResult = handleKey(tempKey);
         if (tempResult) {
             break;
