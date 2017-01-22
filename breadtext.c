@@ -1355,6 +1355,13 @@ void displayActivityMode() {
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 
+int8_t isWordCharacter(int8_t tempCharacter) {
+    return ((tempCharacter >= 'a' && tempCharacter <= 'z')
+         || (tempCharacter >= 'A' && tempCharacter <= 'Z')
+         || (tempCharacter >= '0' && tempCharacter <= '9')
+         || tempCharacter == '_');
+}
+
 void setActivityMode(int8_t mode) {
     eraseActivityModeOrNotification();
     if (activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE) {
@@ -1380,6 +1387,35 @@ void setActivityMode(int8_t mode) {
         setTextPosIndex(&highlightTextPos, tempLength);
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
+        scrollCursorOntoScreen();
+    }
+    if (mode == HIGHLIGHT_WORD_MODE) {
+        int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+        int64_t tempEndIndex = tempStartIndex;
+        int64_t tempLength = cursorTextPos.line->textAllocation.length;
+        if (tempStartIndex < tempLength) {
+            int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+            if (isWordCharacter(tempCharacter)) {
+                while (tempStartIndex > 0) {
+                    int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
+                    if (!isWordCharacter(tempCharacter)) {
+                        break;
+                    }
+                    tempStartIndex -= 1;
+                }
+                while (tempEndIndex < tempLength - 1) {
+                    int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
+                    if (!isWordCharacter(tempCharacter)) {
+                        break;
+                    }
+                    tempEndIndex += 1;
+                }
+            }
+        }
+        highlightTextPos.line = cursorTextPos.line;
+        setTextPosIndex(&highlightTextPos, tempStartIndex);
+        setTextPosIndex(&cursorTextPos, tempEndIndex);
+        scrollCursorOntoScreen();
     }
     int8_t tempOldIsHighlighting = isHighlighting;
     isHighlighting = (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE || mode == HIGHLIGHT_LINE_MODE);
@@ -2319,6 +2355,9 @@ int8_t handleKey(int32_t key) {
         }
         if (key == 'H') {
             setActivityMode(HIGHLIGHT_LINE_MODE);
+        }
+        if (key == 'w') {
+            setActivityMode(HIGHLIGHT_WORD_MODE);
         }
         if (key == 'c') {
             copySelection();
