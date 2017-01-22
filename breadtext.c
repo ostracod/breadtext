@@ -807,11 +807,13 @@ historyTextPos_t convertTextPosToHistoryTextPos(textPos_t *pos) {
     return output;
 }
 
-void reassignTopTextLine() {
-    textLine_t *tempLine = topTextLine;
-    topTextLine = getNextTextLine(tempLine);
+void reassignTopTextLine(textLine_t *lineToBeDeleted) {
+    if (lineToBeDeleted != topTextLine) {
+        return;
+    }
+    topTextLine = getNextTextLine(lineToBeDeleted);
     if (topTextLine == NULL) {
-        topTextLine = getPreviousTextLine(tempLine);
+        topTextLine = getPreviousTextLine(lineToBeDeleted);
     }
     topTextLineRow = 0;
 }
@@ -841,7 +843,7 @@ void performHistoryAction(historyAction_t *action) {
     }
     if (action->type == HISTORY_ACTION_DELETE) {
         textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
-        reassignTopTextLine();
+        reassignTopTextLine(tempLine);
         deleteTextLine(tempLine);
     }
 }
@@ -849,7 +851,7 @@ void performHistoryAction(historyAction_t *action) {
 void undoHistoryAction(historyAction_t *action) {
     if (action->type == HISTORY_ACTION_INSERT) {
         textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
-        reassignTopTextLine();
+        reassignTopTextLine(tempLine);
         deleteTextLine(tempLine);
     }
     if (action->type == HISTORY_ACTION_DELETE) {
@@ -1972,6 +1974,7 @@ void deleteSelectionHelper() {
         while (tempLine != tempLastTextPos.line) {
             textLine_t *tempNextLine = getNextTextLine(tempLine);
             recordTextLineDeleted(tempLine);
+            reassignTopTextLine(tempLine);
             deleteTextLine(tempLine);
             tempLine = tempNextLine;
         }
@@ -1982,6 +1985,7 @@ void deleteSelectionHelper() {
         tempAmount = tempLastTextPos.line->textAllocation.length - tempEndIndex;
         insertTextIntoTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempLastTextPos.line->textAllocation.text + tempEndIndex, tempAmount);
         recordTextLineInserted(tempFirstTextPos.line);
+        reassignTopTextLine(tempLastTextPos.line);
         deleteTextLine(tempLastTextPos.line);
     }
     cursorTextPos = tempFirstTextPos;
