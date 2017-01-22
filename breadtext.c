@@ -2082,18 +2082,13 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
-void pasteBeforeCursor() {
-    addHistoryFrame();
+void pasteBeforeCursorHelper(FILE *file) {
+    fseek(file, 0, SEEK_SET);
     textLine_t *tempFirstLine = cursorTextPos.line;
-    if (isHighlighting) {
-        deleteSelection();
-    }
-    systemPasteClipboardFile();
-    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
     while (true) {
         int8_t *tempText = NULL;
         size_t tempSize = 0;
-        int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
+        int64_t tempCount = getline((char **)&tempText, &tempSize, file);
         if (tempCount < 0) {
             break;
         }
@@ -2111,21 +2106,77 @@ void pasteBeforeCursor() {
         }
         free(tempText);
     }
-    fclose(tempFile);
-    remove((char *)clipboardFilePath);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstLine), tempFirstLine);
         displayCursor();
     }
     textBufferIsDirty = true;
+}
+
+int8_t fileEndsInNewline(FILE *file) {
+    fseek(file, 0, SEEK_END);
+    int64_t tempSize = ftell(file);
+    if (tempSize <= 0) {
+        return false;
+    }
+    fseek(file, -1, SEEK_END);
+    int8_t tempCharacter;
+    fread(&tempCharacter, 1, 1, file);
+    return (tempCharacter == '\n');
+}
+
+void pasteBeforeCursor() {
+    addHistoryFrame();
+    int8_t tempLastIsHighlighting = isHighlighting;
+    if (isHighlighting) {
+        deleteSelectionHelper();
+        setActivityMode(COMMAND_MODE);
+    }
+    systemPasteClipboardFile();
+    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    if (fileEndsInNewline(tempFile) && !tempLastIsHighlighting) {
+        cursorTextPos.row = 0;
+        cursorTextPos.column = 0;
+    }
+    pasteBeforeCursorHelper(tempFile);
+    fclose(tempFile);
+    remove((char *)clipboardFilePath);
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
 
 void pasteAfterCursor() {
-    moveCursorRight(1);
-    pasteBeforeCursor();
+    addHistoryFrame();
+    int8_t tempLastIsHighlighting = isHighlighting;
+    if (isHighlighting) {
+        deleteSelectionHelper();
+        setActivityMode(COMMAND_MODE);
+    }
+    systemPasteClipboardFile();
+    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    if (!tempLastIsHighlighting) {
+        if (fileEndsInNewline(tempFile)) {
+            eraseCursor();
+            textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
+            if (tempLine == NULL) {
+                int64_t tempLength = cursorTextPos.line->textAllocation.length;
+                setTextPosIndex(&cursorTextPos, tempLength);
+                insertNewlineBeforeCursor();
+            } else {
+                cursorTextPos.line = tempLine;
+                cursorTextPos.row = 0;
+                cursorTextPos.column = 0;
+            }
+        } else {
+            moveCursorRight(1);
+        }
+    }
+    pasteBeforeCursorHelper(tempFile);
+    fclose(tempFile);
+    remove((char *)clipboardFilePath);
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
 }
 
 void handleResize() {
