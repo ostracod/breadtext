@@ -91,6 +91,8 @@ historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
 int32_t macroKeyListLength = 0;
 int8_t isRecordingMacro = false;
+int8_t indentationWidth = 4;
+int8_t shouldUseHardTabs = false;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -1545,6 +1547,161 @@ int8_t scrollCursorOntoScreen() {
     return false;
 }
 
+int32_t getTextLineIndentationLevel(textLine_t *line) {
+    int32_t output = 0;
+    int8_t tempSpaceCount = 0;
+    int64_t tempLength = line->textAllocation.length;
+    int64_t index = 0;
+    while (index < tempLength) {
+        int8_t tempCharacter = line->textAllocation.text[index];
+        if (tempCharacter == ' ') {
+            tempSpaceCount += 1;
+            if (tempSpaceCount >= indentationWidth) {
+                output += 1;
+                tempSpaceCount = 0;
+            }
+        } else if (tempCharacter == '\t') {
+            output += 1;
+            tempSpaceCount = 0;
+        } else {
+            break;
+        }
+        index += 1;
+    }
+    return output;
+}
+
+int64_t getTextLineIndentationEndIndex(textLine_t *line) {
+    int64_t tempLength = line->textAllocation.length;
+    int64_t index = 0;
+    while (index < tempLength) {
+        int8_t tempCharacter = line->textAllocation.text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index += 1;
+    }
+    return index;
+}
+
+void decreaseTextLineIndentationLevelHelper(textLine_t *line) {
+    int32_t tempOldLevel = getTextLineIndentationLevel(line);
+    int64_t tempStartIndex = 0;
+    int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
+    int32_t tempLevel = 0;
+    int8_t tempSpaceCount = 0;
+    while (tempStartIndex < tempEndIndex) {
+        if (tempLevel >= tempOldLevel - 1) {
+            break;
+        }
+        int8_t tempCharacter = line->textAllocation.text[tempStartIndex];
+        if (tempCharacter == ' ') {
+            tempSpaceCount += 1;
+            if (tempSpaceCount >= indentationWidth) {
+                tempLevel += 1;
+                tempSpaceCount = 0;
+            }
+        } else if (tempCharacter == '\t') {
+            tempLevel += 1;
+            tempSpaceCount = 0;
+        } else {
+            break;
+        }
+        tempStartIndex += 1;
+    }
+    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    if (tempAmount > 0) {
+        recordTextLineDeleted(line);
+        removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
+        recordTextLineInserted(line);
+    }
+    int64_t tempOffset = -tempAmount;
+    if (line == cursorTextPos.line) {
+        int64_t index = getTextPosIndex(&cursorTextPos);
+        index += tempOffset;
+        if (index < 0) {
+            index = 0;
+        }
+        setTextPosIndex(&cursorTextPos, index);
+    }
+    if (isHighlighting) {
+        if (line == highlightTextPos.line) {
+            int64_t index = getTextPosIndex(&highlightTextPos);
+            index += tempOffset;
+            if (index < 0) {
+                index = 0;
+            }
+            setTextPosIndex(&highlightTextPos, index);
+        }
+    }
+}
+
+void increaseTextLineIndentationLevelHelper(textLine_t *line) {
+    int32_t tempOldLevel = getTextLineIndentationLevel(line);
+    int64_t tempStartIndex = 0;
+    int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
+    int32_t tempLevel = 0;
+    int8_t tempSpaceCount = 0;
+    while (tempStartIndex < tempEndIndex) {
+        if (tempLevel >= tempOldLevel) {
+            break;
+        }
+        int8_t tempCharacter = line->textAllocation.text[tempStartIndex];
+        if (tempCharacter == ' ') {
+            tempSpaceCount += 1;
+            if (tempSpaceCount >= indentationWidth) {
+                tempLevel += 1;
+                tempSpaceCount = 0;
+            }
+        } else if (tempCharacter == '\t') {
+            tempLevel += 1;
+            tempSpaceCount = 0;
+        } else {
+            break;
+        }
+        tempStartIndex += 1;
+    }
+    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    int8_t tempIndentation[100];
+    int8_t tempIndentationLength;
+    if (shouldUseHardTabs) {
+        tempIndentation[0] = '\t';
+        tempIndentationLength = 1;
+    } else {
+        int8_t index = 0;
+        while (index < indentationWidth) {
+            tempIndentation[index] = ' ' ;
+            index += 1;
+        }
+        tempIndentationLength = indentationWidth;
+    }
+    recordTextLineDeleted(line);
+    if (tempAmount > 0) {
+        removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
+    }
+    insertTextIntoTextAllocation(&(line->textAllocation), tempStartIndex, tempIndentation, tempIndentationLength);
+    recordTextLineInserted(line);
+    int64_t tempOffset = tempIndentationLength - tempAmount;
+    if (line == cursorTextPos.line) {
+        int64_t index = getTextPosIndex(&cursorTextPos);
+        index += tempOffset;
+        if (index < 0) {
+            index = 0;
+        }
+        setTextPosIndex(&cursorTextPos, index);
+    }
+    if (isHighlighting) {
+        if (line == highlightTextPos.line) {
+            int64_t index = getTextPosIndex(&highlightTextPos);
+            index += tempOffset;
+            if (index < 0) {
+                index = 0;
+            }
+            setTextPosIndex(&highlightTextPos, index);
+        }
+    }
+}
+
 void moveCursor(textPos_t *pos) {
     historyFrameIsConsecutive = false;
     textPos_t tempPreviousTextPos = cursorTextPos;
@@ -2224,6 +2381,96 @@ void pasteAfterCursor() {
     historyFrameIsConsecutive = false;
 }
 
+void increaseSelectionIndentationLevel() {
+    addHistoryFrame();
+    textPos_t *tempStartTextPos;
+    textPos_t *tempEndTextPos;
+    if (isHighlighting) {
+        tempStartTextPos = getFirstHighlightTextPos();
+        tempEndTextPos = getLastHighlightTextPos();
+    } else {
+        tempStartTextPos = &cursorTextPos;
+        tempEndTextPos = &cursorTextPos;
+    }
+    eraseCursor();
+    textLine_t *tempLine = tempStartTextPos->line;
+    int8_t tempIsSingleLine = tempStartTextPos->line == tempEndTextPos->line;
+    if (tempIsSingleLine) {
+        int64_t tempOldRowCount = getTextLineRowCount(tempLine);
+        increaseTextLineIndentationLevelHelper(tempLine);
+        int64_t tempNewRowCount = getTextLineRowCount(tempLine);
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            if (tempOldRowCount == tempNewRowCount) {
+                displayTextLine(getTextLinePosY(tempLine), tempLine);
+            } else {
+                displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempLine), tempLine);
+            }
+            displayCursor();
+        }
+    } else {
+        while (true) {
+            increaseTextLineIndentationLevelHelper(tempLine);
+            if (tempLine == tempEndTextPos->line) {
+                break;
+            }
+            tempLine = getNextTextLine(tempLine);
+        }
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempStartTextPos->line), tempStartTextPos->line);
+            displayCursor();
+        }
+    }
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
+}
+
+void decreaseSelectionIndentationLevel() {
+    addHistoryFrame();
+    textPos_t *tempStartTextPos;
+    textPos_t *tempEndTextPos;
+    if (isHighlighting) {
+        tempStartTextPos = getFirstHighlightTextPos();
+        tempEndTextPos = getLastHighlightTextPos();
+    } else {
+        tempStartTextPos = &cursorTextPos;
+        tempEndTextPos = &cursorTextPos;
+    }
+    eraseCursor();
+    textLine_t *tempLine = tempStartTextPos->line;
+    int8_t tempIsSingleLine = tempStartTextPos->line == tempEndTextPos->line;
+    if (tempIsSingleLine) {
+        int64_t tempOldRowCount = getTextLineRowCount(tempLine);
+        decreaseTextLineIndentationLevelHelper(tempLine);
+        int64_t tempNewRowCount = getTextLineRowCount(tempLine);
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            if (tempOldRowCount == tempNewRowCount) {
+                displayTextLine(getTextLinePosY(tempLine), tempLine);
+            } else {
+                displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempLine), tempLine);
+            }
+            displayCursor();
+        }
+    } else {
+        while (true) {
+            decreaseTextLineIndentationLevelHelper(tempLine);
+            if (tempLine == tempEndTextPos->line) {
+                break;
+            }
+            tempLine = getNextTextLine(tempLine);
+        }
+        int8_t tempResult = scrollCursorOntoScreen();
+        if (!tempResult) {
+            displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempStartTextPos->line), tempStartTextPos->line);
+            displayCursor();
+        }
+    }
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -2283,6 +2530,12 @@ int8_t handleKey(int32_t key) {
     // Escape.
     if (key == 27) {
         setActivityMode(COMMAND_MODE);
+    }
+    if (key == '\t') {
+        increaseSelectionIndentationLevel();
+    }
+    if (key == KEY_BTAB) {
+        decreaseSelectionIndentationLevel();
     }
     if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
         if (key == KEY_LEFT) {
@@ -2416,6 +2669,12 @@ int8_t handleKey(int32_t key) {
                 displayNotification((int8_t *)"Recording macro.");
             }
             isRecordingMacro = !isRecordingMacro;
+        }
+        if (key == '>') {
+            increaseSelectionIndentationLevel();
+        }
+        if (key == '<') {
+            decreaseSelectionIndentationLevel();
         }
     }
     if (!isHighlighting) {
