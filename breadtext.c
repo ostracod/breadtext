@@ -2070,20 +2070,25 @@ void deleteCharacterAfterCursor() {
     finishCurrentHistoryFrame();
 }
 
-void insertNewlineBeforeCursorHelper() {
+void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempAmount = cursorTextPos.line->textAllocation.length - index;
     insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextPos.line->textAllocation.text + index, tempAmount);
+    int32_t tempCount = 0;
+    while (tempCount < baseIndentationLevel) {
+        increaseTextLineIndentationLevelHelper(tempLine);
+        tempCount += 1;
+    }
     recordTextLineDeleted(cursorTextPos.line);
     removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, tempAmount);
     recordTextLineInserted(cursorTextPos.line);
     insertTextLineRight(cursorTextPos.line, tempLine);
     recordTextLineInserted(tempLine);
     cursorTextPos.line = tempLine;
-    cursorTextPos.column = 0;
-    cursorTextPos.row = 0;
+    int64_t tempIndex = getTextLineIndentationEndIndex(cursorTextPos.line);
+    setTextPosIndex(&cursorTextPos, tempIndex);
     cursorSnapColumn = cursorTextPos.column;
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
@@ -2096,7 +2101,8 @@ void insertNewlineBeforeCursorHelper() {
 
 void insertNewlineBeforeCursor() {
     addHistoryFrame();
-    insertNewlineBeforeCursorHelper();
+    int32_t tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    insertNewlineBeforeCursorHelper(tempLevel);
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
@@ -2284,7 +2290,7 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
-void pasteBeforeCursorHelper(FILE *file) {
+void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
     fseek(file, 0, SEEK_SET);
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
@@ -2302,10 +2308,12 @@ void pasteBeforeCursorHelper(FILE *file) {
         recordTextLineInserted(cursorTextPos.line);
         index += tempCount;
         setTextPosIndex(&cursorTextPos, index);
-        cursorSnapColumn = cursorTextPos.column;
         if (tempContainsNewline) {
-            insertNewlineBeforeCursorHelper();
+            insertNewlineBeforeCursorHelper(baseIndentationLevel);
+            cursorTextPos.row = 0;
+            cursorTextPos.column = 0;
         }
+        cursorSnapColumn = cursorTextPos.column;
         free(tempText);
     }
     int8_t tempResult = scrollCursorOntoScreen();
@@ -2337,11 +2345,15 @@ void pasteBeforeCursor() {
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    int32_t tempLevel;
     if (fileEndsInNewline(tempFile) && !tempLastIsHighlighting) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
+        tempLevel = 0;
+    } else {
+        tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
     }
-    pasteBeforeCursorHelper(tempFile);
+    pasteBeforeCursorHelper(tempFile, tempLevel);
     fclose(tempFile);
     remove((char *)clipboardFilePath);
     finishCurrentHistoryFrame();
@@ -2357,6 +2369,7 @@ void pasteAfterCursor() {
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    int32_t tempLevel;
     if (!tempLastIsHighlighting) {
         if (fileEndsInNewline(tempFile)) {
             eraseCursor();
@@ -2364,17 +2377,21 @@ void pasteAfterCursor() {
             if (tempLine == NULL) {
                 int64_t tempLength = cursorTextPos.line->textAllocation.length;
                 setTextPosIndex(&cursorTextPos, tempLength);
-                insertNewlineBeforeCursor();
+                insertNewlineBeforeCursorHelper(0);
             } else {
                 cursorTextPos.line = tempLine;
                 cursorTextPos.row = 0;
                 cursorTextPos.column = 0;
             }
+            tempLevel = 0;
         } else {
             moveCursorRight(1);
+            tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
         }
+    } else {
+        tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
     }
-    pasteBeforeCursorHelper(tempFile);
+    pasteBeforeCursorHelper(tempFile, tempLevel);
     fclose(tempFile);
     remove((char *)clipboardFilePath);
     finishCurrentHistoryFrame();
