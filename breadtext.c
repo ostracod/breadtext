@@ -19,6 +19,11 @@
 #define HIGHLIGHT_WORD_MODE 4
 #define HIGHLIGHT_LINE_MODE 5
 
+#define HISTORY_ACTION_INSERT 1
+#define HISTORY_ACTION_DELETE 2
+
+#define MAXIMUM_HISTORY_DEPTH 300
+
 #define SHOULD_RUN_TESTS false
 
 typedef struct textAllocation {
@@ -43,6 +48,26 @@ typedef struct textPos {
     int64_t row;
 } textPos_t;
 
+typedef struct historyTextPos {
+    int64_t lineNumber;
+    int64_t index;
+} historyTextPos_t;
+
+typedef struct historyAction {
+    int8_t type;
+    int64_t lineNumber;
+    int8_t *text;
+    int64_t length;
+} historyAction_t;
+
+typedef struct historyFrame {
+    historyAction_t *historyActionList;
+    int64_t length;
+    int64_t allocationSize;
+    historyTextPos_t previousCursorTextPos;
+    historyTextPos_t nextCursorTextPos;
+} historyFrame_t;
+
 textLine_t *rootTextLine = NULL;
 textLine_t *topTextLine = NULL;
 int64_t topTextLineRow = 0;
@@ -55,6 +80,13 @@ int8_t isShowingNotification = false;
 int32_t notificationTextLength = 0;
 int8_t isHighlighting = false;
 textPos_t highlightTextPos;
+historyFrame_t historyFrameList[MAXIMUM_HISTORY_DEPTH];
+int32_t historyFrameListIndex = 0;
+int32_t historyFrameListLength = 0;
+int8_t historyFrameIsConsecutive = false;
+int8_t isStartOfNonconsecutiveEscapeSequence = false;
+historyAction_t firstNonconsecutiveEscapeSequenceAction;
+historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -492,6 +524,32 @@ int8_t textLineIsAfterTextLine(textLine_t *line1, textLine_t *line2) {
     return (tempLineNumber1 > tempLineNumber2);
 }
 
+textLine_t *getTextLineByNumber(int64_t number) {
+    int64_t tempLineCount = 0;
+    textLine_t *tempLine = rootTextLine;
+    while (true) {
+        if (tempLine == NULL) {
+            return NULL;
+        }
+        textLine_t *tempChild = tempLine->leftChild;
+        int64_t tempLineCount2;
+        if (tempChild == NULL) {
+            tempLineCount2 = 0;
+        } else {
+            tempLineCount2 = tempChild->lineCount;
+        }
+        int64_t tempLineNumber = tempLineCount + tempLineCount2 + 1;
+        if (number > tempLineNumber) {
+            tempLine = tempLine->rightChild;
+            tempLineCount = tempLineNumber;
+        } else if (number < tempLineNumber) {
+            tempLine = tempChild;
+        } else {
+            return tempLine;
+        }
+    }
+}
+
 int8_t textLineTreeIsBalanced(textLine_t *line) {
     textLine_t *tempChild;
     tempChild = line->leftChild;
@@ -735,6 +793,258 @@ int64_t getTextLineRowCount(textLine_t *line) {
     return line->textAllocation.length / viewPortWidth + 1;
 }
 
+textPos_t convertHistoryTextPosToTextPos(historyTextPos_t *pos) {
+    textPos_t output;
+    output.line = getTextLineByNumber(pos->lineNumber);
+    setTextPosIndex(&output, pos->index);
+    return output;
+}
+
+historyTextPos_t convertTextPosToHistoryTextPos(textPos_t *pos) {
+    historyTextPos_t output;
+    output.lineNumber = getTextLineNumber(pos->line);
+    output.index = getTextPosIndex(pos);
+    return output;
+}
+
+void reassignTopTextLine() {
+    textLine_t *tempLine = topTextLine;
+    topTextLine = getNextTextLine(tempLine);
+    if (topTextLine == NULL) {
+        topTextLine = getPreviousTextLine(tempLine);
+    }
+    topTextLineRow = 0;
+}
+
+void eraseActivityModeOrNotification();
+void setActivityMode(int8_t mode);
+int8_t scrollCursorOntoScreen();
+void displayNotification(int8_t *message);
+void displayStatusBar();
+void redrawEverything();
+
+void performHistoryAction(historyAction_t *action) {
+    if (action->type == HISTORY_ACTION_INSERT) {
+        textLine_t *tempLine = createEmptyTextLine();
+        insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, action->text, action->length);
+        if (rootTextLine == NULL) {
+            rootTextLine = tempLine;
+            topTextLine = tempLine;
+            topTextLineRow = 0;
+        } else if (action->lineNumber == 1) {
+            textLine_t *tempLine2 = getTextLineByNumber(1);
+            insertTextLineLeft(tempLine2, tempLine);
+        } else {
+            textLine_t *tempLine2 = getTextLineByNumber(action->lineNumber - 1);
+            insertTextLineRight(tempLine2, tempLine);
+        }
+    }
+    if (action->type == HISTORY_ACTION_DELETE) {
+        textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
+        reassignTopTextLine();
+        deleteTextLine(tempLine);
+    }
+}
+
+void undoHistoryAction(historyAction_t *action) {
+    if (action->type == HISTORY_ACTION_INSERT) {
+        textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
+        reassignTopTextLine();
+        deleteTextLine(tempLine);
+    }
+    if (action->type == HISTORY_ACTION_DELETE) {
+        textLine_t *tempLine = createEmptyTextLine();
+        insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, action->text, action->length);
+        if (rootTextLine == NULL) {
+            rootTextLine = tempLine;
+            topTextLine = tempLine;
+            topTextLineRow = 0;
+        } else if (action->lineNumber == 1) {
+            textLine_t *tempLine2 = getTextLineByNumber(1);
+            insertTextLineLeft(tempLine2, tempLine);
+        } else {
+            textLine_t *tempLine2 = getTextLineByNumber(action->lineNumber - 1);
+            insertTextLineRight(tempLine2, tempLine);
+        }
+    }
+}
+
+void cleanUpHistoryAction(historyAction_t *action) {
+    if (action->text != NULL) {
+        free(action->text);
+    }
+}
+
+historyFrame_t createEmptyHistoryFrame() {
+    historyFrame_t output;
+    output.historyActionList = malloc(0);
+    output.length = 0;
+    output.allocationSize = 0;
+    output.previousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
+    return output;
+}
+
+void addHistoryActionToHistoryFrame(historyFrame_t *frame, historyAction_t *action) {
+    int64_t tempOldSize = frame->length * sizeof(historyAction_t);
+    int64_t index = frame->length;
+    frame->length += 1;
+    int64_t tempSize = frame->length * sizeof(historyAction_t);
+    if (tempSize > frame->allocationSize) {
+        frame->allocationSize = tempSize * 2;
+        historyAction_t *tempList = malloc(frame->allocationSize);
+        copyData((int8_t *)tempList, (int8_t *)(frame->historyActionList), tempOldSize);
+        free(frame->historyActionList);
+        frame->historyActionList = tempList;
+    }
+    *(frame->historyActionList + index) = *action;
+}
+
+void performHistoryFrame(historyFrame_t *frame) {
+    int64_t index = 0;
+    while (index < frame->length) {
+        historyAction_t *tempAction = frame->historyActionList + index;
+        performHistoryAction(tempAction);
+        index += 1;
+    }
+    cursorTextPos = convertHistoryTextPosToTextPos(&(frame->nextCursorTextPos));
+    setActivityMode(COMMAND_MODE);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (tempResult) {
+        displayStatusBar();
+    } else {
+        redrawEverything();
+    }
+    textBufferIsDirty = true;
+}
+
+void undoHistoryFrame(historyFrame_t *frame) {
+    int64_t index = frame->length - 1;
+    while (index >= 0) {
+        historyAction_t *tempAction = frame->historyActionList + index;
+        undoHistoryAction(tempAction);
+        index -= 1;
+    }
+    cursorTextPos = convertHistoryTextPosToTextPos(&(frame->previousCursorTextPos));
+    setActivityMode(COMMAND_MODE);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (tempResult) {
+        displayStatusBar();
+    } else {
+        redrawEverything();
+    }
+    textBufferIsDirty = true;
+}
+
+void cleanUpHistoryFrame(historyFrame_t *frame) {
+    int64_t index = 0;
+    while (index < frame->length) {
+        historyAction_t *tempAction = frame->historyActionList + index;
+        cleanUpHistoryAction(tempAction);
+        index += 1;
+    }
+    if (frame->historyActionList != NULL) {
+        free(frame->historyActionList);
+    }
+}
+
+void addHistoryFrame() {
+    int32_t index = 0;
+    while (index < historyFrameListIndex) {
+        historyFrame_t *tempFrame = historyFrameList + index;
+        cleanUpHistoryFrame(tempFrame);
+        index += 1;
+    }
+    if (historyFrameListIndex > 1) {
+        int32_t index = 1;
+        while (historyFrameListIndex < historyFrameListLength) {
+            historyFrameList[index] = historyFrameList[historyFrameListIndex];
+            index += 1;
+            historyFrameListIndex += 1;
+        }
+        historyFrameListLength = index;
+    } else if (historyFrameListIndex == 0) {
+        int32_t index = historyFrameListLength - 1;
+        while (index >= 0) {
+            historyFrameList[index + 1] = historyFrameList[index];
+            index -= 1;
+        }
+        historyFrameListLength += 1;
+    }
+    historyFrameListIndex = 0;
+    historyFrameList[historyFrameListIndex] = createEmptyHistoryFrame();
+}
+
+historyAction_t createHistoryActionFromTextLine(textLine_t *line, int8_t actionType) {
+    historyAction_t output;
+    output.type = actionType;
+    output.lineNumber = getTextLineNumber(line);
+    int64_t tempLength = line->textAllocation.length;
+    output.text = malloc(tempLength);
+    copyData(output.text, line->textAllocation.text, tempLength);
+    output.length = tempLength;
+    return output;
+}
+
+void recordTextLine(textLine_t *line, int8_t actionType) {
+    historyAction_t tempAction = createHistoryActionFromTextLine(line, actionType);
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    addHistoryActionToHistoryFrame(tempFrame, &tempAction);
+}
+
+void recordTextLineInserted(textLine_t *line) {
+    recordTextLine(line, HISTORY_ACTION_INSERT);
+}
+
+void recordTextLineDeleted(textLine_t *line) {
+    recordTextLine(line, HISTORY_ACTION_DELETE);
+}
+
+void updateHistoryFrameInsertAction(textLine_t *line) {
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    int64_t index = 0;
+    while (index < tempFrame->length) {
+        historyAction_t *tempAction = tempFrame->historyActionList + index;
+        if (tempAction->type == HISTORY_ACTION_INSERT) {
+            int64_t tempLength = line->textAllocation.length;
+            if (tempAction->text != NULL) {
+                free(tempAction->text);
+            }
+            tempAction->text = malloc(tempLength);
+            copyData(tempAction->text, line->textAllocation.text, tempLength);
+            tempAction->length = tempLength;
+            break;
+        }
+        index += 1;
+    }
+}
+
+void finishCurrentHistoryFrame() {
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    tempFrame->nextCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
+}
+
+void undoLastAction() {
+    if (historyFrameListIndex >= historyFrameListLength) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"At oldest state.");
+        return;
+    }
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    undoHistoryFrame(tempFrame);
+    historyFrameListIndex += 1;
+}
+
+void redoLastAction() {
+    if (historyFrameListIndex <= 0) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"At newest state.");
+        return;
+    }
+    historyFrameListIndex -= 1;
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    performHistoryFrame(tempFrame);
+}
+
 int64_t getTextLinePosY(textLine_t *line) {
     if (textLineIsAfterTextLine(line, topTextLine)) {
         textLine_t *tempLine = topTextLine;
@@ -773,12 +1083,18 @@ int8_t getCursorCharacter() {
 }
 
 void eraseCursor() {
+    if (isHighlighting) {
+        return;
+    }
     attron(COLOR_PAIR(primaryColorPair));
     mvaddch(getCursorPosY(), cursorTextPos.column, (char)getCursorCharacter());
     attroff(COLOR_PAIR(primaryColorPair));
 }
 
 void displayCursor() {
+    if (isHighlighting) {
+        return;
+    }
     refresh();
     attron(COLOR_PAIR(secondaryColorPair));
     mvaddch(getCursorPosY(), cursorTextPos.column, (char)getCursorCharacter());
@@ -976,6 +1292,7 @@ void displayTextLinesUnderAndIncludingTextLine(int64_t posY, textLine_t *line) {
 
 void displayAllTextLines() {
     displayTextLinesUnderAndIncludingTextLine(-topTextLineRow, topTextLine);
+    displayCursor();
 }
 
 void eraseStatusBar() {
@@ -992,8 +1309,6 @@ void eraseStatusBar() {
     mvprintw(windowHeight - 1, 0, "%s", tempBuffer);
     attroff(COLOR_PAIR(secondaryColorPair));
 }
-
-void eraseActivityModeOrNotification();
 
 void eraseActivityMode() {
     int8_t tempBuffer[activityModeTextLength + 1];
@@ -1030,6 +1345,17 @@ void displayActivityMode() {
 
 void setActivityMode(int8_t mode) {
     eraseActivityModeOrNotification();
+    if (activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE) {
+        if (isStartOfNonconsecutiveEscapeSequence) {
+            addHistoryFrame();
+            historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+            tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
+            addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
+            recordTextLineInserted(cursorTextPos.line);
+            finishCurrentHistoryFrame();
+            textBufferIsDirty = true;
+        }
+    }
     activityMode = mode;
     if (mode == HIGHLIGHT_CHARACTER_MODE) {
         highlightTextPos.line = cursorTextPos.line;
@@ -1040,9 +1366,6 @@ void setActivityMode(int8_t mode) {
     isHighlighting = (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE || mode == HIGHLIGHT_LINE_MODE);
     if (tempOldIsHighlighting || mode == HIGHLIGHT_LINE_MODE) {
         displayAllTextLines();
-        if (!isHighlighting) {
-            displayCursor();
-        }
     } else if (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE) {
         displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
     }
@@ -1110,7 +1433,6 @@ void displayStatusBar() {
 void redrawEverything() {
     displayAllTextLines();
     displayStatusBar();
-    displayCursor();
 }
 
 int8_t scrollCursorOntoScreen() {
@@ -1134,7 +1456,6 @@ int8_t scrollCursorOntoScreen() {
             tempPosY += 1;
         }
         displayAllTextLines();
-        displayCursor();
         return true;
     }
     if (tempPosY >= viewPortHeight) {
@@ -1154,13 +1475,13 @@ int8_t scrollCursorOntoScreen() {
             tempPosY -= 1;
         }
         displayAllTextLines();
-        displayCursor();
         return true;
     }
     return false;
 }
 
 void moveCursor(textPos_t *pos) {
+    historyFrameIsConsecutive = false;
     textPos_t tempPreviousTextPos = cursorTextPos;
     if (!equalTextPos(pos, &tempPreviousTextPos)) {
         cursorTextPos = *pos;
@@ -1179,9 +1500,7 @@ void moveCursor(textPos_t *pos) {
                 }
             } else {
                 cursorTextPos = tempPreviousTextPos;
-                if (!isHighlighting) {
-                    eraseCursor();
-                }
+                eraseCursor();
                 if (pos->line != cursorTextPos.line) {
                     eraseLineNumber();
                     cursorTextPos.line = pos->line;
@@ -1189,9 +1508,7 @@ void moveCursor(textPos_t *pos) {
                 }
                 cursorTextPos.column = pos->column;
                 cursorTextPos.row = pos->row;
-                if (!isHighlighting) {
-                    displayCursor();
-                }
+                displayCursor();
             }
         }
     }
@@ -1219,6 +1536,7 @@ void moveCursorLeft(int32_t amount) {
     }
     cursorSnapColumn = tempNextTextPos.column;
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorRight(int32_t amount) {
@@ -1244,6 +1562,7 @@ void moveCursorRight(int32_t amount) {
     }
     cursorSnapColumn = tempNextTextPos.column;
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorUp(int32_t amount) {
@@ -1274,6 +1593,7 @@ void moveCursorUp(int32_t amount) {
         tempCount += 1;
     }
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorDown(int32_t amount) {
@@ -1315,12 +1635,31 @@ void moveCursorDown(int32_t amount) {
         tempCount += 1;
     }
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void insertCharacterUnderCursor(int8_t character) {
     int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
     int64_t index = getTextPosIndex(&cursorTextPos);
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        cleanUpHistoryAction(&firstNonconsecutiveEscapeSequenceAction);
+        firstNonconsecutiveEscapeSequenceAction = createHistoryActionFromTextLine(cursorTextPos.line, HISTORY_ACTION_DELETE);
+        nonconsecutiveEscapeSequencePreviousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
+    } else {
+        if (!historyFrameIsConsecutive) {
+            addHistoryFrame();
+            recordTextLineDeleted(cursorTextPos.line);
+        }
+    }
     insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, &character, 1);
+    if (!isStartOfNonconsecutiveEscapeSequence) {
+        if (historyFrameIsConsecutive) {
+            updateHistoryFrameInsertAction(cursorTextPos.line);
+        } else {
+            recordTextLineInserted(cursorTextPos.line);
+            historyFrameIsConsecutive = true;
+        }
+    }
     cursorTextPos.column += 1;
     if (cursorTextPos.column >= viewPortWidth) {
         cursorTextPos.column = 0;
@@ -1336,22 +1675,34 @@ void insertCharacterUnderCursor(int8_t character) {
         } else {
             displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
         }
-        if (!isHighlighting) {
-            displayCursor();
-        }
+        displayCursor();
     }
-    textBufferIsDirty = true;
+    if (!isStartOfNonconsecutiveEscapeSequence) {
+        textBufferIsDirty = true;
+        finishCurrentHistoryFrame();
+    }
 }
 
-void deleteCharacterBeforeCursor() {
+void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
     int64_t index = getTextPosIndex(&cursorTextPos) - 1;
     if (index < 0) {
+        if (shouldRecordHistory) {
+            addHistoryFrame();
+        }
         textLine_t *tempLine = getPreviousTextLine(cursorTextPos.line);
         if (tempLine == NULL) {
             return;
         }
+        addHistoryFrame();
         index = tempLine->textAllocation.length;
+        if (shouldRecordHistory) {
+            recordTextLineDeleted(tempLine);
+        }
         insertTextIntoTextAllocation(&(tempLine->textAllocation), index, cursorTextPos.line->textAllocation.text, cursorTextPos.line->textAllocation.length);
+        if (shouldRecordHistory) {
+            recordTextLineInserted(tempLine);
+            recordTextLineDeleted(cursorTextPos.line);
+        }
         deleteTextLine(cursorTextPos.line);
         setTextPosIndex(&cursorTextPos, index);
         cursorSnapColumn = cursorTextPos.column;
@@ -1363,13 +1714,28 @@ void deleteCharacterBeforeCursor() {
         if (!tempResult) {
             int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
             displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
-            if (!isHighlighting) {
-                displayCursor();
-            }
+            displayCursor();
+        }
+        if (shouldRecordHistory) {
+            historyFrameIsConsecutive = false;
         }
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
+        if (shouldRecordHistory) {
+            if (!historyFrameIsConsecutive) {
+                addHistoryFrame();
+                recordTextLineDeleted(cursorTextPos.line);
+            }
+        }
         removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, 1);
+        if (shouldRecordHistory) {
+            if (historyFrameIsConsecutive) {
+                updateHistoryFrameInsertAction(cursorTextPos.line);
+            } else {
+                recordTextLineInserted(cursorTextPos.line);
+                historyFrameIsConsecutive = true;
+            }
+        }
         cursorTextPos.column -= 1;
         if (cursorTextPos.column < 0) {
             cursorTextPos.column = viewPortWidth - 1;
@@ -1385,12 +1751,13 @@ void deleteCharacterBeforeCursor() {
             } else {
                 displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
             }
-            if (!isHighlighting) {
-                displayCursor();
-            }
+            displayCursor();
         }
     }
-    textBufferIsDirty = true;
+    if (shouldRecordHistory) {
+        textBufferIsDirty = true;
+        finishCurrentHistoryFrame();
+    }
 }
 
 void deleteCharacterAfterCursor() {
@@ -1401,16 +1768,27 @@ void deleteCharacterAfterCursor() {
         if (tempLine == NULL) {
             return;
         }
+        recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
+        recordTextLineInserted(cursorTextPos.line);
+        recordTextLineDeleted(tempLine);
         deleteTextLine(tempLine);
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
         displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
-        if (!isHighlighting) {
-            displayCursor();
-        }
+        displayCursor();
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
+        if (!historyFrameIsConsecutive) {
+            addHistoryFrame();
+            recordTextLineDeleted(cursorTextPos.line);
+        }
         removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, 1);
+        if (historyFrameIsConsecutive) {
+            updateHistoryFrameInsertAction(cursorTextPos.line);
+        } else {
+            recordTextLineInserted(cursorTextPos.line);
+            historyFrameIsConsecutive = true;
+        }
         int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
         if (tempNewRowCount == tempOldRowCount) {
@@ -1418,21 +1796,23 @@ void deleteCharacterAfterCursor() {
         } else {
             displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
         }
-        if (!isHighlighting) {
-            displayCursor();
-        }
+        displayCursor();
     }
     textBufferIsDirty = true;
+    finishCurrentHistoryFrame();
 }
 
-void insertNewlineBeforeCursor() {
+void insertNewlineBeforeCursorHelper() {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempAmount = cursorTextPos.line->textAllocation.length - index;
     insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextPos.line->textAllocation.text + index, tempAmount);
+    recordTextLineDeleted(cursorTextPos.line);
     removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, tempAmount);
+    recordTextLineInserted(cursorTextPos.line);
     insertTextLineRight(cursorTextPos.line, tempLine);
+    recordTextLineInserted(tempLine);
     cursorTextPos.line = tempLine;
     cursorTextPos.column = 0;
     cursorTextPos.row = 0;
@@ -1441,11 +1821,16 @@ void insertNewlineBeforeCursor() {
     if (!tempResult) {
         int64_t tempPosY = getTextLinePosY(tempLine2);
         displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine2);
-        if (!isHighlighting) {
-            displayCursor();
-        }
+        displayCursor();
     }
     textBufferIsDirty = true;
+}
+
+void insertNewlineBeforeCursor() {
+    addHistoryFrame();
+    insertNewlineBeforeCursorHelper();
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
 }
 
 void saveFile() {
@@ -1474,6 +1859,7 @@ void moveCursorToBeginningOfLine() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorToEndOfLine() {
@@ -1481,6 +1867,7 @@ void moveCursorToEndOfLine() {
     int64_t tempLength = tempNextTextPos.line->textAllocation.length;
     setTextPosIndex(&tempNextTextPos, tempLength);
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorToBeginningOfFile() {
@@ -1489,6 +1876,7 @@ void moveCursorToBeginningOfFile() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void moveCursorToEndOfFile() {
@@ -1497,6 +1885,7 @@ void moveCursorToEndOfFile() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    historyFrameIsConsecutive = false;
 }
 
 void copySelectionHelper() {
@@ -1575,19 +1964,24 @@ void deleteSelectionHelper() {
     int64_t tempEndIndex = getTextPosIndex(&tempLastTextPos);
     if (tempFirstTextPos.line == tempLastTextPos.line) {
         int64_t tempAmount = tempEndIndex - tempStartIndex;
+        recordTextLineDeleted(tempFirstTextPos.line);
         removeTextFromTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempAmount);
+        recordTextLineInserted(tempFirstTextPos.line);
     } else {
         textLine_t *tempLine = getNextTextLine(tempFirstTextPos.line);
         while (tempLine != tempLastTextPos.line) {
             textLine_t *tempNextLine = getNextTextLine(tempLine);
+            recordTextLineDeleted(tempLine);
             deleteTextLine(tempLine);
             tempLine = tempNextLine;
         }
         int64_t tempAmount;
         tempAmount = tempFirstTextPos.line->textAllocation.length - tempStartIndex;
+        recordTextLineDeleted(tempFirstTextPos.line);
         removeTextFromTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempAmount);
         tempAmount = tempLastTextPos.line->textAllocation.length - tempEndIndex;
         insertTextIntoTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempLastTextPos.line->textAllocation.text + tempEndIndex, tempAmount);
+        recordTextLineInserted(tempFirstTextPos.line);
         deleteTextLine(tempLastTextPos.line);
     }
     cursorTextPos = tempFirstTextPos;
@@ -1601,19 +1995,26 @@ void deleteSelectionHelper() {
 }
 
 void deleteSelection() {
+    addHistoryFrame();
     deleteSelectionHelper();
     setActivityMode(COMMAND_MODE);
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
 }
 
 void cutSelection() {
+    addHistoryFrame();
     copySelectionHelper();
     deleteSelectionHelper();
     setActivityMode(COMMAND_MODE);
     eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Cut selection.");
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
 }
 
 void pasteBeforeCursor() {
+    addHistoryFrame();
     textLine_t *tempFirstLine = cursorTextPos.line;
     if (isHighlighting) {
         deleteSelection();
@@ -1630,12 +2031,14 @@ void pasteBeforeCursor() {
         int8_t tempContainsNewline;
         tempCount = removeBadCharacters(tempText, &tempContainsNewline);
         int64_t index = getTextPosIndex(&cursorTextPos);
+        recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
+        recordTextLineInserted(cursorTextPos.line);
         index += tempCount;
         setTextPosIndex(&cursorTextPos, index);
         cursorSnapColumn = cursorTextPos.column;
         if (tempContainsNewline) {
-            insertNewlineBeforeCursor();
+            insertNewlineBeforeCursorHelper();
         }
         free(tempText);
     }
@@ -1647,6 +2050,8 @@ void pasteBeforeCursor() {
         displayCursor();
     }
     textBufferIsDirty = true;
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
 }
 
 void pasteAfterCursor() {
@@ -1682,11 +2087,19 @@ int8_t handleKey(int32_t key) {
     }
     if (activityMode == TEXT_ENTRY_MODE) {
         if (key == ',' && lastKey == ',') {
-            deleteCharacterBeforeCursor();
+            if (isStartOfNonconsecutiveEscapeSequence) {
+                deleteCharacterBeforeCursor(false);
+            } else {
+                deleteCharacterBeforeCursor(true);
+            }
+            isStartOfNonconsecutiveEscapeSequence = false;
             setActivityMode(COMMAND_MODE);
         } else if (key >= 32 && key <= 126) {
+            isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
             insertCharacterUnderCursor((int8_t)key);
         }
+    } else {
+        isStartOfNonconsecutiveEscapeSequence = false;
     }
     // Escape.
     if (key == 27) {
@@ -1777,11 +2190,17 @@ int8_t handleKey(int32_t key) {
         if (key == 'd') {
             deleteSelection();
         }
+        if (key == 'u') {
+            undoLastAction();
+        }
+        if (key == 'U') {
+            redoLastAction();
+        }
     }
     if (!isHighlighting) {
         // Backspace.
         if (key == 127) {
-            deleteCharacterBeforeCursor();
+            deleteCharacterBeforeCursor(true);
         }
         if (key == '\n') {
             insertNewlineBeforeCursor();
@@ -1864,6 +2283,7 @@ int main(int argc, const char *argv[]) {
     cursorTextPos.row = 0;
     cursorTextPos.column = 0;
     cursorSnapColumn = 0;
+    firstNonconsecutiveEscapeSequenceAction.text = NULL;
     
     window = initscr();
     noecho();
