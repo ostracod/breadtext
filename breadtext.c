@@ -1986,6 +1986,7 @@ void deleteSelectionHelper() {
         insertTextIntoTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempLastTextPos.line->textAllocation.text + tempEndIndex, tempAmount);
         recordTextLineInserted(tempFirstTextPos.line);
         reassignTopTextLine(tempLastTextPos.line);
+        recordTextLineDeleted(tempLastTextPos.line);
         deleteTextLine(tempLastTextPos.line);
     }
     cursorTextPos = tempFirstTextPos;
