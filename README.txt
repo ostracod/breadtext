@@ -39,6 +39,7 @@ Shift + P = Paste before cursor
 U = Undo
 Shift + U = Redo
 <> = Indent
+Tab or Shift + Tab = Indent
 N = Find next instance
 Shift + N = Find previous instance
 
