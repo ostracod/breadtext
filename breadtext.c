@@ -1951,8 +1951,15 @@ void insertCharacterUnderCursor(int8_t character) {
     }
 }
 
+void decreaseSelectionIndentationLevel();
+
 void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
-    int64_t index = getTextPosIndex(&cursorTextPos) - 1;
+    int64_t index = getTextPosIndex(&cursorTextPos);
+    if (index > 0 && index == getTextLineIndentationEndIndex(cursorTextPos.line)) {
+        decreaseSelectionIndentationLevel();
+        return;
+    }
+    index -= 1;
     if (index < 0) {
         if (shouldRecordHistory) {
             addHistoryFrame();
