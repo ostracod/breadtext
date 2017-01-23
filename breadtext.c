@@ -1991,6 +1991,8 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
             displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
             displayCursor();
         }
+        eraseLineNumber();
+        displayLineNumber();
         if (shouldRecordHistory) {
             historyFrameIsConsecutive = false;
         }
@@ -2051,6 +2053,8 @@ void deleteCharacterAfterCursor() {
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
         displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
         displayCursor();
+        eraseLineNumber();
+        displayLineNumber();
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
         if (!historyFrameIsConsecutive) {
@@ -2103,6 +2107,8 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
         displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine2);
         displayCursor();
     }
+    eraseLineNumber();
+    displayLineNumber();
     textBufferIsDirty = true;
 }
 
@@ -2275,6 +2281,8 @@ void deleteSelectionHelper() {
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstTextPos.line), tempFirstTextPos.line);
         displayCursor();
     }
+    eraseLineNumber();
+    displayLineNumber();
     textBufferIsDirty = true;
 }
 
@@ -2328,6 +2336,8 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstLine), tempFirstLine);
         displayCursor();
     }
+    eraseLineNumber();
+    displayLineNumber();
     textBufferIsDirty = true;
 }
 
