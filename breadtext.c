@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <curses.h>
 #include <string.h>
+#include <wordexp.h>
 
 #define true 1
 #define false 0
@@ -123,6 +124,38 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
     }
 }
 
+int8_t isWhitespace(int8_t character) {
+    return (character == ' ' || character == '\n' || character == '\t' || character == '\r');
+}
+
+int8_t *findWhitespace(int8_t *text) {
+    while (true) {
+        int8_t tempCharacter = *text;
+        if (tempCharacter == 0) {
+            break;
+        }
+        if (isWhitespace(tempCharacter)) {
+            break;
+        }
+        text += 1;
+    }
+    return text;
+}
+
+int8_t *skipWhitespace(int8_t *text) {
+    while (true) {
+        int8_t tempCharacter = *text;
+        if (tempCharacter == 0) {
+            break;
+        }
+        if (!isWhitespace(tempCharacter)) {
+            break;
+        }
+        text += 1;
+    }
+    return text;
+}
+
 int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline) {
     *containsNewline = false;
     int64_t tempIndex1 = 0;
@@ -159,8 +192,11 @@ void convertTabsToSpaces(int8_t *text) {
 }
 
 int8_t *mallocRealpath(int8_t *path) {
+    wordexp_t expResult;
+    wordexp((char *)path, &expResult, 0);
     int8_t tempText[50000];
-    realpath((char *)path, (char *)tempText);
+    realpath(expResult.we_wordv[0], (char *)tempText);
+    wordfree(&expResult);
     int8_t *output = malloc(strlen((char *)tempText) + 1);
     strcpy((char *)output, (char *)tempText);
     return output;
@@ -2742,6 +2778,48 @@ void playMacro() {
     }
 }
 
+void setConfigurationVariable(int8_t *name, int64_t value) {
+    if (strcmp((char *)name, "colorScheme") == 0) {
+        if (value == 0) {
+            primaryColorPair = BLACK_ON_WHITE;
+            secondaryColorPair = WHITE_ON_BLACK;
+        }
+        if (value == 1) {
+            primaryColorPair = WHITE_ON_BLACK;
+            secondaryColorPair = BLACK_ON_WHITE;
+        }
+    }
+    if (strcmp((char *)name, "indentationWidth") == 0) {
+        indentationWidth = value;
+    }
+    if (strcmp((char *)name, "shouldUseHardTabs") == 0) {
+        shouldUseHardTabs = value;
+    }
+}
+
+void processRcFile() {
+    FILE *tempFile = fopen((char *)rcFilePath, "r");
+    if (tempFile == NULL) {
+        return;
+    }
+    while (true) {
+        int8_t *tempText = NULL;
+        size_t tempSize = 0;
+        int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
+        if (tempCount < 0) {
+            break;
+        }
+        int8_t *tempText2 = findWhitespace(tempText);
+        if (tempText2 != tempText) {
+            *tempText2 = 0;
+            tempText2 = skipWhitespace(tempText2 + 1);
+            int64_t tempValue = atoi((char *)tempText2);
+            setConfigurationVariable(tempText, tempValue);
+        }
+        free(tempText);
+    }
+}
+
 int main(int argc, const char *argv[]) {
     
     #ifdef __APPLE__
@@ -2763,6 +2841,8 @@ int main(int argc, const char *argv[]) {
     filePath = mallocRealpath((int8_t *)(argv[1]));
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
+    
+    processRcFile();
     
     FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
