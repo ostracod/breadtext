@@ -2620,6 +2620,97 @@ void deleteTextCommandCharacter() {
     displayTextCommandCursor();
 }
 
+void executeTextCommand() {
+    int8_t *tempTermList[20];
+    int8_t tempTermIndex = 0;
+    int8_t tempIsInQuotes = false;
+    int8_t *tempIndex1 = textCommandBuffer;
+    int8_t *tempIndex2 = textCommandBuffer;
+    int8_t tempIsStartOfTerm = true;
+    while (true) {
+        int8_t tempCharacter = *tempIndex1;
+        tempIndex1 += 1;
+        if (tempCharacter == 0) {
+            break;
+        }
+        int8_t tempIsWhitespace = isWhitespace(tempCharacter);
+        if (tempCharacter == '\\') {
+            int8_t tempCharacter = *tempIndex1;
+            tempIndex1 += 1;
+            *tempIndex2 = tempCharacter;
+            tempIndex2 += 1;
+        } else if (tempIsStartOfTerm && !tempIsWhitespace) {
+            if (tempCharacter == '"') {
+                tempTermList[tempTermIndex] = tempIndex2;
+                tempTermIndex += 1;
+                tempIsInQuotes = true;
+            } else {
+                tempTermList[tempTermIndex] = tempIndex2;
+                *tempIndex2 = tempCharacter;
+                tempIndex2 += 1;
+                tempTermIndex += 1;
+            }
+            tempIsStartOfTerm = false;
+        } else {
+            if (tempCharacter == '"') {
+                *tempIndex2 = 0;
+                tempIndex2 += 1;
+                tempIsInQuotes = false;
+                tempIsStartOfTerm = true;
+            } else if (!tempIsWhitespace || tempIsInQuotes) {
+                *tempIndex2 = tempCharacter;
+                tempIndex2 += 1;
+            } else {
+                *tempIndex2 = 0;
+                tempIndex2 += 1;
+                tempIndex1 = skipWhitespace(tempIndex1);
+                tempIsStartOfTerm = true;
+            }
+        }
+    }
+    int8_t tempTermListLength = tempTermIndex;
+    /*
+    endwin();
+    int64_t index = 0;
+    while (index < tempTermListLength) {
+        printf("%s\n", (char *)(tempTermList[index]));
+        index += 1;
+    }
+    exit(0);
+    */
+    if (tempTermListLength <= 0) {
+        setActivityMode(COMMAND_MODE);
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Error: Invalid command.");
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "gotoLine") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        int64_t tempLineNumber = atoi((char *)(tempTermList[1]));
+        textPos_t tempTextPos;
+        tempTextPos.line = getTextLineByNumber(tempLineNumber);
+        tempTextPos.row = 0;
+        tempTextPos.column = 0;
+        if (tempTextPos.line == NULL) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Bad line number.");
+            return;
+        }
+        moveCursor(&tempTextPos);
+        setActivityMode(COMMAND_MODE);
+        return;
+    }
+    setActivityMode(COMMAND_MODE);
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Error: Unrecognized command name.");
+}
+
 void handleResize() {
     int32_t tempWidth;
     int32_t tempHeight;
@@ -2671,6 +2762,9 @@ int8_t handleKey(int32_t key) {
         // Backspace.
         if (key == 127 || key == 263) {
             deleteTextCommandCharacter();
+        }
+        if (key == '\n') {
+            executeTextCommand();
         }
     } else {
         if (activityMode == TEXT_ENTRY_MODE) {
