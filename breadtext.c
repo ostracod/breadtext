@@ -2703,7 +2703,7 @@ int8_t handleKey(int32_t key) {
     }
     if (!isHighlighting) {
         // Backspace.
-        if (key == 127) {
+        if (key == 127 || key == 263) {
             deleteCharacterBeforeCursor(true);
         }
         if (key == '\n') {
@@ -2711,7 +2711,7 @@ int8_t handleKey(int32_t key) {
         }
     } else {
         // Backspace.
-        if (key == 127) {
+        if (key == 127 || key == 263) {
             deleteSelection();
         }
     }
