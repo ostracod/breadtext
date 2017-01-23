@@ -1720,6 +1720,10 @@ void moveCursor(textPos_t *pos) {
                     tempLine = getNextTextLine(tempLine);
                     displayTextLine(getTextLinePosY(tempLine), tempLine);
                 }
+                if (pos->line != tempPreviousTextPos.line) {
+                    eraseLineNumber();
+                    displayLineNumber();
+                }
             } else {
                 cursorTextPos = tempPreviousTextPos;
                 eraseCursor();
