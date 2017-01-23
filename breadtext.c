@@ -849,7 +849,7 @@ historyTextPos_t convertTextPosToHistoryTextPos(textPos_t *pos) {
     return output;
 }
 
-void reassignTopTextLine(textLine_t *lineToBeDeleted) {
+void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted != topTextLine) {
         return;
     }
@@ -885,7 +885,7 @@ void performHistoryAction(historyAction_t *action) {
     }
     if (action->type == HISTORY_ACTION_DELETE) {
         textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
-        reassignTopTextLine(tempLine);
+        handleTextLineDeleted(tempLine);
         deleteTextLine(tempLine);
     }
 }
@@ -893,7 +893,7 @@ void performHistoryAction(historyAction_t *action) {
 void undoHistoryAction(historyAction_t *action) {
     if (action->type == HISTORY_ACTION_INSERT) {
         textLine_t *tempLine = getTextLineByNumber(action->lineNumber);
-        reassignTopTextLine(tempLine);
+        handleTextLineDeleted(tempLine);
         deleteTextLine(tempLine);
     }
     if (action->type == HISTORY_ACTION_DELETE) {
@@ -2018,6 +2018,7 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
             recordTextLineInserted(tempLine);
             recordTextLineDeleted(cursorTextPos.line);
         }
+        handleTextLineDeleted(cursorTextPos.line);
         deleteTextLine(cursorTextPos.line);
         setTextPosIndex(&cursorTextPos, index);
         cursorSnapColumn = cursorTextPos.column;
@@ -2088,6 +2089,7 @@ void deleteCharacterAfterCursor() {
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
         recordTextLineInserted(cursorTextPos.line);
+        handleTextLineDeleted(tempLine);
         recordTextLineDeleted(tempLine);
         deleteTextLine(tempLine);
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
@@ -2299,7 +2301,7 @@ void deleteSelectionHelper() {
         while (tempLine != tempLastTextPos.line) {
             textLine_t *tempNextLine = getNextTextLine(tempLine);
             recordTextLineDeleted(tempLine);
-            reassignTopTextLine(tempLine);
+            handleTextLineDeleted(tempLine);
             deleteTextLine(tempLine);
             tempLine = tempNextLine;
         }
@@ -2310,7 +2312,7 @@ void deleteSelectionHelper() {
         tempAmount = tempLastTextPos.line->textAllocation.length - tempEndIndex;
         insertTextIntoTextAllocation(&(tempFirstTextPos.line->textAllocation), tempStartIndex, tempLastTextPos.line->textAllocation.text + tempEndIndex, tempAmount);
         recordTextLineInserted(tempFirstTextPos.line);
-        reassignTopTextLine(tempLastTextPos.line);
+        handleTextLineDeleted(tempLastTextPos.line);
         recordTextLineDeleted(tempLastTextPos.line);
         deleteTextLine(tempLastTextPos.line);
     }
