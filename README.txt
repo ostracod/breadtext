@@ -53,5 +53,18 @@ COMMANDS
 /set (config variable) (value)
 /help
 
+CONFIGURATION VARIABLES
+
+colorScheme: 0 is black on white, 1 is white on black.
+shouldUseHardTabs: 0 means no, 1 means yes.
+indentationWidth: The number of spaces to use for soft tabs.
+
+On start-up, breadtext looks for the file ~/.breadtextrc to read configuration variables. Each line of .breadtextrc contains a variable name and a value separated by a space.
+
+Example contents of .breadtextrc file:
+
+colorScheme 0
+shouldUseHardTabs 0
+indentationWidth 4
 
 
