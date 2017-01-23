@@ -174,7 +174,7 @@ void systemCopyClipboardFile() {
     }
     if (applicationPlatform == PLATFORM_LINUX) {
         int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "xclip \"%s\"", (char *)clipboardFilePath);
+        sprintf((char *)tempCommand, "xclip -selection clipboard \"%s\"", (char *)clipboardFilePath);
         system((char *)tempCommand);
     }
 }
@@ -187,7 +187,7 @@ void systemPasteClipboardFile() {
     }
     if (applicationPlatform == PLATFORM_LINUX) {
         int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "xclip -o > \"%s\"", (char *)clipboardFilePath);
+        sprintf((char *)tempCommand, "xclip -selection clipboard -o > \"%s\"", (char *)clipboardFilePath);
         system((char *)tempCommand);
     }
 }
