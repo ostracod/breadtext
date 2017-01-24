@@ -1938,9 +1938,11 @@ void moveCursor(textPos_t *pos) {
     if (!equalTextPos(pos, &tempPreviousTextPos)) {
         if (pos->line != tempPreviousTextPos.line) {
             eraseLineNumber();
+            cursorTextPos.line = pos->line;
             displayLineNumber();
         }
-        cursorTextPos = *pos;
+        cursorTextPos.row = pos->row;
+        cursorTextPos.column = pos->column;
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
             if (isHighlighting) {
