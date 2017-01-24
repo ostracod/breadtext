@@ -20,6 +20,7 @@
 #define HIGHLIGHT_WORD_MODE 4
 #define HIGHLIGHT_LINE_MODE 5
 #define TEXT_COMMAND_MODE 6
+#define HELP_MODE 7
 
 #define HISTORY_ACTION_INSERT 1
 #define HISTORY_ACTION_DELETE 2
@@ -72,6 +73,64 @@ typedef struct historyFrame {
     historyTextPos_t nextCursorTextPos;
 } historyFrame_t;
 
+int8_t *helpText[] = {
+    (int8_t *)"",
+    (int8_t *)"= = = BREADTEXT HELP = = =",
+    (int8_t *)"",
+    (int8_t *)"CONTROLS",
+    (int8_t *)"",
+    (int8_t *)"T = Text-entry mode",
+    (int8_t *)", + , (again) or Escape = Command mode",
+    (int8_t *)"IJKL = Scroll one character",
+    (int8_t *)"Shift + IJKL = Scroll 10 characters",
+    (int8_t *)"[] = Scroll to beginning or end of line",
+    (int8_t *)"{} = Scroll to beginning or end of file",
+    (int8_t *)"/ = Enter command",
+    (int8_t *)"S = Save",
+    (int8_t *)"Q = Quit",
+    (int8_t *)"Shift + Q = Quit without saving",
+    (int8_t *)"M = Play macro",
+    (int8_t *)"Shift + M = Start or stop recording macro",
+    (int8_t *)"H = Character highlight mode",
+    (int8_t *)"Shift + H = Line highlight mode",
+    (int8_t *)"W = Word highlight mode",
+    (int8_t *)"D = Delete",
+    (int8_t *)"C = Copy",
+    (int8_t *)"Shift + C = Cut",
+    (int8_t *)"P = Paste after cursor",
+    (int8_t *)"Shift + P = Paste before cursor",
+    (int8_t *)"U = Undo",
+    (int8_t *)"Shift + U = Redo",
+    (int8_t *)"<> = Indent",
+    (int8_t *)"Tab or Shift + Tab = Indent",
+    (int8_t *)"N = Find next instance",
+    (int8_t *)"Shift + N = Find previous instance",
+    (int8_t *)"",
+    (int8_t *)"COMMANDS",
+    (int8_t *)"",
+    (int8_t *)"/gotoLine (line number)",
+    (int8_t *)"/find (pattern)",
+    (int8_t *)"/replace (pattern) (text)",
+    (int8_t *)"/setMark (mark number)",
+    (int8_t *)"/gotoMark (mark number)",
+    (int8_t *)"/set (config variable) (value)",
+    (int8_t *)"/help",
+    (int8_t *)"",
+    (int8_t *)"CONFIGURATION VARIABLES",
+    (int8_t *)"",
+    (int8_t *)"colorScheme: 0 is black on white, 1 is white on black.",
+    (int8_t *)"shouldUseHardTabs: 0 means no, 1 means yes.",
+    (int8_t *)"indentationWidth: The number of spaces to use for soft tabs.",
+    (int8_t *)"",
+    (int8_t *)"On start-up, breadtext looks for the file ~/.breadtextrc to read configuration variables. Each line of .breadtextrc contains a variable name and a value separated by a space.",
+    (int8_t *)"",
+    (int8_t *)"Example contents of .breadtextrc file:",
+    (int8_t *)"",
+    (int8_t *)"colorScheme 0",
+    (int8_t *)"shouldUseHardTabs 0",
+    (int8_t *)"indentationWidth 4"
+};
+
 textLine_t *rootTextLine = NULL;
 textLine_t *topTextLine = NULL;
 int64_t topTextLineRow = 0;
@@ -101,6 +160,7 @@ int8_t searchTerm[1000];
 int64_t searchTermLength;
 textLine_t *markList[MARK_AMOUNT];
 int8_t markIsSetList[MARK_AMOUNT];
+int32_t helpScroll;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -1528,7 +1588,9 @@ void setActivityMode(int8_t mode) {
     } else if (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE) {
         displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
     }
-    if (mode == TEXT_COMMAND_MODE) {
+    if (mode == HELP_MODE || tempOldMode == HELP_MODE) {
+        redrawEverything();
+    } else if (mode == TEXT_COMMAND_MODE) {
         textCommandBuffer[0] = 0;
         displayStatusBar();
     } else if (tempOldMode == TEXT_COMMAND_MODE) {
@@ -1605,9 +1667,51 @@ void displayStatusBar() {
     }
 }
 
+void displayHelpMessage() {
+    bkgd(COLOR_PAIR(primaryColorPair));
+    clear();
+    int64_t tempPosY = 0;
+    int64_t tempLength = sizeof(helpText) / sizeof(*helpText);
+    int64_t index = helpScroll;
+    while (index < tempLength && tempPosY < windowHeight) {
+        int64_t tempLength2 = strlen((char *)(helpText[index]));
+        int64_t tempRowCount = tempLength2 / windowWidth + 1;
+        int8_t tempBuffer[tempRowCount * windowWidth + 1];
+        strcpy((char *)tempBuffer, (char *)(helpText[index]));
+        if (tempPosY + tempRowCount >= windowHeight) {
+            int64_t tempRowCount2 = windowHeight - tempPosY;
+            tempBuffer[tempRowCount2 * windowWidth] = 0;
+        }
+        attron(COLOR_PAIR(primaryColorPair));
+        mvprintw(tempPosY, 0, "%s", tempBuffer);
+        attroff(COLOR_PAIR(primaryColorPair));
+        tempPosY += tempRowCount;
+        index += 1;
+    }
+}
+
+void scrollHelpMessageUp() {
+    if (helpScroll > 0) {
+        helpScroll -= 1;
+        redrawEverything();
+    }
+}
+
+void scrollHelpMessageDown() {
+    int64_t tempLength = sizeof(helpText) / sizeof(*helpText);
+    if (helpScroll < tempLength - 1) {
+        helpScroll += 1;
+        redrawEverything();
+    }
+}
+
 void redrawEverything() {
-    displayAllTextLines();
-    displayStatusBar();
+    if (activityMode == HELP_MODE) {
+        displayHelpMessage();
+    } else {
+        displayAllTextLines();
+        displayStatusBar();
+    }
 }
 
 int8_t scrollCursorOntoScreen() {
@@ -3005,6 +3109,10 @@ void executeTextCommand() {
         displayNotification((int8_t *)"Set configuration variable.");
         return;
     }
+    if (strcmp((char *)(tempTermList[0]), "help") == 0) {
+        setActivityMode(HELP_MODE);
+        return;
+    }
     setActivityMode(COMMAND_MODE);
     eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Error: Unrecognized command name.");
@@ -3027,7 +3135,9 @@ void handleResize() {
     cursorTextPos.column = 0;
     cursorSnapColumn = 0;
     
-    setActivityMode(COMMAND_MODE);
+    if (activityMode != HELP_MODE) {
+        setActivityMode(COMMAND_MODE);
+    }
     redrawEverything();
 }
 
@@ -3054,7 +3164,17 @@ int8_t handleKey(int32_t key) {
     if (key == 27) {
         setActivityMode(COMMAND_MODE);
     }
-    if (activityMode == TEXT_COMMAND_MODE) {
+    if (activityMode == HELP_MODE) {
+        if (key == KEY_UP || key == 'i') {
+            scrollHelpMessageUp();
+        }
+        if (key == KEY_DOWN || key == 'k') {
+            scrollHelpMessageDown();
+        }
+        if (key == 'q') {
+            setActivityMode(COMMAND_MODE);
+        }
+    } else if (activityMode == TEXT_COMMAND_MODE) {
         if (key >= 32 && key <= 126) {
             insertTextCommandCharacter((int8_t)key);
         }
