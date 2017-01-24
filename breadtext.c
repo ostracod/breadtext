@@ -1934,6 +1934,10 @@ void moveCursor(textPos_t *pos) {
     historyFrameIsConsecutive = false;
     textPos_t tempPreviousTextPos = cursorTextPos;
     if (!equalTextPos(pos, &tempPreviousTextPos)) {
+        if (pos->line != tempPreviousTextPos.line) {
+            eraseLineNumber();
+            displayLineNumber();
+        }
         cursorTextPos = *pos;
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
@@ -1948,20 +1952,11 @@ void moveCursor(textPos_t *pos) {
                     tempLine = getNextTextLine(tempLine);
                     displayTextLine(getTextLinePosY(tempLine), tempLine);
                 }
-                if (pos->line != tempPreviousTextPos.line) {
-                    eraseLineNumber();
-                    displayLineNumber();
-                }
+                
             } else {
                 cursorTextPos = tempPreviousTextPos;
                 eraseCursor();
-                if (pos->line != cursorTextPos.line) {
-                    eraseLineNumber();
-                    cursorTextPos.line = pos->line;
-                    displayLineNumber();
-                }
-                cursorTextPos.column = pos->column;
-                cursorTextPos.row = pos->row;
+                cursorTextPos = *pos;
                 displayCursor();
             }
         }
