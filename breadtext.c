@@ -2650,6 +2650,26 @@ textPos_t findNextTermInTextLine(textPos_t *pos, int8_t *isMissing) {
     return *pos;
 }
 
+textPos_t findPreviousTermInTextLine(textPos_t *pos, int8_t *isMissing) {
+    int64_t tempLength = pos->line->textAllocation.length;
+    int64_t index = getTextPosIndex(pos);
+    if (index > tempLength - searchTermLength) {
+        index = tempLength - searchTermLength;
+    }
+    while (index >= 0) {
+        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+            textPos_t tempPos;
+            tempPos.line = pos->line;
+            setTextPosIndex(&tempPos, index);
+            *isMissing = false;
+            return tempPos;
+        }
+        index -= 1;
+    }
+    *isMissing = true;
+    return *pos;
+}
+
 textPos_t findNextTermTextPos(textPos_t *pos, int8_t *isMissing) {
     textPos_t tempPos = *pos;
     while (true) {
@@ -2670,6 +2690,26 @@ textPos_t findNextTermTextPos(textPos_t *pos, int8_t *isMissing) {
     }
 }
 
+textPos_t findPreviousTermTextPos(textPos_t *pos, int8_t *isMissing) {
+    textPos_t tempPos = *pos;
+    while (true) {
+        int8_t tempIsMissing;
+        textPos_t tempPos2 = findPreviousTermInTextLine(&tempPos, &tempIsMissing);
+        if (tempIsMissing) {
+            tempPos.line = getPreviousTextLine(tempPos.line);
+            if (tempPos.line == NULL) {
+                *isMissing = true;
+                return *pos;
+            }
+            int64_t tempLength = tempPos.line->textAllocation.length;
+            setTextPosIndex(&tempPos, tempLength);
+        } else {
+            *isMissing = false;
+            return tempPos2;
+        }
+    }
+}
+
 int8_t gotoNextTerm() {
     moveCursorRight(1);
     int8_t tempIsMissing;
@@ -2683,6 +2723,35 @@ int8_t gotoNextTerm() {
         if (tempIsMissing) {
             moveCursorLeft(1);
             return false;
+        }
+    }
+    moveCursor(&tempTextPos);
+    return true;
+}
+
+int8_t gotoPreviousTerm() {
+    int8_t tempIsMissing;
+    textPos_t tempTextPos;
+    if (getTextLineNumber(cursorTextPos.line) <= 1 && cursorTextPos.row == 0 && cursorTextPos.column == 0) {
+        tempTextPos.line = getRightmostTextLine(rootTextLine);
+        int64_t tempLength = tempTextPos.line->textAllocation.length;
+        setTextPosIndex(&tempTextPos, tempLength);
+        tempTextPos = findPreviousTermTextPos(&tempTextPos, &tempIsMissing);
+        if (tempIsMissing) {
+            return false;
+        }
+    } else {
+        moveCursorLeft(1);
+        tempTextPos = findPreviousTermTextPos(&cursorTextPos, &tempIsMissing);
+        if (tempIsMissing) {
+            tempTextPos.line = getRightmostTextLine(rootTextLine);
+            int64_t tempLength = tempTextPos.line->textAllocation.length;
+            setTextPosIndex(&tempTextPos, tempLength);
+            tempTextPos = findPreviousTermTextPos(&tempTextPos, &tempIsMissing);
+            if (tempIsMissing) {
+                moveCursorRight(1);
+                return false;
+            }
         }
     }
     moveCursor(&tempTextPos);
@@ -3018,6 +3087,12 @@ int8_t handleKey(int32_t key) {
             }
             if (key == '/') {
                 setActivityMode(TEXT_COMMAND_MODE);
+            }
+            if (key == 'n') {
+                gotoNextTerm();
+            }
+            if (key == 'N') {
+                gotoPreviousTerm();
             }
         }
         if (!isHighlighting) {
