@@ -3,7 +3,18 @@
 
 A text editor by Jack Eisenmann, for Jack Eisenmann.
 
-NOTE: This text editor is still under development.
+NOTE: This text editor is still being tested for bugs.
+
+FEATURES
+
+> You can edit text
+> Copy, cut, and paste from system clipboard
+> Undo and redo
+> Find and replace
+> Customizable indentation
+> Set and goto marks
+> Macro playback
+> Compatible with macOS and Linux
 
 INSTALLATION
 
@@ -18,6 +29,6 @@ sudo apt-get install xclip
 
 CONTROLS
 
-For help with controls, type "/help" after running BreadText.
+For help with controls, enter "/help" after running BreadText.
 
 
