@@ -2807,6 +2807,8 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     return output;
 }
 
+int8_t setConfigurationVariable(int8_t *name, int64_t value);
+
 void executeTextCommand() {
     int8_t *tempTermList[20];
     int8_t tempTermIndex = 0;
@@ -2980,6 +2982,27 @@ void executeTextCommand() {
         tempTextPos.column = 0;
         moveCursor(&tempTextPos);
         setActivityMode(COMMAND_MODE);
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "set") == 0) {
+        if (tempTermListLength != 3) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        int64_t tempValue = atoi((char *)(tempTermList[2]));
+        int8_t tempResult = setConfigurationVariable(tempTermList[1], tempValue);
+        if (!tempResult) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Could not set variable.");
+            return;
+        }
+        setActivityMode(COMMAND_MODE);
+        redrawEverything();
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Set configuration variable.");
         return;
     }
     setActivityMode(COMMAND_MODE);
@@ -3242,7 +3265,8 @@ void playMacro() {
     }
 }
 
-void setConfigurationVariable(int8_t *name, int64_t value) {
+int8_t setConfigurationVariable(int8_t *name, int64_t value) {
+    int8_t output = false;
     if (strcmp((char *)name, "colorScheme") == 0) {
         if (value == 0) {
             primaryColorPair = BLACK_ON_WHITE;
@@ -3252,13 +3276,17 @@ void setConfigurationVariable(int8_t *name, int64_t value) {
             primaryColorPair = WHITE_ON_BLACK;
             secondaryColorPair = BLACK_ON_WHITE;
         }
+        output = true;
     }
     if (strcmp((char *)name, "indentationWidth") == 0) {
         indentationWidth = value;
+        output = true;
     }
     if (strcmp((char *)name, "shouldUseHardTabs") == 0) {
         shouldUseHardTabs = value;
+        output = true;
     }
+    return output;
 }
 
 void processRcFile() {
