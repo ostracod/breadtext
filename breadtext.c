@@ -1541,7 +1541,9 @@ void setActivityMode(int8_t mode) {
         }
     }
     if (mode == PREVIOUS_MODE) {
+        int8_t tempMode = activityMode;
         activityMode = previousActivityMode;
+        previousActivityMode = tempMode;
     } else {
         previousActivityMode = activityMode;
         activityMode = mode;
