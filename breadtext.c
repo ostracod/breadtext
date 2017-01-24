@@ -96,6 +96,8 @@ int8_t isRecordingMacro = false;
 int8_t indentationWidth = 4;
 int8_t shouldUseHardTabs = false;
 int8_t textCommandBuffer[1000];
+int8_t searchTerm[1000];
+int64_t searchTermLength;
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -124,6 +126,17 @@ void copyData(int8_t *destination, int8_t *source, int64_t amount) {
             index -= 1;
         }
     }
+}
+
+int8_t equalData(int8_t *source1, int8_t *source2, int64_t amount) {
+    int64_t index = 0;
+    while (index < amount) {
+        if (source1[index] != source2[index]) {
+            return false;
+        }
+        index += 1;
+    }
+    return true;
 }
 
 int8_t isWhitespace(int8_t character) {
@@ -2620,6 +2633,62 @@ void deleteTextCommandCharacter() {
     displayTextCommandCursor();
 }
 
+textPos_t findNextTermInTextLine(textPos_t *pos, int8_t *isMissing) {
+    int64_t tempLength = pos->line->textAllocation.length;
+    int64_t index = getTextPosIndex(pos);
+    while (index <= tempLength - searchTermLength) {
+        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+            textPos_t tempPos;
+            tempPos.line = pos->line;
+            setTextPosIndex(&tempPos, index);
+            *isMissing = false;
+            return tempPos;
+        }
+        index += 1;
+    }
+    *isMissing = true;
+    return *pos;
+}
+
+textPos_t findNextTermTextPos(textPos_t *pos, int8_t *isMissing) {
+    textPos_t tempPos = *pos;
+    while (true) {
+        int8_t tempIsMissing;
+        textPos_t tempPos2 = findNextTermInTextLine(&tempPos, &tempIsMissing);
+        if (tempIsMissing) {
+            tempPos.line = getNextTextLine(tempPos.line);
+            if (tempPos.line == NULL) {
+                *isMissing = true;
+                return *pos;
+            }
+            tempPos.row = 0;
+            tempPos.column = 0;
+        } else {
+            *isMissing = false;
+            return tempPos2;
+        }
+    }
+}
+
+int8_t gotoNextTerm() {
+    moveCursorRight(1);
+    int8_t tempIsMissing;
+    textPos_t tempTextPos;
+    tempTextPos = findNextTermTextPos(&cursorTextPos, &tempIsMissing);
+    if (tempIsMissing) {
+        tempTextPos.line = getLeftmostTextLine(rootTextLine);
+        tempTextPos.row = 0;
+        tempTextPos.column = 0;
+        tempTextPos = findNextTermTextPos(&tempTextPos, &tempIsMissing);
+        if (tempIsMissing) {
+            moveCursorLeft(1);
+            return false;
+        }
+    }
+    moveCursor(&tempTextPos);
+    return true;
+}
+
 void executeTextCommand() {
     int8_t *tempTermList[20];
     int8_t tempTermIndex = 0;
@@ -2703,6 +2772,25 @@ void executeTextCommand() {
             return;
         }
         moveCursor(&tempTextPos);
+        setActivityMode(COMMAND_MODE);
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "find") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        int8_t tempResult = gotoNextTerm();
+        if (!tempResult) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Could not find term.");
+            return;
+        }
         setActivityMode(COMMAND_MODE);
         return;
     }
