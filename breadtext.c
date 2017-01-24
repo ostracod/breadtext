@@ -728,7 +728,7 @@ void printTextLineStructure(textLine_t *line) {
         printf("|");
         tempCount += 1;
     }
-    printf("%lld\n", line->textAllocation.length);
+    printf("%lld\n", (long long)(line->textAllocation.length));
     tempChild = line->rightChild;
     if (tempChild != NULL) {
         printTextLineStructure(tempChild);
@@ -1633,7 +1633,7 @@ void eraseLineNumber() {
 void displayLineNumber() {
     attron(COLOR_PAIR(secondaryColorPair));
     int8_t tempMessage[100];
-    sprintf((char *)tempMessage, "Line %lld", getTextLineNumber(cursorTextPos.line));
+    sprintf((char *)tempMessage, "Line %lld", (long long)(getTextLineNumber(cursorTextPos.line)));
     lineNumberTextLength = (int32_t)strlen((char *)tempMessage);
     mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempMessage);
     attroff(COLOR_PAIR(secondaryColorPair));
@@ -3057,9 +3057,9 @@ void executeTextCommand() {
         eraseActivityModeOrNotification();
         int8_t tempText[1000];
         if (tempResult == 1) {
-            sprintf((char *)tempText, "Replaced %lld term.", tempResult);
+            sprintf((char *)tempText, "Replaced %lld term.", (long long)(tempResult));
         } else {
-            sprintf((char *)tempText, "Replaced %lld terms.", tempResult);
+            sprintf((char *)tempText, "Replaced %lld terms.", (long long)(tempResult));
         }
         displayNotification(tempText);
         return;
