@@ -2758,6 +2758,40 @@ int8_t gotoPreviousTerm() {
     return true;
 }
 
+int64_t findAndReplaceAllTerms(int8_t *replacementText) {
+    int64_t tempLength = strlen((char *)replacementText);
+    int64_t output = 0;
+    int8_t tempIsMissing;
+    textPos_t tempTextPos;
+    tempTextPos.line = getLeftmostTextLine(rootTextLine);
+    tempTextPos.row = 0;
+    tempTextPos.column = 0;
+    while (true) {
+        tempTextPos = findNextTermTextPos(&tempTextPos, &tempIsMissing);
+        if (tempIsMissing) {
+            break;
+        }
+        if (output == 0) {
+            addHistoryFrame();
+        }
+        int64_t index = getTextPosIndex(&tempTextPos);
+        recordTextLineDeleted(tempTextPos.line);
+        removeTextFromTextAllocation(&(tempTextPos.line->textAllocation), index, searchTermLength);
+        insertTextIntoTextAllocation(&(tempTextPos.line->textAllocation), index, replacementText, tempLength);
+        recordTextLineInserted(tempTextPos.line);
+        index += tempLength;
+        setTextPosIndex(&tempTextPos, index);
+        output += 1;
+    }
+    if (output > 0) {
+        finishCurrentHistoryFrame();
+        historyFrameIsConsecutive = false;
+        displayAllTextLines();
+        textBufferIsDirty = true;
+    }
+    return output;
+}
+
 void executeTextCommand() {
     int8_t *tempTermList[20];
     int8_t tempTermIndex = 0;
@@ -2861,6 +2895,27 @@ void executeTextCommand() {
             return;
         }
         setActivityMode(COMMAND_MODE);
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "replace") == 0) {
+        if (tempTermListLength != 3) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        int64_t tempResult = findAndReplaceAllTerms(tempTermList[2]);
+        setActivityMode(COMMAND_MODE);
+        eraseActivityModeOrNotification();
+        int8_t tempText[1000];
+        if (tempResult == 1) {
+            sprintf((char *)tempText, "Replaced %lld term.", tempResult);
+        } else {
+            sprintf((char *)tempText, "Replaced %lld terms.", tempResult);
+        }
+        displayNotification(tempText);
         return;
     }
     setActivityMode(COMMAND_MODE);
