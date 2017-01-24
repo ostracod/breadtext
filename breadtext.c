@@ -21,6 +21,7 @@
 #define HIGHLIGHT_LINE_MODE 5
 #define TEXT_COMMAND_MODE 6
 #define HELP_MODE 7
+#define PREVIOUS_MODE 8
 
 #define HISTORY_ACTION_INSERT 1
 #define HISTORY_ACTION_DELETE 2
@@ -137,6 +138,7 @@ int64_t topTextLineRow = 0;
 textPos_t cursorTextPos;
 int64_t cursorSnapColumn = 0;
 int8_t activityMode = COMMAND_MODE;
+int8_t previousActivityMode;
 int32_t activityModeTextLength = 0;
 int32_t lineNumberTextLength = 0;
 int8_t isShowingNotification = false;
@@ -1538,62 +1540,76 @@ void setActivityMode(int8_t mode) {
             textBufferIsDirty = true;
         }
     }
-    int8_t tempOldMode = activityMode;
-    activityMode = mode;
-    if (mode == HIGHLIGHT_CHARACTER_MODE) {
-        highlightTextPos.line = cursorTextPos.line;
-        highlightTextPos.column = cursorTextPos.column;
-        highlightTextPos.row = cursorTextPos.row;
+    if (mode == PREVIOUS_MODE) {
+        activityMode = previousActivityMode;
+    } else {
+        previousActivityMode = activityMode;
+        activityMode = mode;
     }
-    if (mode == HIGHLIGHT_LINE_MODE) {
-        highlightTextPos.line = cursorTextPos.line;
-        int64_t tempLength = cursorTextPos.line->textAllocation.length;
-        setTextPosIndex(&highlightTextPos, tempLength);
-        cursorTextPos.row = 0;
-        cursorTextPos.column = 0;
-        scrollCursorOntoScreen();
+    if (activityMode == HIGHLIGHT_CHARACTER_MODE) {
+        if (mode != PREVIOUS_MODE) {
+            highlightTextPos.line = cursorTextPos.line;
+            highlightTextPos.column = cursorTextPos.column;
+            highlightTextPos.row = cursorTextPos.row;
+        }
     }
-    if (mode == HIGHLIGHT_WORD_MODE) {
-        int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
-        int64_t tempEndIndex = tempStartIndex;
-        int64_t tempLength = cursorTextPos.line->textAllocation.length;
-        if (tempStartIndex < tempLength) {
-            int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
-            if (isWordCharacter(tempCharacter)) {
-                while (tempStartIndex > 0) {
-                    int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
-                    if (!isWordCharacter(tempCharacter)) {
-                        break;
+    if (activityMode == HIGHLIGHT_LINE_MODE) {
+        if (mode != PREVIOUS_MODE) {
+            highlightTextPos.line = cursorTextPos.line;
+            int64_t tempLength = cursorTextPos.line->textAllocation.length;
+            setTextPosIndex(&highlightTextPos, tempLength);
+            cursorTextPos.row = 0;
+            cursorTextPos.column = 0;
+            scrollCursorOntoScreen();
+        }
+    }
+    if (activityMode == HIGHLIGHT_WORD_MODE) {
+        if (mode != PREVIOUS_MODE) {
+            int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+            int64_t tempEndIndex = tempStartIndex;
+            int64_t tempLength = cursorTextPos.line->textAllocation.length;
+            if (tempStartIndex < tempLength) {
+                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+                if (isWordCharacter(tempCharacter)) {
+                    while (tempStartIndex > 0) {
+                        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
+                        if (!isWordCharacter(tempCharacter)) {
+                            break;
+                        }
+                        tempStartIndex -= 1;
                     }
-                    tempStartIndex -= 1;
-                }
-                while (tempEndIndex < tempLength - 1) {
-                    int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
-                    if (!isWordCharacter(tempCharacter)) {
-                        break;
+                    while (tempEndIndex < tempLength - 1) {
+                        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
+                        if (!isWordCharacter(tempCharacter)) {
+                            break;
+                        }
+                        tempEndIndex += 1;
                     }
-                    tempEndIndex += 1;
                 }
             }
+            highlightTextPos.line = cursorTextPos.line;
+            setTextPosIndex(&highlightTextPos, tempStartIndex);
+            setTextPosIndex(&cursorTextPos, tempEndIndex);
+            scrollCursorOntoScreen();
         }
-        highlightTextPos.line = cursorTextPos.line;
-        setTextPosIndex(&highlightTextPos, tempStartIndex);
-        setTextPosIndex(&cursorTextPos, tempEndIndex);
-        scrollCursorOntoScreen();
     }
     int8_t tempOldIsHighlighting = isHighlighting;
-    isHighlighting = (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE || mode == HIGHLIGHT_LINE_MODE);
-    if (tempOldIsHighlighting || mode == HIGHLIGHT_LINE_MODE) {
-        displayAllTextLines();
-    } else if (mode == HIGHLIGHT_CHARACTER_MODE || mode == HIGHLIGHT_WORD_MODE) {
-        displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
+    isHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_WORD_MODE || activityMode == HIGHLIGHT_LINE_MODE);
+    if (activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
+        if (tempOldIsHighlighting || activityMode == HIGHLIGHT_LINE_MODE) {
+            displayAllTextLines();
+        } else if (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_WORD_MODE) {
+            displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
+        }
     }
-    if (mode == HELP_MODE || tempOldMode == HELP_MODE) {
+    if (activityMode == HELP_MODE || previousActivityMode == HELP_MODE) {
         redrawEverything();
-    } else if (mode == TEXT_COMMAND_MODE) {
-        textCommandBuffer[0] = 0;
+    } else if (activityMode == TEXT_COMMAND_MODE) {
+        if (mode != PREVIOUS_MODE) {
+            textCommandBuffer[0] = 0;
+        }
         displayStatusBar();
-    } else if (tempOldMode == TEXT_COMMAND_MODE) {
+    } else if (previousActivityMode == TEXT_COMMAND_MODE) {
         displayStatusBar();
     } else {
         displayActivityMode();
@@ -2972,14 +2988,14 @@ void executeTextCommand() {
     exit(0);
     */
     if (tempTermListLength <= 0) {
-        setActivityMode(COMMAND_MODE);
+        setActivityMode(PREVIOUS_MODE);
         eraseActivityModeOrNotification();
         displayNotification((int8_t *)"Error: Invalid command.");
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "gotoLine") == 0) {
         if (tempTermListLength != 2) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
@@ -2990,45 +3006,54 @@ void executeTextCommand() {
         tempTextPos.row = 0;
         tempTextPos.column = 0;
         if (tempTextPos.line == NULL) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Bad line number.");
             return;
         }
+        setActivityMode(PREVIOUS_MODE);
         moveCursor(&tempTextPos);
-        setActivityMode(COMMAND_MODE);
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "find") == 0) {
         if (tempTermListLength != 2) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        setActivityMode(PREVIOUS_MODE);
         int8_t tempResult = gotoNextTerm();
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
         if (!tempResult) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Could not find term.");
             return;
         }
-        setActivityMode(COMMAND_MODE);
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "replace") == 0) {
         if (tempTermListLength != 3) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
-        int64_t tempResult = findAndReplaceAllTerms(tempTermList[2]);
         setActivityMode(COMMAND_MODE);
+        cursorTextPos.row = 0;
+        cursorTextPos.column = 0;
+        cursorSnapColumn = 0;
+        historyFrameIsConsecutive = false;
+        scrollCursorOntoScreen();
+        int64_t tempResult = findAndReplaceAllTerms(tempTermList[2]);
         eraseActivityModeOrNotification();
         int8_t tempText[1000];
         if (tempResult == 1) {
@@ -3041,41 +3066,41 @@ void executeTextCommand() {
     }
     if (strcmp((char *)(tempTermList[0]), "setMark") == 0) {
         if (tempTermListLength != 2) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         int64_t index = atoi((char *)(tempTermList[1]));
         if (index < 0 || index >= MARK_AMOUNT) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Bad mark number.");
             return;
         }
         markList[index] = cursorTextPos.line;
         markIsSetList[index] = true;
-        setActivityMode(COMMAND_MODE);
+        setActivityMode(PREVIOUS_MODE);
         eraseActivityModeOrNotification();
         displayNotification((int8_t *)"Set mark.");
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "gotoMark") == 0) {
         if (tempTermListLength != 2) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         int64_t index = atoi((char *)(tempTermList[1]));
         if (index < 0 || index >= MARK_AMOUNT) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Bad mark number.");
             return;
         }
         if (!markIsSetList[index]) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Mark is not set.");
             return;
@@ -3084,13 +3109,15 @@ void executeTextCommand() {
         tempTextPos.line = markList[index];
         tempTextPos.row = 0;
         tempTextPos.column = 0;
+        setActivityMode(PREVIOUS_MODE);
         moveCursor(&tempTextPos);
-        setActivityMode(COMMAND_MODE);
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "set") == 0) {
         if (tempTermListLength != 3) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Wrong number of arguments.");
             return;
@@ -3098,12 +3125,12 @@ void executeTextCommand() {
         int64_t tempValue = atoi((char *)(tempTermList[2]));
         int8_t tempResult = setConfigurationVariable(tempTermList[1], tempValue);
         if (!tempResult) {
-            setActivityMode(COMMAND_MODE);
+            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Error: Could not set variable.");
             return;
         }
-        setActivityMode(COMMAND_MODE);
+        setActivityMode(PREVIOUS_MODE);
         redrawEverything();
         eraseActivityModeOrNotification();
         displayNotification((int8_t *)"Set configuration variable.");
@@ -3113,7 +3140,7 @@ void executeTextCommand() {
         setActivityMode(HELP_MODE);
         return;
     }
-    setActivityMode(COMMAND_MODE);
+    setActivityMode(PREVIOUS_MODE);
     eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Error: Unrecognized command name.");
 }
