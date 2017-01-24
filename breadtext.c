@@ -26,6 +26,7 @@
 
 #define MAXIMUM_HISTORY_DEPTH 300
 #define MAXIMUM_MACRO_LENGTH 100
+#define MARK_AMOUNT 10
 
 #define SHOULD_RUN_TESTS false
 
@@ -98,6 +99,8 @@ int8_t shouldUseHardTabs = false;
 int8_t textCommandBuffer[1000];
 int8_t searchTerm[1000];
 int64_t searchTermLength;
+textLine_t *markList[MARK_AMOUNT];
+int8_t markIsSetList[MARK_AMOUNT];
 WINDOW *window;
 int32_t windowWidth = -1;
 int32_t windowHeight = -1;
@@ -865,14 +868,26 @@ historyTextPos_t convertTextPosToHistoryTextPos(textPos_t *pos) {
 }
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
-    if (lineToBeDeleted != topTextLine) {
-        return;
+    if (lineToBeDeleted == topTextLine) {
+        topTextLine = getNextTextLine(lineToBeDeleted);
+        if (topTextLine == NULL) {
+            topTextLine = getPreviousTextLine(lineToBeDeleted);
+        }
+        topTextLineRow = 0;
     }
-    topTextLine = getNextTextLine(lineToBeDeleted);
-    if (topTextLine == NULL) {
-        topTextLine = getPreviousTextLine(lineToBeDeleted);
+    int8_t index = 0;
+    while (index < MARK_AMOUNT) {
+        if (markIsSetList[index]) {
+            textLine_t **tempTextLine = markList + index;
+            if (lineToBeDeleted == *tempTextLine) {
+                *tempTextLine = getNextTextLine(lineToBeDeleted);
+                if (*tempTextLine == NULL) {
+                    *tempTextLine = getPreviousTextLine(lineToBeDeleted);
+                }
+            }
+        }
+        index += 1;
     }
-    topTextLineRow = 0;
 }
 
 void eraseActivityModeOrNotification();
@@ -2918,6 +2933,55 @@ void executeTextCommand() {
         displayNotification(tempText);
         return;
     }
+    if (strcmp((char *)(tempTermList[0]), "setMark") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        int64_t index = atoi((char *)(tempTermList[1]));
+        if (index < 0 || index >= MARK_AMOUNT) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Bad mark number.");
+            return;
+        }
+        markList[index] = cursorTextPos.line;
+        markIsSetList[index] = true;
+        setActivityMode(COMMAND_MODE);
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Set mark.");
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "gotoMark") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        int64_t index = atoi((char *)(tempTermList[1]));
+        if (index < 0 || index >= MARK_AMOUNT) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Bad mark number.");
+            return;
+        }
+        if (!markIsSetList[index]) {
+            setActivityMode(COMMAND_MODE);
+            eraseActivityModeOrNotification();
+            displayNotification((int8_t *)"Error: Mark is not set.");
+            return;
+        }
+        textPos_t tempTextPos;
+        tempTextPos.line = markList[index];
+        tempTextPos.row = 0;
+        tempTextPos.column = 0;
+        moveCursor(&tempTextPos);
+        setActivityMode(COMMAND_MODE);
+        return;
+    }
     setActivityMode(COMMAND_MODE);
     eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Error: Unrecognized command name.");
@@ -3291,6 +3355,11 @@ int main(int argc, const char *argv[]) {
     cursorTextPos.column = 0;
     cursorSnapColumn = 0;
     firstNonconsecutiveEscapeSequenceAction.text = NULL;
+    int8_t index = 0;
+    while (index < MARK_AMOUNT) {
+        markIsSetList[index] = false;
+        index += 1;
+    }
     
     window = initscr();
     noecho();
