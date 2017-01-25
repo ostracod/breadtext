@@ -1932,17 +1932,26 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line) {
     }
 }
 
+void adjustLineSelectionBoundaries(textPos_t *nextCursorPos);
+
 void moveCursor(textPos_t *pos) {
+    if (activityMode == HIGHLIGHT_WORD_MODE) {
+        setActivityMode(COMMAND_MODE);
+    }
     historyFrameIsConsecutive = false;
     textPos_t tempPreviousTextPos = cursorTextPos;
-    if (!equalTextPos(pos, &tempPreviousTextPos)) {
-        if (pos->line != tempPreviousTextPos.line) {
+    textPos_t tempNextPos = *pos;
+    if (!equalTextPos(&tempNextPos, &tempPreviousTextPos)) {
+        if (activityMode == HIGHLIGHT_LINE_MODE) {
+            adjustLineSelectionBoundaries(&tempNextPos);
+        }
+        if (tempNextPos.line != tempPreviousTextPos.line) {
             eraseLineNumber();
-            cursorTextPos.line = pos->line;
+            cursorTextPos.line = tempNextPos.line;
             displayLineNumber();
         }
-        cursorTextPos.row = pos->row;
-        cursorTextPos.column = pos->column;
+        cursorTextPos.row = tempNextPos.row;
+        cursorTextPos.column = tempNextPos.column;
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
             if (isHighlighting) {
@@ -1960,7 +1969,7 @@ void moveCursor(textPos_t *pos) {
             } else {
                 cursorTextPos = tempPreviousTextPos;
                 eraseCursor();
-                cursorTextPos = *pos;
+                cursorTextPos = tempNextPos;
                 displayCursor();
             }
         }
@@ -2116,7 +2125,6 @@ void moveLineSelectionUp(int32_t amount) {
         tempNextTextPos.line = tempLine;
         tempCount += 1;
     }
-    adjustLineSelectionBoundaries(&tempNextTextPos);
     moveCursor(&tempNextTextPos);
     historyFrameIsConsecutive = false;
 }
@@ -2132,7 +2140,6 @@ void moveLineSelectionDown(int32_t amount) {
         tempNextTextPos.line = tempLine;
         tempCount += 1;
     }
-    adjustLineSelectionBoundaries(&tempNextTextPos);
     moveCursor(&tempNextTextPos);
     historyFrameIsConsecutive = false;
 }
