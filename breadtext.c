@@ -2509,6 +2509,7 @@ void deleteSelectionHelper() {
     }
     cursorTextPos = tempFirstTextPos;
     cursorSnapColumn = cursorTextPos.column;
+    setActivityMode(COMMAND_MODE);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstTextPos.line), tempFirstTextPos.line);
@@ -2522,7 +2523,6 @@ void deleteSelectionHelper() {
 void deleteSelection() {
     addHistoryFrame();
     deleteSelectionHelper();
-    setActivityMode(COMMAND_MODE);
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
@@ -2531,7 +2531,6 @@ void cutSelection() {
     addHistoryFrame();
     copySelectionHelper();
     deleteSelectionHelper();
-    setActivityMode(COMMAND_MODE);
     eraseActivityModeOrNotification();
     displayNotification((int8_t *)"Cut selection.");
     finishCurrentHistoryFrame();
@@ -2591,7 +2590,6 @@ void pasteBeforeCursor() {
     int8_t tempLastIsHighlighting = isHighlighting;
     if (isHighlighting) {
         deleteSelectionHelper();
-        setActivityMode(COMMAND_MODE);
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
@@ -2615,7 +2613,6 @@ void pasteAfterCursor() {
     int8_t tempLastIsHighlighting = isHighlighting;
     if (isHighlighting) {
         deleteSelectionHelper();
-        setActivityMode(COMMAND_MODE);
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
