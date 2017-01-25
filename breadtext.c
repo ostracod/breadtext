@@ -3185,7 +3185,11 @@ int8_t handleKey(int32_t key) {
     }
     // Escape.
     if (key == 27) {
-        setActivityMode(COMMAND_MODE);
+        if (activityMode == TEXT_COMMAND_MODE) {
+            setActivityMode(PREVIOUS_MODE);
+        } else {
+            setActivityMode(COMMAND_MODE);
+        }
     }
     if (activityMode == HELP_MODE) {
         if (key == KEY_UP || key == 'i') {
