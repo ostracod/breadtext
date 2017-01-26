@@ -1,6 +1,7 @@
-breadtext
+build
 *.dSYM
 test.txt
 *.swp
 .DS_store
+*.o
 

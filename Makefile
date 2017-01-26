@@ -1,7 +1,21 @@
+CC = gcc
+CFLAGS = -Wall -c
+LDFLAGS = -lncurses
+DIRBUILD = build
+DIRSRC = src
+SOURCES := $(shell ls $(DIRSRC)/*.c)
+OBJECTS = $(SOURCES:.c=.o)
+EXECUTABLE = $(DIRBUILD)/breadtext
 
-all: breadtext.c 
-	gcc -g -Wall -o breadtext breadtext.c -lncurses
+all: $(SOURCES) $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	mkdir -p $(DIRBUILD)
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+.c.o:
+	$(CC) $(CFLAGS) $< -o $@
 
 clean: 
-	rm breadtext
+	rm $(OBJECTS) $(EXECUTABLE)
 

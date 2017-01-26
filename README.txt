@@ -21,7 +21,7 @@ INSTALLATION
 To install:
 
 make
-sudo mv ./breadtext /usr/local/bin/breadtext
+sudo mv ./build/breadtext /usr/local/bin/breadtext
 
 On Linux you must install xclip for clipboard functionality:
 
