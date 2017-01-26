@@ -2544,6 +2544,13 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
+int64_t getIndentationWidth(int64_t level) {
+    if (shouldUseHardTabs) {
+        return level;
+    }
+    return level * indentationWidth;
+}
+
 void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
     fseek(file, 0, SEEK_SET);
     textLine_t *tempFirstLine = cursorTextPos.line;
@@ -2564,8 +2571,8 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
         setTextPosIndex(&cursorTextPos, index);
         if (tempContainsNewline) {
             insertNewlineBeforeCursorHelper(baseIndentationLevel);
-            cursorTextPos.row = 0;
-            cursorTextPos.column = 0;
+            int64_t index = getIndentationWidth(baseIndentationLevel);
+            setTextPosIndex(&cursorTextPos, index);
         }
         cursorSnapColumn = cursorTextPos.column;
         free(tempText);
