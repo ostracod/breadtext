@@ -4,6 +4,7 @@
 #include <curses.h>
 #include <string.h>
 #include <wordexp.h>
+#include <time.h>
 
 #define true 1
 #define false 0
@@ -740,7 +741,72 @@ void printTextLineStructure(textLine_t *line) {
     }
 }
 
+int8_t runFuzzTest() {
+    textLine_t *tempLine = createEmptyTextLine();
+    rootTextLine = tempLine;
+    int32_t maximumLineCount = 100;
+    textLine_t *lineList[maximumLineCount];
+    lineList[0] = tempLine;
+    int32_t lineCount = 1;
+    int32_t tempIterationCount = 0;
+    while (tempIterationCount < 1000000) {
+        if (tempIterationCount % 20000 == 0) {
+            printf("%d (%d)\n", tempIterationCount, lineCount);
+        }
+        int8_t shouldInsert;
+        if (lineCount < 10) {
+            shouldInsert = true;
+        } else if (lineCount >= maximumLineCount) {
+            shouldInsert = false;
+        } else {
+            shouldInsert = ((rand() % 100) >= 50);
+        }
+        int64_t tempLineNumber = rand() % lineCount + 1;
+        textLine_t *tempSelectedLine = getTextLineByNumber(tempLineNumber);
+        if (shouldInsert) {
+            textLine_t *tempLine = createEmptyTextLine();
+            int32_t index;
+            if ((rand() % 100) >= 50) {
+                insertTextLineRight(tempSelectedLine, tempLine);
+                index = tempLineNumber;
+            } else {
+                insertTextLineLeft(tempSelectedLine, tempLine);
+                index = tempLineNumber - 1;
+            }
+            int32_t tempIndex = lineCount;
+            while (tempIndex > index) {
+                lineList[tempIndex] = lineList[tempIndex - 1];
+                tempIndex -= 1;
+            }
+            lineList[index] = tempLine;
+            lineCount += 1;
+        } else {
+            deleteTextLine(tempSelectedLine);
+            int32_t index = tempLineNumber - 1;
+            int32_t tempIndex = index;
+            while (tempIndex < lineCount - 1) {
+                lineList[tempIndex] = lineList[tempIndex + 1];
+                tempIndex += 1;
+            }
+            lineCount -= 1;
+        }
+        textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
+        int32_t index = 0;
+        while (index < lineCount) {
+            textLine_t *tempLine2 = lineList[index];
+            if (tempLine != tempLine2) {
+                return false;
+            }
+            tempLine = getNextTextLine(tempLine);
+            index += 1;
+        }
+        tempIterationCount += 1;
+    }
+    return true;
+}
+
 void runTests() {
+    srand((unsigned)time(NULL));
     int32_t tempCount;
     tempCount = 0;
     while (tempCount < 100) {
@@ -901,6 +967,13 @@ void runTests() {
         }
     }
     printf("Passed test 9.\n");
+    int8_t tempResult = runFuzzTest();
+    if (tempResult) {
+        printf("Passed test 10.\n");
+    } else {
+        printf("FAILED TEST 10.\n");
+        return;
+    }
 }
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2) {
