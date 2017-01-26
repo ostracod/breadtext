@@ -272,9 +272,14 @@ void convertTabsToSpaces(int8_t *text) {
 }
 
 int8_t *mallocRealpath(int8_t *path) {
-    wordexp_t expResult;
-    wordexp((char *)path, &expResult, 0);
     int8_t tempText[50000];
+    int64_t tempLength = strlen((char *)path);
+    tempText[0] = '"';
+    strcpy((char *)tempText + 1, (char *)path);
+    tempText[tempLength + 1] = '"';
+    tempText[tempLength + 2] = 0;
+    wordexp_t expResult;
+    wordexp((char *)tempText, &expResult, 0);
     realpath(expResult.we_wordv[0], (char *)tempText);
     wordfree(&expResult);
     int8_t *output = malloc(strlen((char *)tempText) + 1);
