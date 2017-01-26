@@ -2848,7 +2848,7 @@ textPos_t findPreviousTermTextPos(textPos_t *pos, int8_t *isMissing) {
     }
 }
 
-int8_t gotoNextTerm() {
+int8_t gotoNextTermHelper() {
     moveCursorRight(1);
     int8_t tempIsMissing;
     textPos_t tempTextPos;
@@ -2867,7 +2867,7 @@ int8_t gotoNextTerm() {
     return true;
 }
 
-int8_t gotoPreviousTerm() {
+int8_t gotoPreviousTermHelper() {
     int8_t tempIsMissing;
     textPos_t tempTextPos;
     if (getTextLineNumber(cursorTextPos.line) <= 1 && cursorTextPos.row == 0 && cursorTextPos.column == 0) {
@@ -2894,6 +2894,26 @@ int8_t gotoPreviousTerm() {
     }
     moveCursor(&tempTextPos);
     return true;
+}
+
+void gotoNextTerm() {
+    int8_t tempResult = gotoNextTermHelper();
+    cursorSnapColumn = cursorTextPos.column;
+    historyFrameIsConsecutive = false;
+    if (!tempResult) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Could not find term.");
+    }
+}
+
+void gotoPreviousTerm() {
+    int8_t tempResult = gotoPreviousTermHelper();
+    cursorSnapColumn = cursorTextPos.column;
+    historyFrameIsConsecutive = false;
+    if (!tempResult) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Could not find term.");
+    }
 }
 
 int64_t findAndReplaceAllTerms(int8_t *replacementText) {
@@ -3030,11 +3050,10 @@ void executeTextCommand() {
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
         setActivityMode(PREVIOUS_MODE);
-        int8_t tempResult = gotoNextTerm();
+        int8_t tempResult = gotoNextTermHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
-            setActivityMode(PREVIOUS_MODE);
             eraseActivityModeOrNotification();
             displayNotification((int8_t *)"Could not find term.");
             return;
