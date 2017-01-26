@@ -3,7 +3,7 @@
 
 A text editor by Jack Eisenmann, for Jack Eisenmann.
 
-NOTE: This text editor is still being tested for bugs.
+If you find any bugs, please report them to esperantanaso@gmail.com.
 
 FEATURES
 
