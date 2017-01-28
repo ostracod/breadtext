@@ -31,6 +31,10 @@ On Linux you must install xclip for clipboard functionality:
 
 sudo apt-get install xclip
 
+You may also have to perform:
+
+sudo apt-get install libncurses-dev
+
 CONTROLS
 
 For help with controls, enter "/help" after running BreadText.
