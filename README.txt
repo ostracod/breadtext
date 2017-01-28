@@ -5,6 +5,10 @@ A text editor by Jack Eisenmann, for Jack Eisenmann.
 
 If you find any bugs, please report them to esperantanaso@gmail.com.
 
+KNOWN BUG
+
+Sometimes the text editor will randomly change the first line of the opened text file. I am working to resolve this issue.
+
 FEATURES
 
 > You can edit text
