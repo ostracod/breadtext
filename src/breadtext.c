@@ -1893,7 +1893,7 @@ int64_t getTextLineIndentationEndIndex(textLine_t *line) {
     return index;
 }
 
-void decreaseTextLineIndentationLevelHelper(textLine_t *line) {
+void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
     int32_t tempOldLevel = getTextLineIndentationLevel(line);
     int64_t tempStartIndex = 0;
     int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
@@ -1920,9 +1920,13 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line) {
     }
     int64_t tempAmount = tempEndIndex - tempStartIndex;
     if (tempAmount > 0) {
-        recordTextLineDeleted(line);
+        if (shouldRecordHistory) {
+            recordTextLineDeleted(line);
+        }
         removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
-        recordTextLineInserted(line);
+        if (shouldRecordHistory) {
+            recordTextLineInserted(line);
+        }
     }
     int64_t tempOffset = -tempAmount;
     if (line == cursorTextPos.line) {
@@ -1945,7 +1949,7 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line) {
     }
 }
 
-void increaseTextLineIndentationLevelHelper(textLine_t *line) {
+void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
     int32_t tempOldLevel = getTextLineIndentationLevel(line);
     int64_t tempStartIndex = 0;
     int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
@@ -1984,12 +1988,16 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line) {
         }
         tempIndentationLength = indentationWidth;
     }
-    recordTextLineDeleted(line);
+    if (shouldRecordHistory) {
+        recordTextLineDeleted(line);
+    }
     if (tempAmount > 0) {
         removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
     }
     insertTextIntoTextAllocation(&(line->textAllocation), tempStartIndex, tempIndentation, tempIndentationLength);
-    recordTextLineInserted(line);
+    if (shouldRecordHistory) {
+        recordTextLineInserted(line);
+    }
     int64_t tempOffset = tempIndentationLength - tempAmount;
     if (line == cursorTextPos.line) {
         int64_t index = getTextPosIndex(&cursorTextPos);
@@ -2408,7 +2416,7 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
     insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextPos.line->textAllocation.text + index, tempAmount);
     int32_t tempCount = 0;
     while (tempCount < baseIndentationLevel) {
-        increaseTextLineIndentationLevelHelper(tempLine);
+        increaseTextLineIndentationLevelHelper(tempLine, false);
         tempCount += 1;
     }
     recordTextLineDeleted(cursorTextPos.line);
@@ -2754,7 +2762,7 @@ void increaseSelectionIndentationLevel() {
     int8_t tempIsSingleLine = tempStartTextPos->line == tempEndTextPos->line;
     if (tempIsSingleLine) {
         int64_t tempOldRowCount = getTextLineRowCount(tempLine);
-        increaseTextLineIndentationLevelHelper(tempLine);
+        increaseTextLineIndentationLevelHelper(tempLine, true);
         int64_t tempNewRowCount = getTextLineRowCount(tempLine);
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
@@ -2767,7 +2775,7 @@ void increaseSelectionIndentationLevel() {
         }
     } else {
         while (true) {
-            increaseTextLineIndentationLevelHelper(tempLine);
+            increaseTextLineIndentationLevelHelper(tempLine, true);
             if (tempLine == tempEndTextPos->line) {
                 break;
             }
@@ -2799,7 +2807,7 @@ void decreaseSelectionIndentationLevel() {
     int8_t tempIsSingleLine = tempStartTextPos->line == tempEndTextPos->line;
     if (tempIsSingleLine) {
         int64_t tempOldRowCount = getTextLineRowCount(tempLine);
-        decreaseTextLineIndentationLevelHelper(tempLine);
+        decreaseTextLineIndentationLevelHelper(tempLine, true);
         int64_t tempNewRowCount = getTextLineRowCount(tempLine);
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
@@ -2812,7 +2820,7 @@ void decreaseSelectionIndentationLevel() {
         }
     } else {
         while (true) {
-            decreaseTextLineIndentationLevelHelper(tempLine);
+            decreaseTextLineIndentationLevelHelper(tempLine, true);
             if (tempLine == tempEndTextPos->line) {
                 break;
             }
