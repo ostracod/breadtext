@@ -32,6 +32,7 @@
 #define MARK_AMOUNT 10
 
 #define SHOULD_RUN_TESTS false
+#define IS_IN_DEBUG_MODE false
 
 typedef struct textAllocation {
     int8_t *text;
@@ -3658,11 +3659,30 @@ int main(int argc, const char *argv[]) {
     handleResize();
     
     while (true) {
+        #if IS_IN_DEBUG_MODE
+            textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
+            int64_t tempLength = tempLine1->textAllocation.length;
+            int8_t tempBuffer[tempLength];
+            copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
+        #endif
+        
         int32_t tempKey = getch();
         int8_t tempResult = handleKey(tempKey);
         if (tempResult) {
             break;
         }
+        
+        #if IS_IN_DEBUG_MODE
+            textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
+            if (tempLength != tempLine2->textAllocation.length
+                || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
+                endwin();
+                printf("FIRST LINE CHANGED.\n");
+                printf("CHARACTER TYPED: %c\n", tempKey);
+                printf("ACTIVITY MODE: %d\n", activityMode);
+                exit(0);
+            }
+        #endif
     }
     
     endwin();
