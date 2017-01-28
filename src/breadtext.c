@@ -3389,166 +3389,257 @@ int8_t handleKey(int32_t key) {
             }
         }
         if (activityMode != TEXT_ENTRY_MODE) {
-            if (key == 'q') {
-                if (textBufferIsDirty) {
-                    eraseActivityModeOrNotification();
-                    displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
-                } else {
+            switch (key) {
+                case 'q':
+                {
+                    if (textBufferIsDirty) {
+                        eraseActivityModeOrNotification();
+                        displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+                    } else {
+                        return true;
+                    }
+                    break;
+                }
+                case 'Q':
+                {
                     return true;
+                    break;
                 }
-            }
-            if (key == 'Q') {
-                return true;
-            }
-            if (key == 't') {
-                setActivityMode(TEXT_ENTRY_MODE);
-            }
-            if (key == 's') {
-                saveFile();
-            }
-            if (key == '[') {
-                moveCursorToBeginningOfLine();
-            }
-            if (key == ']') {
-                moveCursorToEndOfLine();
-            }
-            if (key == '{') {
-                moveCursorToBeginningOfFile();
-            }
-            if (key == '}') {
-                moveCursorToEndOfFile();
-            }
-            if (key == 'h') {
-                setActivityMode(HIGHLIGHT_CHARACTER_MODE);
-            }
-            if (key == 'H') {
-                setActivityMode(HIGHLIGHT_LINE_MODE);
-            }
-            if (key == 'w') {
-                setActivityMode(HIGHLIGHT_WORD_MODE);
-            }
-            if (key == 'c') {
-                copySelection();
-            }
-            if (key == 'C') {
-                cutSelection();
-            }
-            if (key == 'p') {
-                pasteAfterCursor();
-            }
-            if (key == 'P') {
-                pasteBeforeCursor();
-            }
-            if (key == 'd') {
-                deleteSelection();
-            }
-            if (key == 'u') {
-                undoLastAction();
-            }
-            if (key == 'U') {
-                redoLastAction();
-            }
-            if (key == 'm') {
-                playMacro();
-            }
-            if (key == 'M') {
-                eraseActivityModeOrNotification();
-                if (isRecordingMacro) {
-                    displayNotification((int8_t *)"Finished recording.");
-                } else {
-                    macroKeyListLength = 0;
-                    displayNotification((int8_t *)"Recording macro.");
+                case 't':
+                {
+                    setActivityMode(TEXT_ENTRY_MODE);
+                    break;
                 }
-                isRecordingMacro = !isRecordingMacro;
-            }
-            if (key == '>') {
-                increaseSelectionIndentationLevel();
-            }
-            if (key == '<') {
-                decreaseSelectionIndentationLevel();
-            }
-            if (key == '/') {
-                setActivityMode(TEXT_COMMAND_MODE);
-            }
-            if (key == 'n') {
-                gotoNextTerm();
-            }
-            if (key == 'N') {
-                gotoPreviousTerm();
-            }
-            if (key == '0') {
-                gotoMark(0);
-            }
-            if (key == '1') {
-                gotoMark(1);
-            }
-            if (key == '2') {
-                gotoMark(2);
-            }
-            if (key == '3') {
-                gotoMark(3);
-            }
-            if (key == '4') {
-                gotoMark(4);
-            }
-            if (key == '5') {
-                gotoMark(5);
-            }
-            if (key == '6') {
-                gotoMark(6);
-            }
-            if (key == '7') {
-                gotoMark(7);
-            }
-            if (key == '8') {
-                gotoMark(8);
-            }
-            if (key == '9') {
-                gotoMark(9);
-            }
-            if (key == ')') {
-                setMark(0);
-            }
-            if (key == '!') {
-                setMark(1);
-            }
-            if (key == '@') {
-                setMark(2);
-            }
-            if (key == '#') {
-                setMark(3);
-            }
-            if (key == '$') {
-                setMark(4);
-            }
-            if (key == '%') {
-                setMark(5);
-            }
-            if (key == '^') {
-                setMark(6);
-            }
-            if (key == '&') {
-                setMark(7);
-            }
-            if (key == '*') {
-                setMark(8);
-            }
-            if (key == '(') {
-                setMark(9);
+                case 's':
+                {
+                    saveFile();
+                    break;
+                }
+                case '[':
+                {
+                    moveCursorToBeginningOfLine();
+                    break;
+                }
+                case ']':
+                {
+                    moveCursorToEndOfLine();
+                    break;
+                }
+                case '{':
+                {
+                    moveCursorToBeginningOfFile();
+                    break;
+                }
+                case '}':
+                {
+                    moveCursorToEndOfFile();
+                    break;
+                }
+                case 'h':
+                {
+                    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
+                    break;
+                }
+                case 'H':
+                {
+                    setActivityMode(HIGHLIGHT_LINE_MODE);
+                    break;
+                }
+                case 'w':
+                {
+                    setActivityMode(HIGHLIGHT_WORD_MODE);
+                    break;
+                }
+                case 'c':
+                {
+                    copySelection();
+                    break;
+                }
+                case 'C':
+                {
+                    cutSelection();
+                    break;
+                }
+                case 'p':
+                {
+                    pasteAfterCursor();
+                    break;
+                }
+                case 'P':
+                {
+                    pasteBeforeCursor();
+                    break;
+                }
+                case 'd':
+                {
+                    deleteSelection();
+                    break;
+                }
+                case 'u':
+                {
+                    undoLastAction();
+                    break;
+                }
+                case 'U':
+                {
+                    redoLastAction();
+                    break;
+                }
+                case 'm':
+                {
+                    playMacro();
+                    break;
+                }
+                case 'M':
+                {
+                    eraseActivityModeOrNotification();
+                    if (isRecordingMacro) {
+                        displayNotification((int8_t *)"Finished recording.");
+                    } else {
+                        macroKeyListLength = 0;
+                        displayNotification((int8_t *)"Recording macro.");
+                    }
+                    isRecordingMacro = !isRecordingMacro;
+                    break;
+                }
+                case '>':
+                {
+                    increaseSelectionIndentationLevel();
+                    break;
+                }
+                case '<':
+                {
+                    decreaseSelectionIndentationLevel();
+                    break;
+                }
+                case '/':
+                {
+                    setActivityMode(TEXT_COMMAND_MODE);
+                    break;
+                }
+                case 'n':
+                {
+                    gotoNextTerm();
+                    break;
+                }
+                case 'N':
+                {
+                    gotoPreviousTerm();
+                    break;
+                }
+                case '0':
+                {
+                    gotoMark(0);
+                    break;
+                }
+                case '1':
+                {
+                    gotoMark(1);
+                    break;
+                }
+                case '2':
+                {
+                    gotoMark(2);
+                    break;
+                }
+                case '3':
+                {
+                    gotoMark(3);
+                    break;
+                }
+                case '4':
+                {
+                    gotoMark(4);
+                    break;
+                }
+                case '5':
+                {
+                    gotoMark(5);
+                    break;
+                }
+                case '6':
+                {
+                    gotoMark(6);
+                    break;
+                }
+                case '7':
+                {
+                    gotoMark(7);
+                    break;
+                }
+                case '8':
+                {
+                    gotoMark(8);
+                    break;
+                }
+                case '9':
+                {
+                    gotoMark(9);
+                    break;
+                }
+                case ')':
+                {
+                    setMark(0);
+                    break;
+                }
+                case '!':
+                {
+                    setMark(1);
+                    break;
+                }
+                case '@':
+                {
+                    setMark(2);
+                    break;
+                }
+                case '#':
+                {
+                    setMark(3);
+                    break;
+                }
+                case '$':
+                {
+                    setMark(4);
+                    break;
+                }
+                case '%':
+                {
+                    setMark(5);
+                    break;
+                }
+                case '^':
+                {
+                    setMark(6);
+                    break;
+                }
+                case '&':
+                {
+                    setMark(7);
+                    break;
+                }
+                case '*':
+                {
+                    setMark(8);
+                    break;
+                }
+                case '(':
+                {
+                    setMark(9);
+                    break;
+                }
             }
         }
-        if (!isHighlighting) {
-            // Backspace.
-            if (key == 127 || key == 263) {
+        // Backspace.
+        if (key == 127 || key == 263) {
+            if (!isHighlighting) {
                 deleteCharacterBeforeCursor(true);
-            }
-            if (key == '\n') {
-                insertNewlineBeforeCursor();
-            }
-        } else {
-            // Backspace.
-            if (key == 127 || key == 263) {
+            } else {
                 deleteSelection();
+            }
+        }
+        if (key == '\n') {
+            if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
+                insertNewlineBeforeCursor();
             }
         }
     }
