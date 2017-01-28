@@ -108,14 +108,14 @@ int8_t *helpText[] = {
     (int8_t *)"Tab or Shift + Tab = Indent",
     (int8_t *)"N = Find next instance",
     (int8_t *)"Shift + N = Find previous instance",
+    (int8_t *)"Number = Go to mark",
+    (int8_t *)"Shift + Number = Set mark",
     (int8_t *)"",
     (int8_t *)"COMMANDS",
     (int8_t *)"",
     (int8_t *)"/gotoLine (line number)",
     (int8_t *)"/find (pattern)",
     (int8_t *)"/replace (pattern) (text)",
-    (int8_t *)"/setMark (mark number)",
-    (int8_t *)"/gotoMark (mark number)",
     (int8_t *)"/set (config variable) (value)",
     (int8_t *)"/help",
     (int8_t *)"",
@@ -3036,6 +3036,38 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     return output;
 }
 
+void setMark(int64_t index) {
+    if (index < 0 || index >= MARK_AMOUNT) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Error: Bad mark number.");
+        return;
+    }
+    markList[index] = cursorTextPos.line;
+    markIsSetList[index] = true;
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Set mark.");
+}
+
+void gotoMark(int64_t index) {
+    if (index < 0 || index >= MARK_AMOUNT) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Error: Bad mark number.");
+        return;
+    }
+    if (!markIsSetList[index]) {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"Error: Mark is not set.");
+        return;
+    }
+    textPos_t tempTextPos;
+    tempTextPos.line = markList[index];
+    tempTextPos.row = 0;
+    tempTextPos.column = 0;
+    moveCursor(&tempTextPos);
+    cursorSnapColumn = cursorTextPos.column;
+    historyFrameIsConsecutive = false;
+}
+
 int8_t setConfigurationVariable(int8_t *name, int64_t value);
 
 void executeTextCommand() {
@@ -3170,57 +3202,6 @@ void executeTextCommand() {
             sprintf((char *)tempText, "Replaced %lld terms.", (long long)(tempResult));
         }
         displayNotification(tempText);
-        return;
-    }
-    if (strcmp((char *)(tempTermList[0]), "setMark") == 0) {
-        if (tempTermListLength != 2) {
-            setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
-            return;
-        }
-        int64_t index = atoi((char *)(tempTermList[1]));
-        if (index < 0 || index >= MARK_AMOUNT) {
-            setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Bad mark number.");
-            return;
-        }
-        markList[index] = cursorTextPos.line;
-        markIsSetList[index] = true;
-        setActivityMode(PREVIOUS_MODE);
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Set mark.");
-        return;
-    }
-    if (strcmp((char *)(tempTermList[0]), "gotoMark") == 0) {
-        if (tempTermListLength != 2) {
-            setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
-            return;
-        }
-        int64_t index = atoi((char *)(tempTermList[1]));
-        if (index < 0 || index >= MARK_AMOUNT) {
-            setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Bad mark number.");
-            return;
-        }
-        if (!markIsSetList[index]) {
-            setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Mark is not set.");
-            return;
-        }
-        textPos_t tempTextPos;
-        tempTextPos.line = markList[index];
-        tempTextPos.row = 0;
-        tempTextPos.column = 0;
-        setActivityMode(PREVIOUS_MODE);
-        moveCursor(&tempTextPos);
-        cursorSnapColumn = cursorTextPos.column;
-        historyFrameIsConsecutive = false;
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "set") == 0) {
@@ -3495,6 +3476,66 @@ int8_t handleKey(int32_t key) {
             if (key == 'N') {
                 gotoPreviousTerm();
             }
+            if (key == '0') {
+                gotoMark(0);
+            }
+            if (key == '1') {
+                gotoMark(1);
+            }
+            if (key == '2') {
+                gotoMark(2);
+            }
+            if (key == '3') {
+                gotoMark(3);
+            }
+            if (key == '4') {
+                gotoMark(4);
+            }
+            if (key == '5') {
+                gotoMark(5);
+            }
+            if (key == '6') {
+                gotoMark(6);
+            }
+            if (key == '7') {
+                gotoMark(7);
+            }
+            if (key == '8') {
+                gotoMark(8);
+            }
+            if (key == '9') {
+                gotoMark(9);
+            }
+            if (key == ')') {
+                setMark(0);
+            }
+            if (key == '!') {
+                setMark(1);
+            }
+            if (key == '@') {
+                setMark(2);
+            }
+            if (key == '#') {
+                setMark(3);
+            }
+            if (key == '$') {
+                setMark(4);
+            }
+            if (key == '%') {
+                setMark(5);
+            }
+            if (key == '^') {
+                setMark(6);
+            }
+            if (key == '&') {
+                setMark(7);
+            }
+            if (key == '*') {
+                setMark(8);
+            }
+            if (key == '(') {
+                setMark(9);
+            }
         }
         if (!isHighlighting) {
             // Backspace.
@@ -3574,9 +3615,9 @@ void processRcFile() {
 int main(int argc, const char *argv[]) {
     
     #ifdef __APPLE__
-    applicationPlatform = PLATFORM_MAC;
+        applicationPlatform = PLATFORM_MAC;
     #else
-    applicationPlatform = PLATFORM_LINUX;
+        applicationPlatform = PLATFORM_LINUX;
     #endif
     
     if (SHOULD_RUN_TESTS) {
