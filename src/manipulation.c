@@ -48,3 +48,32 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     }
     return output;
 }
+
+void toggleSemicolonAtEndOfLine() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempEndOfLineIndex = tempLength;
+    while (tempEndOfLineIndex > 0) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndOfLineIndex - 1];
+        if (!isWhitespace(tempCharacter)) {
+            break;
+        }
+        tempEndOfLineIndex -= 1;
+    }
+    int8_t tempShouldDeleteSemicolon = false;
+    if (tempEndOfLineIndex > 0) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndOfLineIndex - 1];
+        if (tempCharacter == ';') {
+            tempShouldDeleteSemicolon = true;
+        }
+    }
+    textPos_t tempLastTextPos = cursorTextPos;
+    textPos_t tempTextPos = cursorTextPos;
+    setTextPosIndex(&tempTextPos, tempEndOfLineIndex);
+    moveCursor(&tempTextPos);
+    if (tempShouldDeleteSemicolon) {
+        deleteCharacterBeforeCursor(true);
+    } else {
+        insertCharacterBeforeCursor(';');
+    }
+    moveCursor(&tempLastTextPos);
+}

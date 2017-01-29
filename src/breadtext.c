@@ -575,6 +575,8 @@ int8_t handleKey(int32_t key) {
             if (key == '\n') {
                 insertNewlineBeforeCursor();
             }
+        }
+        if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
             if (key == ' ') {
                 insertCharacterBeforeCursor(key);
             }
@@ -587,6 +589,9 @@ int8_t handleKey(int32_t key) {
             if (key == '.') {
                 promptAndReplaceCharacterUnderCursor();
             }
+            if (key == ';') {
+                toggleSemicolonAtEndOfLine();
+            }            
         }
     }
     lastKey = key;

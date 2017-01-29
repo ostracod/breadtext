@@ -3,7 +3,7 @@
 #define MANIPULATION_HEADER_FILE
 
 int64_t findAndReplaceAllTerms(int8_t *replacementText);
-// More to come soon...
+void toggleSemicolonAtEndOfLine();
 
 // MANIPULATION_HEADER_FILE
 #endif
