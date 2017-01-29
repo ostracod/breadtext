@@ -247,7 +247,7 @@ int8_t handleKey(int32_t key) {
                 setActivityMode(COMMAND_MODE);
             } else if (key >= 32 && key <= 126) {
                 isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
-                insertCharacterUnderCursor((int8_t)key);
+                insertCharacterBeforeCursor((int8_t)key);
             }
         } else {
             isStartOfNonconsecutiveEscapeSequence = false;
@@ -561,9 +561,21 @@ int8_t handleKey(int32_t key) {
                 deleteSelection();
             }
         }
-        if (key == '\n') {
-            if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
+        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
+            if (key == '\n') {
                 insertNewlineBeforeCursor();
+            }
+            if (key == ' ') {
+                insertCharacterBeforeCursor(key);
+            }
+            if (key == '\'') {
+                promptAndInsertCharacterAfterCursor();
+            }
+            if (key == '"') {
+                promptAndInsertCharacterBeforeCursor();
+            }
+            if (key == '.') {
+                promptAndReplaceCharacterUnderCursor();
             }
         }
     }

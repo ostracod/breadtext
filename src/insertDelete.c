@@ -1,17 +1,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <curses.h>
 #include "utilities.h"
 #include "textAllocation.h"
 #include "textLine.h"
 #include "textPos.h"
 #include "display.h"
+#include "cursorMotion.h"
 #include "history.h"
 #include "indentation.h"
 #include "insertDelete.h"
 #include "breadtext.h"
 
-void insertCharacterUnderCursor(int8_t character) {
+void insertCharacterBeforeCursor(int8_t character) {
     int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
     int64_t index = getTextPosIndex(&cursorTextPos);
     if (isStartOfNonconsecutiveEscapeSequence) {
@@ -224,3 +226,43 @@ void insertNewlineBeforeCursor() {
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
+
+void promptAndInsertCharacterBeforeCursor() {
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Type a character.");
+    int32_t tempKey = getch();
+    if (tempKey >= 32 && tempKey <= 126) {
+        insertCharacterBeforeCursor(tempKey);
+    }
+    eraseActivityModeOrNotification();
+    displayActivityMode();    
+}
+
+void promptAndInsertCharacterAfterCursor() {
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Type a character.");
+    int32_t tempKey = getch();
+    if (tempKey >= 32 && tempKey <= 126) {
+        moveCursorRight(1);
+        insertCharacterBeforeCursor(tempKey);
+        moveCursorLeft(2);
+    }
+    eraseActivityModeOrNotification();
+    displayActivityMode();
+}
+
+void promptAndReplaceCharacterUnderCursor() {
+    eraseActivityModeOrNotification();
+    displayNotification((int8_t *)"Type a character.");
+    int32_t tempKey = getch();
+    if (tempKey >= 32 && tempKey <= 126) {
+        moveCursorRight(1);
+        deleteCharacterBeforeCursor(true);
+        insertCharacterBeforeCursor(tempKey);
+        moveCursorLeft(1);
+    }
+    eraseActivityModeOrNotification();
+    displayActivityMode();
+}
+
+
