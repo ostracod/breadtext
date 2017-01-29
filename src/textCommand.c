@@ -49,46 +49,48 @@ void executeTextCommand() {
     int8_t *tempTermList[20];
     int8_t tempTermIndex = 0;
     int8_t tempIsInQuotes = false;
-    int8_t *tempIndex1 = textCommandBuffer;
-    int8_t *tempIndex2 = textCommandBuffer;
+    int8_t *tempText1 = textCommandBuffer;
+    int8_t *tempText2 = textCommandBuffer;
     int8_t tempIsStartOfTerm = true;
     while (true) {
-        int8_t tempCharacter = *tempIndex1;
-        tempIndex1 += 1;
+        int8_t tempCharacter = *tempText1;
+        tempText1 += 1;
         if (tempCharacter == 0) {
+            *tempText2 = 0;
+            tempText2 += 1;
             break;
         }
         int8_t tempIsWhitespace = isWhitespace(tempCharacter);
         if (tempCharacter == '\\') {
-            int8_t tempCharacter = *tempIndex1;
-            tempIndex1 += 1;
-            *tempIndex2 = tempCharacter;
-            tempIndex2 += 1;
+            int8_t tempCharacter = *tempText1;
+            tempText1 += 1;
+            *tempText2 = tempCharacter;
+            tempText2 += 1;
         } else if (tempIsStartOfTerm && !tempIsWhitespace) {
             if (tempCharacter == '"') {
-                tempTermList[tempTermIndex] = tempIndex2;
+                tempTermList[tempTermIndex] = tempText2;
                 tempTermIndex += 1;
                 tempIsInQuotes = true;
             } else {
-                tempTermList[tempTermIndex] = tempIndex2;
-                *tempIndex2 = tempCharacter;
-                tempIndex2 += 1;
+                tempTermList[tempTermIndex] = tempText2;
+                *tempText2 = tempCharacter;
+                tempText2 += 1;
                 tempTermIndex += 1;
             }
             tempIsStartOfTerm = false;
         } else {
             if (tempCharacter == '"') {
-                *tempIndex2 = 0;
-                tempIndex2 += 1;
+                *tempText2 = 0;
+                tempText2 += 1;
                 tempIsInQuotes = false;
                 tempIsStartOfTerm = true;
             } else if (!tempIsWhitespace || tempIsInQuotes) {
-                *tempIndex2 = tempCharacter;
-                tempIndex2 += 1;
+                *tempText2 = tempCharacter;
+                tempText2 += 1;
             } else {
-                *tempIndex2 = 0;
-                tempIndex2 += 1;
-                tempIndex1 = skipWhitespace(tempIndex1);
+                *tempText2 = 0;
+                tempText2 += 1;
+                tempText1 = skipWhitespace(tempText1);
                 tempIsStartOfTerm = true;
             }
         }
