@@ -33,6 +33,8 @@ void gotoNextTerm();
 void gotoPreviousTerm();
 void setMark(int64_t index);
 void gotoMark(int64_t index);
+void findNextTermUnderCursor();
+void findPreviousTermUnderCursor();
 
 // CURSOR_MOTION_HEADER_FILE
 #endif

@@ -451,6 +451,16 @@ int8_t handleKey(int32_t key) {
                     gotoPreviousTerm();
                     break;
                 }
+                case 'f':
+                {
+                    findNextTermUnderCursor();
+                    break;
+                }
+                case 'F':
+                {
+                    findPreviousTermUnderCursor();
+                    break;
+                }
                 case '0':
                 {
                     gotoMark(0);

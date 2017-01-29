@@ -47,6 +47,8 @@ int8_t *helpText[] = {
     (int8_t *)". = Replace character under cursor",
     (int8_t *)"' = Insert character before cursor",
     (int8_t *)"Shift + ' = Insert character after cursor",
+    (int8_t *)"F = Find next instance of word under cursor",
+    (int8_t *)"Shift + F = Find next instance of word under cursor",
     (int8_t *)"",
     (int8_t *)"COMMANDS",
     (int8_t *)"",

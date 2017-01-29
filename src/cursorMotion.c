@@ -430,3 +430,44 @@ void gotoMark(int64_t index) {
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
 }
+
+void startSearchingForWordUnderCursor() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempEndIndex = tempStartIndex;
+    int64_t tempLastIndex;
+    tempLastIndex = tempStartIndex;
+    while (tempStartIndex > 0) {
+        tempStartIndex -= 1;
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        if (!isWordCharacter(tempCharacter)) {
+            tempStartIndex = tempLastIndex;
+            break;
+        }
+        tempLastIndex = tempStartIndex;
+    }
+    tempLastIndex = tempEndIndex;
+    while (tempEndIndex < tempLength - 1) {
+        tempEndIndex += 1;
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex];
+        if (!isWordCharacter(tempCharacter)) {
+            tempEndIndex = tempLastIndex;
+            break;
+        }
+        tempLastIndex = tempEndIndex;
+    }
+    tempEndIndex += 1;
+    searchTermLength = tempEndIndex - tempStartIndex;
+    copyData(searchTerm, cursorTextPos.line->textAllocation.text + tempStartIndex, searchTermLength);
+    cursorTextPos.line->textAllocation.text[searchTermLength] = 0;
+}
+
+void findNextTermUnderCursor() {
+    startSearchingForWordUnderCursor();
+    gotoNextTerm();
+}
+
+void findPreviousTermUnderCursor() {
+    startSearchingForWordUnderCursor();
+    gotoPreviousTerm();
+}
