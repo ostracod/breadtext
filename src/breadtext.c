@@ -84,7 +84,7 @@ int8_t *helpText[] = {
     (int8_t *)"",
     (int8_t *)"T = Text-entry mode",
     (int8_t *)", + , (again) or Escape = Command mode",
-    (int8_t *)"IJKL = Scroll one character",
+    (int8_t *)"IJKL or Arrow Keys = Scroll one character",
     (int8_t *)"Shift + IJKL = Scroll 10 characters",
     (int8_t *)"[] = Scroll to beginning or end of line",
     (int8_t *)"{} = Scroll to beginning or end of file",
@@ -3377,23 +3377,11 @@ int8_t handleKey(int32_t key) {
             }
         }
         if (activityMode == HIGHLIGHT_LINE_MODE) {
-            if (key == KEY_UP) {
+            if (key == 'i' || key == KEY_UP) {
                 moveLineSelectionUp(1);
             }
-            if (key == KEY_DOWN) {
+            if (key == 'k' || key == KEY_DOWN) {
                 moveLineSelectionDown(1);
-            }
-            if (key == 'i') {
-                moveLineSelectionUp(1);
-            }
-            if (key == 'k') {
-                moveLineSelectionDown(1);
-            }
-            if (key == 'I') {
-                moveLineSelectionUp(10);
-            }
-            if (key == 'K') {
-                moveLineSelectionDown(10);
             }
         }
         if (activityMode != TEXT_ENTRY_MODE) {
