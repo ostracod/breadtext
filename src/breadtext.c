@@ -461,6 +461,16 @@ int8_t handleKey(int32_t key) {
                     findPreviousTermUnderCursor();
                     break;
                 }
+                case 'b':
+                {
+                    lowercaseSelection();
+                    break;
+                }
+                case 'B':
+                {
+                    uppercaseSelection();
+                    break;
+                }
                 case '0':
                 {
                     gotoMark(0);

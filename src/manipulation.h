@@ -4,6 +4,8 @@
 
 int64_t findAndReplaceAllTerms(int8_t *replacementText);
 void toggleSemicolonAtEndOfLine();
+void uppercaseSelection();
+void lowercaseSelection();
 
 // MANIPULATION_HEADER_FILE
 #endif

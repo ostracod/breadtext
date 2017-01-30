@@ -77,3 +77,102 @@ void toggleSemicolonAtEndOfLine() {
     }
     moveCursor(&tempLastTextPos);
 }
+
+void uppercaseSelection() {
+    addHistoryFrame();
+    textPos_t tempFirstTextPos;
+    textPos_t tempLastTextPos;
+    if (isHighlighting) {
+        tempFirstTextPos = *(getFirstHighlightTextPos());
+        tempLastTextPos = *(getLastHighlightTextPos());
+    } else {
+        tempFirstTextPos = cursorTextPos;
+        tempLastTextPos = cursorTextPos;
+    };
+    textLine_t *tempLine = tempFirstTextPos.line;
+    int64_t index = getTextPosIndex(&tempFirstTextPos);
+    textLine_t *tempLastLine = tempLastTextPos.line;
+    int64_t tempLastIndex = getTextPosIndex(&tempLastTextPos);
+    recordTextLineDeleted(tempLine);
+    while (true) {
+        int64_t tempLength = tempLine->textAllocation.length;
+        if (index <= tempLength) {
+            if (index < tempLength) {
+                int8_t tempCharacter = tempLine->textAllocation.text[index];
+                if (tempCharacter >= 'a' && tempCharacter <= 'z') {
+                    tempCharacter -= 32;
+                    tempLine->textAllocation.text[index] = tempCharacter;
+                }
+            }
+            index += 1;
+            if (tempLine == tempLastLine && index > tempLastIndex) {
+                recordTextLineInserted(tempLine);
+                displayTextLine(getTextLinePosY(tempLine), tempLine);
+                break;
+            }
+        } else {
+            recordTextLineInserted(tempLine);
+            displayTextLine(getTextLinePosY(tempLine), tempLine);
+            if (tempLine == tempLastLine) {
+                break;
+            }
+            tempLine = getNextTextLine(tempLine);
+            index = 0;
+            recordTextLineDeleted(tempLine);
+        }
+    }
+    displayCursor();
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;    
+    textBufferIsDirty = true;
+}
+
+void lowercaseSelection() {
+    addHistoryFrame();
+    textPos_t tempFirstTextPos;
+    textPos_t tempLastTextPos;
+    if (isHighlighting) {
+        tempFirstTextPos = *(getFirstHighlightTextPos());
+        tempLastTextPos = *(getLastHighlightTextPos());
+    } else {
+        tempFirstTextPos = cursorTextPos;
+        tempLastTextPos = cursorTextPos;
+    };
+    textLine_t *tempLine = tempFirstTextPos.line;
+    int64_t index = getTextPosIndex(&tempFirstTextPos);
+    textLine_t *tempLastLine = tempLastTextPos.line;
+    int64_t tempLastIndex = getTextPosIndex(&tempLastTextPos);
+    recordTextLineDeleted(tempLine);
+    while (true) {
+        int64_t tempLength = tempLine->textAllocation.length;
+        if (index <= tempLength) {
+            if (index < tempLength) {
+                int8_t tempCharacter = tempLine->textAllocation.text[index];
+                if (tempCharacter >= 'A' && tempCharacter <= 'Z') {
+                    tempCharacter += 32;
+                    tempLine->textAllocation.text[index] = tempCharacter;
+                }
+            }
+            index += 1;
+            if (tempLine == tempLastLine && index > tempLastIndex) {
+                recordTextLineInserted(tempLine);
+                displayTextLine(getTextLinePosY(tempLine), tempLine);
+                break;
+            }
+        } else {
+            recordTextLineInserted(tempLine);
+            displayTextLine(getTextLinePosY(tempLine), tempLine);
+            if (tempLine == tempLastLine) {
+                break;
+            }
+            tempLine = getNextTextLine(tempLine);
+            index = 0;
+            recordTextLineDeleted(tempLine);
+        }
+    }
+    displayCursor();
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;    
+    textBufferIsDirty = true;
+
+}
