@@ -459,7 +459,7 @@ void startSearchingForWordUnderCursor() {
     tempEndIndex += 1;
     searchTermLength = tempEndIndex - tempStartIndex;
     copyData(searchTerm, cursorTextPos.line->textAllocation.text + tempStartIndex, searchTermLength);
-    cursorTextPos.line->textAllocation.text[searchTermLength] = 0;
+    searchTerm[searchTermLength] = 0;
 }
 
 void findNextTermUnderCursor() {
