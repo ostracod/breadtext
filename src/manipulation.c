@@ -174,5 +174,163 @@ void lowercaseSelection() {
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;    
     textBufferIsDirty = true;
+}
 
+void addToNumberUnderCursor(int64_t offset) {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempWordStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempWordEndIndex = tempWordStartIndex;
+    while (tempWordStartIndex > 0) {
+        int64_t tempNextIndex = tempWordStartIndex - 1;
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempNextIndex];
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        tempWordStartIndex = tempNextIndex;
+    }
+    while (tempWordEndIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempWordEndIndex];
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        tempWordEndIndex += 1;
+    }
+    int8_t tempIsHexadecimal = false;
+    if (tempWordEndIndex - tempWordStartIndex > 2) {
+        int8_t tempCharacter1 = cursorTextPos.line->textAllocation.text[tempWordStartIndex];
+        int8_t tempCharacter2 = cursorTextPos.line->textAllocation.text[tempWordStartIndex + 1];
+        if (tempCharacter1 == '0' && tempCharacter2 == 'x') {
+            tempIsHexadecimal = true;
+        }
+    }
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempDigitStartIndex = tempStartIndex;
+    int64_t tempEndIndex = tempStartIndex;
+    int8_t tempIsNegative1 = false;
+    int8_t tempHasFoundDigit = false;
+    int8_t tempHasFoundX = false;
+    while (tempStartIndex > 0) {
+        int64_t tempNextIndex = tempStartIndex - 1;
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempNextIndex];
+        if (tempCharacter == '-') {
+            tempIsNegative1 = true;
+            break;
+        } else if (tempCharacter == 'x') {
+            if (tempIsHexadecimal) {
+                tempHasFoundX = true;
+            } else {
+                break;
+            }
+        } else if (tempCharacter == '.') {
+            tempEndIndex = tempNextIndex;
+            if (!tempHasFoundX) {
+                tempDigitStartIndex = tempNextIndex;
+            }
+        } else if (tempCharacter >= '0' && tempCharacter <= '9') {
+            if (!tempHasFoundX) {
+                tempDigitStartIndex = tempNextIndex;
+            }
+            tempHasFoundDigit = true;
+        } else if ((tempCharacter >= 'A' && tempCharacter <= 'F') || (tempCharacter >= 'a' && tempCharacter <= 'f')) {
+            if (!tempIsHexadecimal) {
+                break;
+            }
+        } else {
+            break;
+        }
+        tempStartIndex = tempNextIndex;
+    }
+    while (tempEndIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex];
+        if (tempCharacter == 'x' && tempIsHexadecimal) {
+            tempDigitStartIndex = tempEndIndex + 1;
+        } else if (tempCharacter >= '0' && tempCharacter <= '9') {
+            if (!tempHasFoundDigit) {
+                tempDigitStartIndex = tempEndIndex;
+                tempHasFoundDigit = true;
+            }
+        } else if ((tempCharacter >= 'A' && tempCharacter <= 'F') || (tempCharacter >= 'a' && tempCharacter <= 'f')) {
+            if (!tempIsHexadecimal) {
+                break;
+            }
+        } else if (tempCharacter == '-') {
+            if (tempHasFoundDigit) {
+                break;
+            } else {
+                tempIsNegative1 = true;
+            }
+        } else {
+            break;
+        }
+        tempEndIndex += 1;
+    }
+    int64_t tempDigitCount1 = tempEndIndex - tempDigitStartIndex;
+    if (tempDigitCount1 <= 0) {
+        return;
+    }
+    addHistoryFrame();
+    int64_t tempRowCount1 = getTextLineRowCount(cursorTextPos.line);
+    recordTextLineDeleted(cursorTextPos.line);
+    int8_t tempBuffer[1000];
+    copyData(tempBuffer, cursorTextPos.line->textAllocation.text + tempDigitStartIndex, tempDigitCount1);
+    int64_t tempIsNegative2 = tempIsNegative1;
+    
+    if (tempIsHexadecimal) {
+        addToHexadecimalText(tempBuffer, offset);
+    } else {
+        tempBuffer[tempDigitCount1] = 0;
+        int64_t tempNumber;
+        sscanf((char *)tempBuffer, "%lld", (long long*)&tempNumber);
+        if (tempIsNegative1) {
+            tempNumber = -tempNumber;
+        }
+        tempNumber += offset;
+        int64_t tempPositiveNumber;
+        if (tempNumber >= 0) {
+            tempPositiveNumber = tempNumber;
+            tempIsNegative2 = false;
+        } else {
+            tempPositiveNumber = -tempNumber;
+            tempIsNegative2 = true;
+        }
+        sprintf((char *)tempBuffer, "%lld", (long long)tempPositiveNumber);
+    }
+    
+    eraseCursor();
+    int64_t tempDigitCount2 = strlen((char *)tempBuffer);
+    if (!tempIsNegative2 && tempIsNegative1 && !tempIsHexadecimal) {
+        removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), tempDigitStartIndex - 1, 1);
+        tempDigitStartIndex -= 1;
+    }
+    removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), tempDigitStartIndex, tempDigitCount1);
+    if (tempIsNegative2 && !tempIsNegative1 && !tempIsHexadecimal) {
+        int8_t tempCharacter = '-';
+        insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempDigitStartIndex, &tempCharacter, 1);
+        tempDigitStartIndex += 1;
+    }
+    insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempDigitStartIndex, tempBuffer, tempDigitCount2);
+    recordTextLineInserted(cursorTextPos.line);
+    setTextPosIndex(&cursorTextPos, tempDigitStartIndex);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempRowCount2 = getTextLineRowCount(cursorTextPos.line);
+        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+        if (tempRowCount1 == tempRowCount2) {
+            displayTextLine(tempPosY, cursorTextPos.line);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+        }
+    }
+    displayCursor();
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;    
+    textBufferIsDirty = true;
+}
+
+void incrementNumberUnderCursor() {
+    addToNumberUnderCursor(1);
+}
+
+void decrementNumberUnderCursor() {
+    addToNumberUnderCursor(-1);
 }

@@ -52,6 +52,8 @@ int8_t *helpText[] = {
     (int8_t *)"; = Toggle semicolon at end of line",
     (int8_t *)"B = Lowercase",
     (int8_t *)"Shift + B = Uppercase",
+    (int8_t *)"+ = Increment number under cursor",
+    (int8_t *)"- = Decrement number under cursor",
     (int8_t *)"",
     (int8_t *)"COMMANDS",
     (int8_t *)"",

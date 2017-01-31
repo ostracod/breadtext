@@ -603,6 +603,14 @@ int8_t handleKey(int32_t key) {
                 toggleSemicolonAtEndOfLine();
             }            
         }
+        if (activityMode == COMMAND_MODE) {
+            if (key == '+') {
+                incrementNumberUnderCursor();
+            }
+            if (key == '-') {
+                decrementNumberUnderCursor();
+            }
+        }
     }
     lastKey = key;
     return false;

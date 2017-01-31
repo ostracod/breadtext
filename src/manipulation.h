@@ -6,6 +6,8 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText);
 void toggleSemicolonAtEndOfLine();
 void uppercaseSelection();
 void lowercaseSelection();
+void incrementNumberUnderCursor();
+void decrementNumberUnderCursor();
 
 // MANIPULATION_HEADER_FILE
 #endif
