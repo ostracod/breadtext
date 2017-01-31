@@ -14,6 +14,9 @@ FEATURES
 > Customizable indentation
 > Set and goto marks
 > Macro playback
+> Change selection to uppercase or lowercase
+> Increment or decrement number under cursor
+> Toggle semicolon at end of line
 > Compatible with macOS and Linux
 
 INSTALLATION
