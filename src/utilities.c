@@ -110,10 +110,19 @@ int8_t isWordCharacter(int8_t tempCharacter) {
 int8_t *mallocRealpath(int8_t *path) {
     int8_t tempText[50000];
     int64_t tempLength = strlen((char *)path);
-    tempText[0] = '"';
-    strcpy((char *)tempText + 1, (char *)path);
-    tempText[tempLength + 1] = '"';
-    tempText[tempLength + 2] = 0;
+    int64_t tempIndex1 = 0;
+    int64_t tempIndex2 = 0;
+    while (tempIndex1 < tempLength) {
+        int8_t tempCharacter = path[tempIndex1];
+        if (tempCharacter == ' ') {
+            tempText[tempIndex2] = '\\';
+            tempIndex2 += 1;
+        }
+        tempText[tempIndex2] = tempCharacter;
+        tempIndex2 += 1;
+        tempIndex1 += 1;
+    }
+    tempText[tempIndex2] = 0;
     wordexp_t expResult;
     wordexp((char *)tempText, &expResult, 0);
     realpath(expResult.we_wordv[0], (char *)tempText);

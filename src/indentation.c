@@ -102,6 +102,7 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
             setTextPosIndex(&highlightTextPos, index);
         }
     }
+    textBufferIsDirty = true;
 }
 
 void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
@@ -172,6 +173,7 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
             setTextPosIndex(&highlightTextPos, index);
         }
     }
+    textBufferIsDirty = true;
 }
 
 int64_t getIndentationWidth(int64_t level) {

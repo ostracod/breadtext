@@ -693,9 +693,7 @@ int main(int argc, const char *argv[]) {
     filePath = mallocRealpath((int8_t *)(argv[1]));
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
-    
-    processRcFile();
-    
+        
     FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
         rootTextLine = createEmptyTextLine();
@@ -763,6 +761,8 @@ int main(int argc, const char *argv[]) {
     shouldUseHardTabs = false;
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
+    
+    processRcFile();    
     
     window = initscr();
     noecho();
