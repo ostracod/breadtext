@@ -274,12 +274,12 @@ void addToNumberUnderCursor(int64_t offset) {
     recordTextLineDeleted(cursorTextPos.line);
     int8_t tempBuffer[1000];
     copyData(tempBuffer, cursorTextPos.line->textAllocation.text + tempDigitStartIndex, tempDigitCount1);
+    tempBuffer[tempDigitCount1] = 0;
     int64_t tempIsNegative2 = tempIsNegative1;
     
     if (tempIsHexadecimal) {
         addToHexadecimalText(tempBuffer, offset);
     } else {
-        tempBuffer[tempDigitCount1] = 0;
         int64_t tempNumber;
         sscanf((char *)tempBuffer, "%lld", (long long*)&tempNumber);
         if (tempIsNegative1) {

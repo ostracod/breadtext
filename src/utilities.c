@@ -160,19 +160,19 @@ void systemPasteClipboardFile() {
 
 void addToHexadecimalText(int8_t *text, int64_t offset) {
     int64_t tempLength = strlen((char *)text);
-    int64_t tempNumber = 0;
+    uint64_t tempNumber = 0;
     int64_t tempOffset = 0;
     int64_t index = tempLength - 1;
     while (index >= 0) {
         int8_t tempCharacter = text[index];
         if (tempCharacter >= '0' && tempCharacter <= '9') {
-            tempNumber |= (tempCharacter - '0') << tempOffset;
+            tempNumber |= (uint64_t)(tempCharacter - '0') << tempOffset;
         }
         if (tempCharacter >= 'A' && tempCharacter <= 'F') {
-            tempNumber |= (tempCharacter - 'A' + 10) << tempOffset;
+            tempNumber |= (uint64_t)(tempCharacter - 'A' + 10) << tempOffset;
         }
         if (tempCharacter >= 'a' && tempCharacter <= 'f') {
-            tempNumber |= (tempCharacter - 'a' + 10) << tempOffset;
+            tempNumber |= (uint64_t)(tempCharacter - 'a' + 10) << tempOffset;
         }
         tempOffset += 4;
         index -= 1;
