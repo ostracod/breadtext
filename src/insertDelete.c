@@ -144,10 +144,13 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
     }
 }
 
-void deleteCharacterAfterCursor() {
+void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     if (index >= tempLength) {
+        if (shouldAddHistoryFrame) {
+            addHistoryFrame();
+        }
         textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
         if (tempLine == NULL) {
             return;
@@ -166,7 +169,9 @@ void deleteCharacterAfterCursor() {
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
         if (!historyFrameIsConsecutive) {
-            addHistoryFrame();
+            if (shouldAddHistoryFrame) {
+                addHistoryFrame();
+            }
             recordTextLineDeleted(cursorTextPos.line);
         }
         removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, 1);
@@ -186,7 +191,9 @@ void deleteCharacterAfterCursor() {
         displayCursor();
     }
     textBufferIsDirty = true;
-    finishCurrentHistoryFrame();
+    if (shouldAddHistoryFrame) {
+        finishCurrentHistoryFrame();
+    }
 }
 
 void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {

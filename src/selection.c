@@ -70,7 +70,7 @@ void copySelection() {
 
 void deleteSelectionHelper() {
     if (!isHighlighting) {
-        deleteCharacterAfterCursor();
+        deleteCharacterAfterCursor(false);
         return;
     }
     textPos_t tempFirstTextPos = *(getFirstHighlightTextPos());
@@ -127,6 +127,10 @@ void deleteSelectionHelper() {
 }
 
 void deleteSelection() {
+    if (!isHighlighting) {
+        deleteCharacterAfterCursor(true);
+        return;
+    }
     addHistoryFrame();
     deleteSelectionHelper();
     finishCurrentHistoryFrame();

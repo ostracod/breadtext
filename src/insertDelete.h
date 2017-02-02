@@ -10,7 +10,7 @@ historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
 
 void insertCharacterBeforeCursor(int8_t character);
 void deleteCharacterBeforeCursor(int8_t shouldRecordHistory);
-void deleteCharacterAfterCursor();
+void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame);
 void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel);
 void insertNewlineBeforeCursor();
 void promptAndInsertCharacterBeforeCursor();
