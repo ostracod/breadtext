@@ -39,8 +39,8 @@ void displayNotification(int8_t *message);
 void eraseActivityModeOrNotification();
 void displayStatusBar();
 void displayHelpMessage();
-void scrollHelpMessageUp();
-void scrollHelpMessageDown();
+void scrollHelpMessageUp(int64_t amount);
+void scrollHelpMessageDown(int64_t amount);
 void redrawEverything();
 int8_t scrollCursorOntoScreen();
 

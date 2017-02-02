@@ -217,10 +217,16 @@ int8_t handleKey(int32_t key) {
     }
     if (activityMode == HELP_MODE) {
         if (key == KEY_UP || key == 'i') {
-            scrollHelpMessageUp();
+            scrollHelpMessageUp(1);
         }
         if (key == KEY_DOWN || key == 'k') {
-            scrollHelpMessageDown();
+            scrollHelpMessageDown(1);
+        }
+        if (key == 'I') {
+            scrollHelpMessageUp(10);
+        }
+        if (key == 'K') {
+            scrollHelpMessageDown(10);
         }
         if (key == 'q') {
             setActivityMode(COMMAND_MODE);
@@ -380,9 +386,15 @@ int8_t handleKey(int32_t key) {
                     copySelection();
                     break;
                 }
-                case 'C':
+                case 'x':
                 {
                     cutSelection();
+                    break;
+                }
+                case 'X':
+                {
+                    cutSelection();
+                    setActivityMode(TEXT_ENTRY_MODE);
                     break;
                 }
                 case 'p':
@@ -398,6 +410,12 @@ int8_t handleKey(int32_t key) {
                 case 'd':
                 {
                     deleteSelection();
+                    break;
+                }
+                case 'D':
+                {
+                    deleteSelection();
+                    setActivityMode(TEXT_ENTRY_MODE);
                     break;
                 }
                 case 'u':

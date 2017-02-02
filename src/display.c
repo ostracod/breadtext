@@ -15,41 +15,58 @@ int8_t *helpText[] = {
     (int8_t *)"",
     (int8_t *)"= = = BREADTEXT HELP = = =",
     (int8_t *)"",
-    (int8_t *)"CONTROLS",
+    (int8_t *)"SAVE AND QUIT",
+    (int8_t *)"",
+    (int8_t *)"S = Save",
+    (int8_t *)"Q = Quit",
+    (int8_t *)"Shift + Q = Quit without saving",
+    (int8_t *)"",
+    (int8_t *)"CHANGING MODES",
     (int8_t *)"",
     (int8_t *)"T = Text-entry mode",
     (int8_t *)", + , (again) or Escape = Command mode",
+    (int8_t *)"H = Character highlight mode",
+    (int8_t *)"Shift + H = Line highlight mode",
+    (int8_t *)"W = Word highlight mode",    
+    (int8_t *)"/ = Enter command",
+    (int8_t *)"",
+    (int8_t *)"CURSOR MOVEMENT",
+    (int8_t *)"",
     (int8_t *)"IJKL or Arrow Keys = Scroll one character",
     (int8_t *)"Shift + IJKL = Scroll 10 characters",
     (int8_t *)"[] = Scroll to beginning or end of line",
     (int8_t *)"{} = Scroll to beginning or end of file",
-    (int8_t *)"/ = Enter command",
-    (int8_t *)"S = Save",
-    (int8_t *)"Q = Quit",
-    (int8_t *)"Shift + Q = Quit without saving",
-    (int8_t *)"M = Play macro",
-    (int8_t *)"Shift + M = Start or stop recording macro",
-    (int8_t *)"H = Character highlight mode",
-    (int8_t *)"Shift + H = Line highlight mode",
-    (int8_t *)"W = Word highlight mode",
-    (int8_t *)"D = Delete",
-    (int8_t *)"C = Copy",
-    (int8_t *)"Shift + C = Cut",
-    (int8_t *)"P = Paste after cursor",
-    (int8_t *)"Shift + P = Paste before cursor",
-    (int8_t *)"U = Undo",
-    (int8_t *)"Shift + U = Redo",
-    (int8_t *)"<> = Indent",
-    (int8_t *)"Tab or Shift + Tab = Indent",
     (int8_t *)"N = Find next instance",
     (int8_t *)"Shift + N = Find previous instance",
+    (int8_t *)"F = Find next instance of word under cursor",
+    (int8_t *)"Shift + F = Find next instance of word under cursor",    
     (int8_t *)"Number = Go to mark",
     (int8_t *)"Shift + Number = Set mark",
+    (int8_t *)"",
+    (int8_t *)"HIGHLIGHT ACTIONS",
+    (int8_t *)"",
+    (int8_t *)"D = Delete",
+    (int8_t *)"Shift + D = Delete and enter text-entry mode",
+    (int8_t *)"C = Copy",
+    (int8_t *)"X = Cut",
+    (int8_t *)"Shift + X = Cut and enter text-entry mode",
+    (int8_t *)"P = Paste after cursor",
+    (int8_t *)"Shift + P = Paste before cursor",
+    (int8_t *)"",
+    (int8_t *)"HISTORY",
+    (int8_t *)"",    
+    (int8_t *)"M = Play macro",
+    (int8_t *)"Shift + M = Start or stop recording macro",
+    (int8_t *)"U = Undo",
+    (int8_t *)"Shift + U = Redo",
+    (int8_t *)"",
+    (int8_t *)"TEXT MANIPULATION",
+    (int8_t *)"",
+    (int8_t *)"<> = Indent",
+    (int8_t *)"Tab or Shift + Tab = Indent",
     (int8_t *)". = Replace character under cursor",
     (int8_t *)"' = Insert character before cursor",
     (int8_t *)"Shift + ' = Insert character after cursor",
-    (int8_t *)"F = Find next instance of word under cursor",
-    (int8_t *)"Shift + F = Find next instance of word under cursor",
     (int8_t *)"; = Toggle semicolon at end of line",
     (int8_t *)"B = Lowercase",
     (int8_t *)"Shift + B = Uppercase",
@@ -491,18 +508,30 @@ void displayHelpMessage() {
     }
 }
 
-void scrollHelpMessageUp() {
-    if (helpScroll > 0) {
-        helpScroll -= 1;
-        redrawEverything();
+void scrollHelpMessageUp(int64_t amount) {
+    int64_t tempCount = 0;
+    while (tempCount < amount) {
+        if (helpScroll > 0) {
+            helpScroll -= 1;
+            redrawEverything();
+        } else {
+            break;
+        }
+        tempCount += 1;
     }
 }
 
-void scrollHelpMessageDown() {
+void scrollHelpMessageDown(int64_t amount) {
     int64_t tempLength = sizeof(helpText) / sizeof(*helpText);
-    if (helpScroll < tempLength - 1) {
-        helpScroll += 1;
-        redrawEverything();
+    int64_t tempCount = 0;
+    while (tempCount < amount) {
+        if (helpScroll < tempLength - 1) {
+            helpScroll += 1;
+            redrawEverything();
+        } else {
+            break;
+        }
+        tempCount += 1;
     }
 }
 
