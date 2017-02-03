@@ -217,7 +217,6 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         tempEndIndex = line->textAllocation.length;
     }
     int64_t tempAmount = tempEndIndex - tempStartIndex;
-    int64_t tempEndColumn = tempAmount % viewPortWidth;
     if (isHighlighting) {
         int64_t tempStartIndex2;
         int64_t tempEndIndex2;
@@ -231,11 +230,16 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         tempStartTextPos.column = 0;
         tempEndTextPos.line = line;
         if (tempFirstTextPos->line == line) {
-            tempEndTextPos.row = tempFirstTextPos->row;
-            tempEndTextPos.column = tempFirstTextPos->column;
+            if (getTextPosIndex(tempFirstTextPos) < tempStartIndex) {
+                setTextPosIndex(&tempEndTextPos, tempStartIndex);
+            } else if (getTextPosIndex(tempFirstTextPos) > tempEndIndex) {
+                setTextPosIndex(&tempEndTextPos, tempEndIndex);
+            } else {
+                tempEndTextPos.row = tempFirstTextPos->row;
+                tempEndTextPos.column = tempFirstTextPos->column;
+            }
         } else if (textLineIsAfterTextLine(tempFirstTextPos->line, line)) {
-            tempEndTextPos.row = tempEndRow - 1;
-            tempEndTextPos.column = tempEndColumn;
+            setTextPosIndex(&tempEndTextPos, tempEndIndex);
         } else {
             tempEndTextPos = tempStartTextPos;
         }
@@ -252,9 +256,13 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         }
         tempStartTextPos = tempEndTextPos;
         if (tempLastTextPos->line == line) {
-            tempEndTextPos.row = tempLastTextPos->row;
-            tempEndTextPos.column = tempLastTextPos->column;
-            if (tempEndTextPos.row < tempEndRow - 1 || tempEndTextPos.column < tempEndColumn) {
+            if (getTextPosIndex(tempLastTextPos) < tempStartIndex) {
+                setTextPosIndex(&tempEndTextPos, tempStartIndex);
+            } else if (getTextPosIndex(tempLastTextPos) > tempEndIndex) {
+                setTextPosIndex(&tempEndTextPos, tempEndIndex);
+            } else {
+                tempEndTextPos.row = tempLastTextPos->row;
+                tempEndTextPos.column = tempLastTextPos->column;
                 tempEndTextPos.column += 1;
                 if (tempEndTextPos.column >= viewPortWidth) {
                     tempEndTextPos.column = 0;
@@ -262,8 +270,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
                 }
             }
         } else if (textLineIsAfterTextLine(tempLastTextPos->line, line)) {
-            tempEndTextPos.row = tempEndRow - 1;
-            tempEndTextPos.column = tempEndColumn;
+            setTextPosIndex(&tempEndTextPos, tempEndIndex);
         } else {
             tempEndTextPos = tempStartTextPos;
         }
@@ -279,8 +286,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
             attroff(COLOR_PAIR(secondaryColorPair));
         }
         tempStartTextPos = tempEndTextPos;
-        tempEndTextPos.row = tempEndRow - 1;
-        tempEndTextPos.column = tempEndColumn;
+        setTextPosIndex(&tempEndTextPos, tempEndIndex);
         tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
         tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
         tempAmount2 = tempEndIndex2 - tempStartIndex2;
@@ -302,8 +308,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
             tempBuffer[tempAmount2] = 0;
             textPos_t tempTextPos;
             tempTextPos.line = line;
-            tempTextPos.row = tempEndRow - 1;
-            tempTextPos.column = tempEndColumn;
+            setTextPosIndex(&tempTextPos, tempEndIndex);
             int8_t tempColor;
             if (!textPosIsAfterTextPos(tempFirstTextPos, &tempTextPos) && !textPosIsAfterTextPos(&tempTextPos, tempLastTextPos)) {
                 tempColor = secondaryColorPair;
