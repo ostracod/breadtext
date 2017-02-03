@@ -72,6 +72,7 @@ int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline) {
     while (true) {
         int8_t tempCharacter = text[tempIndex1];
         if (tempCharacter == 0) {
+            text[tempIndex2] = 0;
             break;
         }
         if (tempCharacter == '\n') {
