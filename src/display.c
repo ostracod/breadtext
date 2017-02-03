@@ -258,7 +258,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
         if (tempLastTextPos->line == line) {
             if (getTextPosIndex(tempLastTextPos) < tempStartIndex) {
                 setTextPosIndex(&tempEndTextPos, tempStartIndex);
-            } else if (getTextPosIndex(tempLastTextPos) > tempEndIndex) {
+            } else if (getTextPosIndex(tempLastTextPos) + 1 > tempEndIndex) {
                 setTextPosIndex(&tempEndTextPos, tempEndIndex);
             } else {
                 tempEndTextPos.row = tempLastTextPos->row;
