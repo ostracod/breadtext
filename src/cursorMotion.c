@@ -226,6 +226,7 @@ void moveCursorToBeginningOfLine() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
     historyFrameIsConsecutive = false;
 }
 
@@ -234,6 +235,7 @@ void moveCursorToEndOfLine() {
     int64_t tempLength = tempNextTextPos.line->textAllocation.length;
     setTextPosIndex(&tempNextTextPos, tempLength);
     moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
     historyFrameIsConsecutive = false;
 }
 
@@ -243,6 +245,7 @@ void moveCursorToBeginningOfFile() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
     historyFrameIsConsecutive = false;
 }
 
@@ -252,6 +255,7 @@ void moveCursorToEndOfFile() {
     tempNextTextPos.column = 0;
     tempNextTextPos.row = 0;
     moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
     historyFrameIsConsecutive = false;
 }
 
