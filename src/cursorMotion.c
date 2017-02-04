@@ -300,7 +300,7 @@ int8_t wordAtTextPosHasLength(textPos_t *pos, int64_t length) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     int64_t tempPreviousIndex = index;
-    while (index > 0) {
+    while (index >= 0) {
         int8_t tempCharacter = pos->line->textAllocation.text[index];
         if (!isWordCharacter(tempCharacter)) {
             break;
