@@ -51,7 +51,9 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
 }
 
 void toggleSemicolonAtEndOfLine() {
+    int64_t tempSnapColumn = cursorSnapColumn;
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int8_t tempIsAtEndOfLine = (getTextPosIndex(&cursorTextPos) >= tempLength);
     int64_t tempEndOfLineIndex = tempLength;
     while (tempEndOfLineIndex > 0) {
         int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndOfLineIndex - 1];
@@ -71,12 +73,18 @@ void toggleSemicolonAtEndOfLine() {
     textPos_t tempTextPos = cursorTextPos;
     setTextPosIndex(&tempTextPos, tempEndOfLineIndex);
     moveCursor(&tempTextPos);
+    int8_t tempShouldMoveCursorBack;
     if (tempShouldDeleteSemicolon) {
         deleteCharacterBeforeCursor(true);
+        tempShouldMoveCursorBack = !tempIsAtEndOfLine;
     } else {
         insertCharacterBeforeCursor(';');
+        tempShouldMoveCursorBack = true;
     }
-    moveCursor(&tempLastTextPos);
+    if (tempShouldMoveCursorBack) {
+        moveCursor(&tempLastTextPos);
+        cursorSnapColumn = tempSnapColumn;
+    }
 }
 
 void uppercaseSelection() {
