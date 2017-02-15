@@ -76,12 +76,16 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
         }
         addHistoryFrame();
         index = tempLine->textAllocation.length;
-        if (shouldRecordHistory) {
-            recordTextLineDeleted(tempLine);
+        if (!textLineOnlyContainsWhitespace(cursorTextPos.line)) {
+            if (shouldRecordHistory) {
+                recordTextLineDeleted(tempLine);
+            }
+            insertTextIntoTextAllocation(&(tempLine->textAllocation), index, cursorTextPos.line->textAllocation.text, cursorTextPos.line->textAllocation.length);
+            if (shouldRecordHistory) {
+                recordTextLineInserted(tempLine);
+            }
         }
-        insertTextIntoTextAllocation(&(tempLine->textAllocation), index, cursorTextPos.line->textAllocation.text, cursorTextPos.line->textAllocation.length);
         if (shouldRecordHistory) {
-            recordTextLineInserted(tempLine);
             recordTextLineDeleted(cursorTextPos.line);
         }
         handleTextLineDeleted(cursorTextPos.line);
@@ -155,9 +159,11 @@ void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
         if (tempLine == NULL) {
             return;
         }
-        recordTextLineDeleted(cursorTextPos.line);
-        insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
-        recordTextLineInserted(cursorTextPos.line);
+        if (!textLineOnlyContainsWhitespace(tempLine)) {        
+            recordTextLineDeleted(cursorTextPos.line);
+            insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
+            recordTextLineInserted(cursorTextPos.line);
+        }
         handleTextLineDeleted(tempLine);
         recordTextLineDeleted(tempLine);
         deleteTextLine(tempLine);

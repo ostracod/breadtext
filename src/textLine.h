@@ -29,6 +29,7 @@ textLine_t *getNextTextLine(textLine_t *line);
 int64_t getTextLineNumber(textLine_t *line);
 int8_t textLineIsAfterTextLine(textLine_t *line1, textLine_t *line2);
 textLine_t *getTextLineByNumber(int64_t number);
+int8_t textLineOnlyContainsWhitespace(textLine_t *line);
 
 // TEXT_LINE_HEADER_FILE
 #endif

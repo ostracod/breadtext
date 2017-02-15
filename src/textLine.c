@@ -326,3 +326,16 @@ textLine_t *getTextLineByNumber(int64_t number) {
         }
     }
 }
+
+int8_t textLineOnlyContainsWhitespace(textLine_t *line) {
+    int64_t tempLength = line->textAllocation.length;
+    int64_t index = 0;
+    while (index < tempLength) {
+        int8_t tempCharacter = line->textAllocation.text[index];
+        if (!isWhitespace(tempCharacter)) {
+            return false;
+        }
+        index += 1;
+    }
+    return true;
+}
