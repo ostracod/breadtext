@@ -610,10 +610,16 @@ void gotoMark(int64_t index) {
     historyFrameIsConsecutive = false;
 }
 
-void startSearchingForWordUnderCursor() {
+int8_t startSearchingForWordUnderCursor() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    if (tempLength <= 0) {
+        return false;
+    }
     int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
     int64_t tempEndIndex = tempStartIndex;
+    if (tempStartIndex >= tempLength) {
+        return false;
+    }
     int64_t tempLastIndex;
     tempLastIndex = tempStartIndex;
     while (tempStartIndex >= 0) {
@@ -636,17 +642,35 @@ void startSearchingForWordUnderCursor() {
     }
     tempEndIndex = tempLastIndex;
     tempEndIndex += 1;
-    searchTermLength = tempEndIndex - tempStartIndex;
+    int64_t tempLength2 = tempEndIndex - tempStartIndex;
+    if (tempLength2 == 1) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        if (!isWordCharacter(tempCharacter)) {
+            return false;
+        }
+    }
+    searchTermLength = tempLength2;
     copyData(searchTerm, cursorTextPos.line->textAllocation.text + tempStartIndex, searchTermLength);
     searchTerm[searchTermLength] = 0;
+    return true;
 }
 
 void findNextTermUnderCursor() {
-    startSearchingForWordUnderCursor();
-    gotoNextWord();
+    int8_t tempResult = startSearchingForWordUnderCursor();
+    if (tempResult) {
+        gotoNextWord();
+    } else {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"No word under cursor.");
+    }
 }
 
 void findPreviousTermUnderCursor() {
-    startSearchingForWordUnderCursor();
-    gotoPreviousWord();
+    int8_t tempResult = startSearchingForWordUnderCursor();
+    if (tempResult) {
+        gotoPreviousWord();
+    } else {
+        eraseActivityModeOrNotification();
+        displayNotification((int8_t *)"No word under cursor.");
+    }
 }
