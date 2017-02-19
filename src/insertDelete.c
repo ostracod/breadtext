@@ -242,8 +242,7 @@ void insertNewlineBeforeCursor() {
 }
 
 void promptAndInsertCharacterBeforeCursor() {
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Type a character.");
+    notifyUser((int8_t *)"Type a character.");
     int32_t tempKey = getch();
     if (tempKey >= 32 && tempKey <= 126) {
         insertCharacterBeforeCursor(tempKey);
@@ -253,8 +252,7 @@ void promptAndInsertCharacterBeforeCursor() {
 }
 
 void promptAndInsertCharacterAfterCursor() {
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Type a character.");
+    notifyUser((int8_t *)"Type a character.");
     int32_t tempKey = getch();
     if (tempKey >= 32 && tempKey <= 126) {
         moveCursorRight(1);
@@ -266,8 +264,7 @@ void promptAndInsertCharacterAfterCursor() {
 }
 
 void promptAndReplaceCharacterUnderCursor() {
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Type a character.");
+    notifyUser((int8_t *)"Type a character.");
     int32_t tempKey = getch();
     if (tempKey >= 32 && tempKey <= 126) {
         moveCursorRight(1);

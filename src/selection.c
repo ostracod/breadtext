@@ -64,8 +64,7 @@ void copySelectionHelper() {
 void copySelection() {
     copySelectionHelper();
     setActivityMode(COMMAND_MODE);
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Copied selection.");
+    notifyUser((int8_t *)"Copied selection.");
 }
 
 void deleteSelectionHelper() {
@@ -141,8 +140,7 @@ void cutSelection() {
     addHistoryFrame();
     copySelectionHelper();
     deleteSelectionHelper();
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Cut selection.");
+    notifyUser((int8_t *)"Cut selection.");
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }

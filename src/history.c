@@ -231,8 +231,7 @@ void finishCurrentHistoryFrame() {
 
 void undoLastAction() {
     if (historyFrameListIndex >= historyFrameListLength) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"At oldest state.");
+        notifyUser((int8_t *)"At oldest state.");
         return;
     }
     historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
@@ -242,8 +241,7 @@ void undoLastAction() {
 
 void redoLastAction() {
     if (historyFrameListIndex <= 0) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"At newest state.");
+        notifyUser((int8_t *)"At newest state.");
         return;
     }
     historyFrameListIndex -= 1;

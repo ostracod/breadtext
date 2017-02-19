@@ -476,6 +476,11 @@ void eraseActivityModeOrNotification() {
     }
 }
 
+void notifyUser(int8_t *message) {
+    eraseActivityModeOrNotification();
+    displayNotification(message);
+}
+
 void displayStatusBar() {
     eraseStatusBar();
     if (activityMode == TEXT_COMMAND_MODE) {

@@ -145,8 +145,7 @@ void setActivityMode(int8_t mode) {
 }
 
 void saveFile() {
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Saving...");
+    notifyUser((int8_t *)"Saving...");
     refresh();
     int8_t tempNewline = '\n';
     FILE *tempFile = fopen((char *)filePath, "w");
@@ -160,8 +159,7 @@ void saveFile() {
         tempLine = tempNextLine;
     }
     fclose(tempFile);
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Saved file.");
+    notifyUser((int8_t *)"Saved file.");
     textBufferIsDirty = false;
 }
 
@@ -196,8 +194,10 @@ int8_t handleKey(int32_t key) {
         if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
             isRecordingMacro = false;
         } else {
-            macroKeyList[macroKeyListLength] = key;
-            macroKeyListLength += 1;
+            if (key != 'm') {
+                macroKeyList[macroKeyListLength] = key;
+                macroKeyListLength += 1;
+            }
         }
     }
     if (isShowingNotification) {
@@ -324,8 +324,7 @@ int8_t handleKey(int32_t key) {
                 case 'q':
                 {
                     if (textBufferIsDirty) {
-                        eraseActivityModeOrNotification();
-                        displayNotification((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+                        notifyUser((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
                     } else {
                         return true;
                     }
@@ -430,17 +429,20 @@ int8_t handleKey(int32_t key) {
                 }
                 case 'm':
                 {
-                    playMacro();
+                    if (isRecordingMacro) {
+                        notifyUser((int8_t *)"Don't be naughty. ;-)");
+                    } else {
+                        playMacro();
+                    }
                     break;
                 }
                 case 'M':
                 {
-                    eraseActivityModeOrNotification();
                     if (isRecordingMacro) {
-                        displayNotification((int8_t *)"Finished recording.");
+                        notifyUser((int8_t *)"Finished recording.");
                     } else {
                         macroKeyListLength = 0;
-                        displayNotification((int8_t *)"Recording macro.");
+                        notifyUser((int8_t *)"Recording macro.");
                     }
                     isRecordingMacro = !isRecordingMacro;
                     break;

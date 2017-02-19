@@ -543,8 +543,7 @@ void gotoNextTerm() {
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Could not find term.");
+        notifyUser((int8_t *)"Could not find term.");
     }
 }
 
@@ -553,8 +552,7 @@ void gotoPreviousTerm() {
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Could not find term.");
+        notifyUser((int8_t *)"Could not find term.");
     }
 }
 
@@ -563,8 +561,7 @@ void gotoNextWord() {
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Could not find word.");
+        notifyUser((int8_t *)"Could not find word.");
     }
 }
 
@@ -573,32 +570,27 @@ void gotoPreviousWord() {
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Could not find word.");
+        notifyUser((int8_t *)"Could not find word.");
     }
 }
 
 void setMark(int64_t index) {
     if (index < 0 || index >= MARK_AMOUNT) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Error: Bad mark number.");
+        notifyUser((int8_t *)"Error: Bad mark number.");
         return;
     }
     markList[index] = cursorTextPos.line;
     markIsSetList[index] = true;
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Set mark.");
+    notifyUser((int8_t *)"Set mark.");
 }
 
 void gotoMark(int64_t index) {
     if (index < 0 || index >= MARK_AMOUNT) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Error: Bad mark number.");
+        notifyUser((int8_t *)"Error: Bad mark number.");
         return;
     }
     if (!markIsSetList[index]) {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Error: Mark is not set.");
+        notifyUser((int8_t *)"Error: Mark is not set.");
         return;
     }
     textPos_t tempTextPos;
@@ -660,8 +652,7 @@ void findNextTermUnderCursor() {
     if (tempResult) {
         gotoNextWord();
     } else {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"No word under cursor.");
+        notifyUser((int8_t *)"No word under cursor.");
     }
 }
 
@@ -670,7 +661,6 @@ void findPreviousTermUnderCursor() {
     if (tempResult) {
         gotoPreviousWord();
     } else {
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"No word under cursor.");
+        notifyUser((int8_t *)"No word under cursor.");
     }
 }

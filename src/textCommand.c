@@ -108,15 +108,13 @@ void executeTextCommand() {
     */
     if (tempTermListLength <= 0) {
         setActivityMode(PREVIOUS_MODE);
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Error: Invalid command.");
+        notifyUser((int8_t *)"Error: Invalid command.");
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "gotoLine") == 0) {
         if (tempTermListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         int64_t tempLineNumber = atoi((char *)(tempTermList[1]));
@@ -126,8 +124,7 @@ void executeTextCommand() {
         tempTextPos.column = 0;
         if (tempTextPos.line == NULL) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Bad line number.");
+            notifyUser((int8_t *)"Error: Bad line number.");
             return;
         }
         setActivityMode(PREVIOUS_MODE);
@@ -139,8 +136,7 @@ void executeTextCommand() {
     if (strcmp((char *)(tempTermList[0]), "find") == 0) {
         if (tempTermListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
@@ -150,8 +146,7 @@ void executeTextCommand() {
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Could not find term.");
+            notifyUser((int8_t *)"Could not find term.");
             return;
         }
         return;
@@ -159,8 +154,7 @@ void executeTextCommand() {
     if (strcmp((char *)(tempTermList[0]), "replace") == 0) {
         if (tempTermListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
@@ -172,35 +166,31 @@ void executeTextCommand() {
         historyFrameIsConsecutive = false;
         scrollCursorOntoScreen();
         int64_t tempResult = findAndReplaceAllTerms(tempTermList[2]);
-        eraseActivityModeOrNotification();
         int8_t tempText[1000];
         if (tempResult == 1) {
             sprintf((char *)tempText, "Replaced %lld term.", (long long)(tempResult));
         } else {
             sprintf((char *)tempText, "Replaced %lld terms.", (long long)(tempResult));
         }
-        displayNotification(tempText);
+        notifyUser(tempText);
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "set") == 0) {
         if (tempTermListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Wrong number of arguments.");
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
         int64_t tempValue = atoi((char *)(tempTermList[2]));
         int8_t tempResult = setConfigurationVariable(tempTermList[1], tempValue);
         if (!tempResult) {
             setActivityMode(PREVIOUS_MODE);
-            eraseActivityModeOrNotification();
-            displayNotification((int8_t *)"Error: Could not set variable.");
+            notifyUser((int8_t *)"Error: Could not set variable.");
             return;
         }
         setActivityMode(PREVIOUS_MODE);
         redrawEverything();
-        eraseActivityModeOrNotification();
-        displayNotification((int8_t *)"Set configuration variable.");
+        notifyUser((int8_t *)"Set configuration variable.");
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "help") == 0) {
@@ -208,6 +198,5 @@ void executeTextCommand() {
         return;
     }
     setActivityMode(PREVIOUS_MODE);
-    eraseActivityModeOrNotification();
-    displayNotification((int8_t *)"Error: Unrecognized command name.");
+    notifyUser((int8_t *)"Error: Unrecognized command name.");
 }

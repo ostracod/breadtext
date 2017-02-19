@@ -37,6 +37,7 @@ void displayLineNumber();
 void eraseNotification();
 void displayNotification(int8_t *message);
 void eraseActivityModeOrNotification();
+void notifyUser(int8_t *message);
 void displayStatusBar();
 void displayHelpMessage();
 void scrollHelpMessageUp(int64_t amount);
