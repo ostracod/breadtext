@@ -16,6 +16,8 @@
 #define HELP_MODE 7
 #define PREVIOUS_MODE 8
 
+#define TIME_NEVER -1
+
 #define SHOULD_RUN_TESTS false
 #define IS_IN_DEBUG_MODE false
 
@@ -32,6 +34,9 @@ int8_t isHighlighting;
 textPos_t highlightTextPos;
 int8_t textCommandBuffer[1000];
 int32_t helpScroll;
+int8_t *filePath;
+int8_t *rcFilePath;
+int64_t fileLastModifiedTime;
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);

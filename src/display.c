@@ -80,6 +80,8 @@ int8_t *helpText[] = {
     (int8_t *)"/find (pattern)",
     (int8_t *)"/replace (pattern) (text)",
     (int8_t *)"/set (config variable) (value)",
+    (int8_t *)"/getPath",
+    (int8_t *)"/setPath (path)",
     (int8_t *)"/help",
     (int8_t *)"",
     (int8_t *)"CONFIGURATION VARIABLES",

@@ -21,15 +21,10 @@
 #include "textCommand.h"
 #include "breadtext.h"
 
-#define TIME_NEVER -1
-
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
 int32_t macroKeyListLength = 0;
 int8_t isRecordingMacro = false;
 int32_t lastKey = 0;
-int8_t *filePath;
-int8_t *rcFilePath;
-int64_t fileLastModifiedTime;
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted == topTextLine) {

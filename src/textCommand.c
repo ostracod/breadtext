@@ -197,6 +197,28 @@ void executeTextCommand() {
         setActivityMode(HELP_MODE);
         return;
     }
+    if (strcmp((char *)(tempTermList[0]), "getPath") == 0) {
+        if (tempTermListLength != 1) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        setActivityMode(PREVIOUS_MODE);
+        notifyUser(filePath);
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "setPath") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        filePath = mallocRealpath(tempTermList[1]);
+        fileLastModifiedTime = TIME_NEVER;
+        setActivityMode(PREVIOUS_MODE);
+        notifyUser((int8_t *)"Changed file path.");
+        return;
+    }
     setActivityMode(PREVIOUS_MODE);
     notifyUser((int8_t *)"Error: Unrecognized command name.");
 }
