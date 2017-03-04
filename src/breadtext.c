@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
 #include <curses.h>
 #include "utilities.h"
 #include "textAllocation.h"
@@ -149,6 +150,14 @@ void saveFile() {
     refresh();
     int8_t tempNewline = '\n';
     FILE *tempFile = fopen((char *)filePath, "w");
+    if (tempFile == NULL) {
+        if (errno == EACCES) {
+            notifyUser((int8_t *)"ERROR: Permission denied.\n");
+            return;
+        }
+        notifyUser((int8_t *)"ERROR: Could not save.\n");
+        return;
+    }
     textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
     while (tempLine != NULL) {
         textLine_t *tempNextLine = getNextTextLine(tempLine);
@@ -716,6 +725,10 @@ int main(int argc, const char *argv[]) {
         
     FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
+        if (errno == EACCES) {
+            printf("Permission denied.\n");
+            return 0;
+        }
         rootTextLine = createEmptyTextLine();
     } else {
         int8_t tempLastContainsNewline = true;
