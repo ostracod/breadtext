@@ -18,6 +18,7 @@ int8_t *helpText[] = {
     (int8_t *)"SAVE AND QUIT",
     (int8_t *)"",
     (int8_t *)"S = Save",
+    (int8_t *)"Shift + S = Save over modified file",
     (int8_t *)"Q = Quit",
     (int8_t *)"Shift + Q = Quit without saving",
     (int8_t *)"",

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include <curses.h>
 #include "utilities.h"
 #include "textAllocation.h"
@@ -20,12 +21,15 @@
 #include "textCommand.h"
 #include "breadtext.h"
 
+#define TIME_NEVER -1
+
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
 int32_t macroKeyListLength = 0;
 int8_t isRecordingMacro = false;
 int32_t lastKey = 0;
 int8_t *filePath;
 int8_t *rcFilePath;
+int64_t fileLastModifiedTime;
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted == topTextLine) {
@@ -145,17 +149,26 @@ void setActivityMode(int8_t mode) {
     historyFrameIsConsecutive = false;
 }
 
-void saveFile() {
+void saveFile(int8_t shouldCheckForModifications) {
+    struct stat attributes;
+    if (shouldCheckForModifications) {
+        stat((char *)filePath, &attributes);
+        int64_t tempTime = attributes.st_mtime;
+        if (tempTime != fileLastModifiedTime) {
+            notifyUser((int8_t *)"ERROR: File modified since last access.");
+            return;
+        }
+    }
     notifyUser((int8_t *)"Saving...");
     refresh();
     int8_t tempNewline = '\n';
     FILE *tempFile = fopen((char *)filePath, "w");
     if (tempFile == NULL) {
         if (errno == EACCES) {
-            notifyUser((int8_t *)"ERROR: Permission denied.\n");
+            notifyUser((int8_t *)"ERROR: Permission denied.");
             return;
         }
-        notifyUser((int8_t *)"ERROR: Could not save.\n");
+        notifyUser((int8_t *)"ERROR: Could not save.");
         return;
     }
     textLine_t *tempLine = getLeftmostTextLine(rootTextLine);
@@ -168,6 +181,8 @@ void saveFile() {
         tempLine = tempNextLine;
     }
     fclose(tempFile);
+    stat((char *)filePath, &attributes);
+    fileLastModifiedTime = attributes.st_mtime;
     notifyUser((int8_t *)"Saved file.");
     textBufferIsDirty = false;
 }
@@ -351,7 +366,12 @@ int8_t handleKey(int32_t key) {
                 }
                 case 's':
                 {
-                    saveFile();
+                    saveFile(true);
+                    break;
+                }
+                case 'S':
+                {
+                    saveFile(false);
                     break;
                 }
                 case '[':
@@ -729,8 +749,12 @@ int main(int argc, const char *argv[]) {
             printf("Permission denied.\n");
             return 0;
         }
+        fileLastModifiedTime = TIME_NEVER;
         rootTextLine = createEmptyTextLine();
     } else {
+        struct stat attributes;
+        stat((char *)filePath, &attributes);
+        fileLastModifiedTime = attributes.st_mtime;
         int8_t tempLastContainsNewline = true;
         rootTextLine = NULL;
         while (true) {
