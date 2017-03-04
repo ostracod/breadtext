@@ -152,11 +152,13 @@ void setActivityMode(int8_t mode) {
 void saveFile(int8_t shouldCheckForModifications) {
     struct stat attributes;
     if (shouldCheckForModifications) {
-        stat((char *)filePath, &attributes);
-        int64_t tempTime = attributes.st_mtime;
-        if (tempTime != fileLastModifiedTime) {
-            notifyUser((int8_t *)"ERROR: File modified since last access.");
-            return;
+        int32_t tempResult = stat((char *)filePath, &attributes);
+        if (tempResult == 0) {
+            int64_t tempTime = attributes.st_mtime;
+            if (tempTime != fileLastModifiedTime) {
+                notifyUser((int8_t *)"ERROR: File modified since last access.");
+                return;
+            }
         }
     }
     notifyUser((int8_t *)"Saving...");
