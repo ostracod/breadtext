@@ -193,16 +193,31 @@ int8_t fileEndsInNewline(FILE *file) {
     return (tempCharacter == '\n');
 }
 
+int8_t isHighlightingLines() {
+    textPos_t *tempFirstTextPos = getFirstHighlightTextPos();
+    textPos_t *tempLastTextPos = getLastHighlightTextPos();
+    if (tempFirstTextPos->row != 0 || tempFirstTextPos->column != 0) {
+        return false;
+    }
+    int64_t index = getTextPosIndex(tempLastTextPos);
+    int64_t tempLength = tempLastTextPos->line->textAllocation.length;
+    return (index == tempLength);
+}
+
 void pasteBeforeCursor() {
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
+    int8_t tempLastIsHighlightingLines;
     if (isHighlighting) {
+        tempLastIsHighlightingLines = isHighlightingLines();
         deleteSelectionHelper();
+    } else {
+        tempLastIsHighlightingLines = false;
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
     int32_t tempLevel;
-    if (fileEndsInNewline(tempFile) && !tempLastIsHighlighting) {
+    if (fileEndsInNewline(tempFile) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
         tempLevel = 0;
@@ -219,14 +234,23 @@ void pasteBeforeCursor() {
 void pasteAfterCursor() {
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
+    int8_t tempLastIsHighlightingLines;
     if (isHighlighting) {
+        tempLastIsHighlightingLines = isHighlightingLines();
         deleteSelectionHelper();
+    } else {
+        tempLastIsHighlightingLines = false;
     }
     systemPasteClipboardFile();
     FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    int8_t tempFileEndsInNewline = fileEndsInNewline(tempFile);
     int32_t tempLevel;
-    if (!tempLastIsHighlighting) {
-        if (fileEndsInNewline(tempFile)) {
+    if (tempLastIsHighlightingLines && tempFileEndsInNewline) {
+        cursorTextPos.row = 0;
+        cursorTextPos.column = 0;
+        tempLevel = 0;
+    } else if (!tempLastIsHighlighting) {
+        if (tempFileEndsInNewline) {
             eraseCursor();
             textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
             if (tempLine == NULL) {
