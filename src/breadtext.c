@@ -25,6 +25,8 @@ int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
 int32_t macroKeyListLength = 0;
 int8_t isRecordingMacro = false;
 int32_t lastKey = 0;
+int8_t *initialFileContents = NULL;
+int64_t initialFileSize;
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted == topTextLine) {
@@ -151,8 +153,10 @@ void saveFile(int8_t shouldCheckForModifications) {
         if (tempResult == 0) {
             int64_t tempTime = attributes.st_mtime;
             if (tempTime != fileLastModifiedTime) {
-                notifyUser((int8_t *)"ERROR: File modified since last access.");
-                return;
+                if (!checkInitialFileContents()) {
+                    notifyUser((int8_t *)"ERROR: File modified since last access.");
+                    return;
+                }
             }
         }
     }
@@ -180,6 +184,7 @@ void saveFile(int8_t shouldCheckForModifications) {
     fclose(tempFile);
     stat((char *)filePath, &attributes);
     fileLastModifiedTime = attributes.st_mtime;
+    storeInitialFileContents();
     notifyUser((int8_t *)"Saved file.");
     textBufferIsDirty = false;
 }
@@ -344,9 +349,14 @@ int8_t handleKey(int32_t key) {
             switch (key) {
                 case 'q':
                 {
+                    int8_t tempShouldQuit = true;
                     if (textBufferIsDirty) {
-                        notifyUser((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
-                    } else {
+                        if (!checkTextBufferHygiene()) {
+                            notifyUser((int8_t *)"Unsaved changes. (Shift + Q to quit anyway.)");
+                            tempShouldQuit = false;
+                        }
+                    }
+                    if (tempShouldQuit) {
                         return true;
                     }
                     break;
@@ -719,6 +729,121 @@ void processRcFile() {
     }
 }
 
+void storeInitialFileContents() {
+    if (initialFileContents != NULL) {
+        free(initialFileContents);
+    }
+    FILE *tempFile = fopen((char *)filePath, "r");
+    if (tempFile == NULL) {
+        initialFileContents = NULL;
+        return;
+    }
+    fseek(tempFile, 0L, SEEK_END);
+    initialFileSize = ftell(tempFile);
+    fseek(tempFile, 0L, SEEK_SET);
+    if (initialFileSize == 0) {
+        initialFileContents = NULL;
+        fclose(tempFile);
+        return;
+    }
+    initialFileContents = malloc(initialFileSize);
+    int64_t index = 0;
+    while (index < initialFileSize) {
+        int64_t tempAmount = 100;
+        if (index + tempAmount > initialFileSize) {
+            tempAmount = initialFileSize - index;
+        }
+        fread(initialFileContents + index, 1, tempAmount, tempFile);
+        index += tempAmount;
+    }
+    fclose(tempFile);
+}
+
+void clearInitialFileContents() {
+    if (initialFileContents != NULL) {
+        free(initialFileContents);
+    }
+    initialFileContents = NULL;
+}
+
+int8_t checkInitialFileContents() {
+    FILE *tempFile = fopen((char *)filePath, "r");
+    if (tempFile == NULL) {
+        return initialFileContents == NULL;
+    }
+    fseek(tempFile, 0L, SEEK_END);
+    int64_t tempSize = ftell(tempFile);
+    fseek(tempFile, 0L, SEEK_SET);
+    if (tempSize == 0) {
+        fclose(tempFile);
+        return (initialFileContents == NULL);
+    } else if (initialFileContents == NULL) {
+        fclose(tempFile);
+        return false;
+    }
+    if (tempSize != initialFileSize) {
+        fclose(tempFile);
+        return false;
+    }
+    int64_t index = 0;
+    while (index < tempSize) {
+        int64_t tempAmount = 100;
+        if (index + tempAmount > tempSize) {
+            tempAmount = tempSize - index;
+        }
+        int8_t tempBuffer[tempAmount];
+        fread(tempBuffer, 1, tempAmount, tempFile);
+        if (!equalData(tempBuffer, initialFileContents + index, tempAmount)) {
+            fclose(tempFile);
+            return false;
+        }
+        index += tempAmount;
+    }
+    fclose(tempFile);
+    return true;
+}
+
+int8_t checkTextBufferHygiene() {
+    if (initialFileContents == NULL) {
+        textLine_t *tempTextLine = getLeftmostTextLine(rootTextLine);
+        textLine_t *tempTextLine2 = getNextTextLine(tempTextLine);
+        return (tempTextLine->textAllocation.length == 0 && tempTextLine2 == NULL);
+    }
+    int64_t index = 0;
+    textLine_t *tempTextLine = getLeftmostTextLine(rootTextLine);
+    while (tempTextLine != NULL) {
+        int64_t tempLength = tempTextLine->textAllocation.length;
+        if (index + tempLength > initialFileSize) {
+            return false;
+        }
+        if (!equalData(initialFileContents + index, tempTextLine->textAllocation.text, tempLength)) {
+            return false;
+        }
+        index += tempLength;
+        tempTextLine = getNextTextLine(tempTextLine);
+        if (tempTextLine != NULL) {
+            if (index >= initialFileSize) {
+                return false;
+            }
+            int8_t tempCharacter = initialFileContents[index];
+            if (tempCharacter == '\n') {
+                index += 1;
+            } else if (tempCharacter == '\r') {
+                index += 1;
+                if (index < initialFileSize) {
+                    int8_t tempCharacter = initialFileContents[index];
+                    if (tempCharacter == '\n') {
+                        index += 1;
+                    }
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 int main(int argc, const char *argv[]) {
     
     #ifdef __APPLE__
@@ -748,6 +873,7 @@ int main(int argc, const char *argv[]) {
         }
         fileLastModifiedTime = TIME_NEVER;
         rootTextLine = createEmptyTextLine();
+        clearInitialFileContents();
     } else {
         struct stat attributes;
         stat((char *)filePath, &attributes);
@@ -787,6 +913,7 @@ int main(int argc, const char *argv[]) {
             rootTextLine = createEmptyTextLine();
         }
         fclose(tempFile);
+        storeInitialFileContents();
     }
     topTextLine = getLeftmostTextLine(rootTextLine);
     topTextLineRow = 0;

@@ -45,6 +45,10 @@ int8_t textPosIsAfterTextPos(textPos_t *textPos1, textPos_t *textPos2);
 void handleTextLineDeleted(textLine_t *lineToBeDeleted);
 void setActivityMode(int8_t mode);
 int8_t setConfigurationVariable(int8_t *name, int64_t value);
+void storeInitialFileContents();
+void clearInitialFileContents();
+int8_t checkInitialFileContents();
+int8_t checkTextBufferHygiene();
 
 // BREADTEXT_HEADER_FILE
 #endif

@@ -215,6 +215,7 @@ void executeTextCommand() {
         }
         filePath = mallocRealpath(tempTermList[1]);
         fileLastModifiedTime = TIME_NEVER;
+        clearInitialFileContents();
         setActivityMode(PREVIOUS_MODE);
         notifyUser((int8_t *)"Changed file path.");
         return;
