@@ -9,6 +9,7 @@
 #include "display.h"
 #include "history.h"
 #include "cursorMotion.h"
+#include "insertDelete.h"
 #include "breadtext.h"
 
 void moveCursor(textPos_t *pos) {
@@ -16,6 +17,9 @@ void moveCursor(textPos_t *pos) {
         setActivityMode(COMMAND_MODE);
     }
     historyFrameIsConsecutive = false;
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
     textPos_t tempPreviousTextPos = cursorTextPos;
     textPos_t tempNextPos = *pos;
     if (!equalTextPos(&tempNextPos, &tempPreviousTextPos)) {

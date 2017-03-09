@@ -51,17 +51,23 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     }
 }
 
+void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame) {
+    addHistoryFrame();
+    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
+    tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
+    addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
+    if (shouldFinishFrame) {
+        recordTextLineInserted(getTextLineByNumber(firstNonconsecutiveEscapeSequenceAction.lineNumber));
+        finishCurrentHistoryFrame();
+    }
+    firstNonconsecutiveEscapeSequenceAction.text = NULL;
+}
+
 void setActivityMode(int8_t mode) {
     eraseActivityModeOrNotification();
     if (activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE) {
         if (isStartOfNonconsecutiveEscapeSequence) {
-            addHistoryFrame();
-            historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
-            tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
-            addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
-            recordTextLineInserted(getTextLineByNumber(firstNonconsecutiveEscapeSequenceAction.lineNumber));
-            finishCurrentHistoryFrame();
-            firstNonconsecutiveEscapeSequenceAction.text = NULL;
+            addNonconsecutiveEscapeSequenceAction(true);
             textBufferIsDirty = true;
         }
     }
@@ -270,29 +276,6 @@ int8_t handleKey(int32_t key) {
             executeTextCommand();
         }
     } else {
-        if (activityMode == TEXT_ENTRY_MODE) {
-            if (key == ',' && lastKey == ',') {
-                if (isStartOfNonconsecutiveEscapeSequence) {
-                    deleteCharacterBeforeCursor(false);
-                } else {
-                    deleteCharacterBeforeCursor(true);
-                }
-                isStartOfNonconsecutiveEscapeSequence = false;
-                setActivityMode(COMMAND_MODE);
-            } else if (key >= 32 && key <= 126) {
-                lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
-                isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
-                insertCharacterBeforeCursor((int8_t)key);
-            }
-        } else {
-            isStartOfNonconsecutiveEscapeSequence = false;
-        }
-        if (key == '\t') {
-            increaseSelectionIndentationLevel();
-        }
-        if (key == KEY_BTAB) {
-            decreaseSelectionIndentationLevel();
-        }
         if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
             if (key == KEY_LEFT) {
                 moveCursorLeft(1);
@@ -346,6 +329,31 @@ int8_t handleKey(int32_t key) {
             if (key == 'K') {
                 moveLineSelectionDown(10);
             }
+        }
+        if (activityMode == TEXT_ENTRY_MODE) {
+            if (key == ',' && lastKey == ',') {
+                if (isStartOfNonconsecutiveEscapeSequence) {
+                    deleteCharacterBeforeCursor(false);
+                } else {
+                    deleteCharacterBeforeCursor(true);
+                }
+                isStartOfNonconsecutiveEscapeSequence = false;
+                setActivityMode(COMMAND_MODE);
+            } else if (key >= 32 && key <= 126) {
+                lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
+                isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
+                insertCharacterBeforeCursor((int8_t)key);
+            } else {
+                isStartOfNonconsecutiveEscapeSequence = false;
+            }
+        } else {
+            isStartOfNonconsecutiveEscapeSequence = false;
+        }
+        if (key == '\t') {
+            increaseSelectionIndentationLevel();
+        }
+        if (key == KEY_BTAB) {
+            decreaseSelectionIndentationLevel();
         }
         if (activityMode != TEXT_ENTRY_MODE) {
             switch (key) {

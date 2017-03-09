@@ -25,11 +25,7 @@ void insertCharacterBeforeCursor(int8_t character) {
         nonconsecutiveEscapeSequencePreviousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
     } else {
         if (lastIsStartOfNonconsecutiveEscapeSequence) {
-            addHistoryFrame();
-            historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
-            tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
-            addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
-            firstNonconsecutiveEscapeSequenceAction.text = NULL;
+            addNonconsecutiveEscapeSequenceAction(false);
         } else if (!historyFrameIsConsecutive) {
             addHistoryFrame();
             recordTextLineDeleted(cursorTextPos.line);
