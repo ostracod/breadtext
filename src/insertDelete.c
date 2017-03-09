@@ -69,6 +69,9 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
         decreaseSelectionIndentationLevel();
         return;
     }
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
     index -= 1;
     if (index < 0) {
         if (shouldRecordHistory) {

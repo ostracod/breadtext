@@ -341,6 +341,14 @@ int8_t handleKey(int32_t key) {
                 insertNewlineBeforeCursor();
             }
         }
+        // Backspace.
+        if (key == 127 || key == 263) {
+            if (!isHighlighting) {
+                deleteCharacterBeforeCursor(true);
+            } else {
+                deleteSelection();
+            }
+        }
         if (activityMode == TEXT_ENTRY_MODE) {
             if (key == ',' && lastKey == ',') {
                 if (isStartOfNonconsecutiveEscapeSequence) {
@@ -643,14 +651,6 @@ int8_t handleKey(int32_t key) {
                     setMark(9);
                     break;
                 }
-            }
-        }
-        // Backspace.
-        if (key == 127 || key == 263) {
-            if (!isHighlighting) {
-                deleteCharacterBeforeCursor(true);
-            } else {
-                deleteSelection();
             }
         }
         if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
