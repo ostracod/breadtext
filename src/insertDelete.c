@@ -238,6 +238,9 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
 }
 
 void insertNewlineBeforeCursor() {
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
     addHistoryFrame();
     int32_t tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
     insertNewlineBeforeCursorHelper(tempLevel);

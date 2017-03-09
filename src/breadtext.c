@@ -330,6 +330,17 @@ int8_t handleKey(int32_t key) {
                 moveLineSelectionDown(10);
             }
         }
+        if (key == '\t') {
+            increaseSelectionIndentationLevel();
+        }
+        if (key == KEY_BTAB) {
+            decreaseSelectionIndentationLevel();
+        }
+        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
+            if (key == '\n') {
+                insertNewlineBeforeCursor();
+            }
+        }
         if (activityMode == TEXT_ENTRY_MODE) {
             if (key == ',' && lastKey == ',') {
                 if (isStartOfNonconsecutiveEscapeSequence) {
@@ -348,12 +359,6 @@ int8_t handleKey(int32_t key) {
             }
         } else {
             isStartOfNonconsecutiveEscapeSequence = false;
-        }
-        if (key == '\t') {
-            increaseSelectionIndentationLevel();
-        }
-        if (key == KEY_BTAB) {
-            decreaseSelectionIndentationLevel();
         }
         if (activityMode != TEXT_ENTRY_MODE) {
             switch (key) {
@@ -646,11 +651,6 @@ int8_t handleKey(int32_t key) {
                 deleteCharacterBeforeCursor(true);
             } else {
                 deleteSelection();
-            }
-        }
-        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
-            if (key == '\n') {
-                insertNewlineBeforeCursor();
             }
         }
         if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {

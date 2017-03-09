@@ -8,6 +8,7 @@
 #include "textPos.h"
 #include "display.h"
 #include "history.h"
+#include "insertDelete.h"
 #include "indentation.h"
 #include "breadtext.h"
 
@@ -184,6 +185,9 @@ int64_t getIndentationWidth(int64_t level) {
 }
 
 void increaseSelectionIndentationLevel() {
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
     addHistoryFrame();
     textPos_t *tempStartTextPos;
     textPos_t *tempEndTextPos;
@@ -229,6 +233,9 @@ void increaseSelectionIndentationLevel() {
 }
 
 void decreaseSelectionIndentationLevel() {
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
     addHistoryFrame();
     textPos_t *tempStartTextPos;
     textPos_t *tempEndTextPos;
