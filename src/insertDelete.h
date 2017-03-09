@@ -5,6 +5,7 @@
 #define INSERT_DELETE_HEADER_FILE
 
 int8_t isStartOfNonconsecutiveEscapeSequence;
+int8_t lastIsStartOfNonconsecutiveEscapeSequence;
 historyAction_t firstNonconsecutiveEscapeSequenceAction;
 historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
 

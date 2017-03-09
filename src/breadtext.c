@@ -59,8 +59,9 @@ void setActivityMode(int8_t mode) {
             historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
             tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
             addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
-            recordTextLineInserted(cursorTextPos.line);
+            recordTextLineInserted(getTextLineByNumber(firstNonconsecutiveEscapeSequenceAction.lineNumber));
             finishCurrentHistoryFrame();
+            firstNonconsecutiveEscapeSequenceAction.text = NULL;
             textBufferIsDirty = true;
         }
     }
@@ -279,6 +280,7 @@ int8_t handleKey(int32_t key) {
                 isStartOfNonconsecutiveEscapeSequence = false;
                 setActivityMode(COMMAND_MODE);
             } else if (key >= 32 && key <= 126) {
+                lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
                 isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
                 insertCharacterBeforeCursor((int8_t)key);
             }
@@ -925,7 +927,6 @@ int main(int argc, const char *argv[]) {
     historyFrameListIndex = 0;
     historyFrameListLength = 0;
     historyFrameIsConsecutive = false;
-    firstNonconsecutiveEscapeSequenceAction.text = NULL;
     activityModeTextLength = 0;
     lineNumberTextLength = 0;
     isShowingNotification = false;
@@ -942,6 +943,7 @@ int main(int argc, const char *argv[]) {
     shouldUseHardTabs = false;
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
+    lastIsStartOfNonconsecutiveEscapeSequence = false;
     
     processRcFile();    
     
