@@ -14,8 +14,12 @@
 #include "selection.h"
 #include "breadtext.h"
 
-void copySelectionHelper() {
+int8_t copySelectionHelper() {
     FILE *tempFile = fopen((char *)clipboardFilePath, "w");
+    if (tempFile == NULL) {
+        notifyUser((int8_t *)"ERROR: Could not copy text.");
+        return false;
+    }
     textPos_t *tempFirstTextPos;
     textPos_t *tempLastTextPos;
     if (isHighlighting) {
@@ -59,10 +63,14 @@ void copySelectionHelper() {
     fclose(tempFile);
     systemCopyClipboardFile();
     remove((char *)clipboardFilePath);
+    return true;
 }
 
 void copySelection() {
-    copySelectionHelper();
+    int8_t tempResult = copySelectionHelper();
+    if (!tempResult) {
+        return;
+    }
     setActivityMode(COMMAND_MODE);
     notifyUser((int8_t *)"Copied selection.");
 }
@@ -137,8 +145,11 @@ void deleteSelection() {
 }
 
 void cutSelection() {
+    int8_t tempResult = copySelectionHelper();
+    if (!tempResult) {
+        return;
+    }
     addHistoryFrame();
-    copySelectionHelper();
     deleteSelectionHelper();
     notifyUser((int8_t *)"Cut selection.");
     finishCurrentHistoryFrame();
@@ -205,6 +216,12 @@ int8_t isHighlightingLines() {
 }
 
 void pasteBeforeCursor() {
+    systemPasteClipboardFile();
+    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    if (tempFile == NULL) {
+        notifyUser((int8_t *)"ERROR: Could not paste text.");
+        return;
+    }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
@@ -214,8 +231,6 @@ void pasteBeforeCursor() {
     } else {
         tempLastIsHighlightingLines = false;
     }
-    systemPasteClipboardFile();
-    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
     int32_t tempLevel;
     if (fileEndsInNewline(tempFile) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
         cursorTextPos.row = 0;
@@ -232,6 +247,12 @@ void pasteBeforeCursor() {
 }
 
 void pasteAfterCursor() {
+    systemPasteClipboardFile();
+    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
+    if (tempFile == NULL) {
+        notifyUser((int8_t *)"ERROR: Could not paste text.");
+        return;
+    }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
@@ -241,8 +262,6 @@ void pasteAfterCursor() {
     } else {
         tempLastIsHighlightingLines = false;
     }
-    systemPasteClipboardFile();
-    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
     int8_t tempFileEndsInNewline = fileEndsInNewline(tempFile);
     int32_t tempLevel;
     if (tempLastIsHighlightingLines && tempFileEndsInNewline) {
