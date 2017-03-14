@@ -227,7 +227,7 @@ int8_t handleKey(int32_t key) {
         if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
             isRecordingMacro = false;
         } else {
-            if (key != 'm') {
+            if (activityMode == TEXT_ENTRY_MODE || key != 'm') {
                 macroKeyList[macroKeyListLength] = key;
                 macroKeyListLength += 1;
             }
