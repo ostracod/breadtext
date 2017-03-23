@@ -34,3 +34,48 @@ int8_t textPosIsAfterTextPos(textPos_t *textPos1, textPos_t *textPos2) {
     }
     return (textPos1->column > textPos2->column);
 }
+
+int8_t moveTextPosForward(textPos_t *pos) {
+    int64_t index = getTextPosIndex(pos);
+    int64_t tempLength = pos->line->textAllocation.length;
+    if (index >= tempLength) {
+        textLine_t *tempLine = getNextTextLine(pos->line);
+        if (tempLine == NULL) {
+            return false;
+        }
+        pos->line = tempLine;
+        setTextPosIndex(pos, 0);
+    } else {
+        index += 1;
+        setTextPosIndex(pos, index);
+    }
+    return true;
+}
+
+int8_t moveTextPosBackward(textPos_t *pos) {
+    int64_t index = getTextPosIndex(pos);
+    if (index <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(pos->line);
+        if (tempLine == NULL) {
+            return false;
+        }
+        int64_t tempLength = tempLine->textAllocation.length;
+        pos->line = tempLine;
+        setTextPosIndex(pos, tempLength);
+    } else {
+        index -= 1;
+        setTextPosIndex(pos, index);
+    }
+    return true;
+}
+
+int8_t getTextPosCharacter(textPos_t *pos) {
+    int64_t index = getTextPosIndex(pos);
+    int64_t tempLength = pos->line->textAllocation.length;
+    if (index >= tempLength) {
+        return '\n';
+    } else {
+        return pos->line->textAllocation.text[index];
+    }
+}
+

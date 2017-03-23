@@ -96,43 +96,16 @@ void setActivityMode(int8_t mode) {
             scrollCursorOntoScreen();
         }
     }
-    if (activityMode == HIGHLIGHT_WORD_MODE) {
-        if (mode != PREVIOUS_MODE) {
-            int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
-            int64_t tempEndIndex = tempStartIndex;
-            int64_t tempLength = cursorTextPos.line->textAllocation.length;
-            if (tempStartIndex < tempLength) {
-                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
-                if (isWordCharacter(tempCharacter)) {
-                    while (tempStartIndex > 0) {
-                        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
-                        if (!isWordCharacter(tempCharacter)) {
-                            break;
-                        }
-                        tempStartIndex -= 1;
-                    }
-                    while (tempEndIndex < tempLength - 1) {
-                        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
-                        if (!isWordCharacter(tempCharacter)) {
-                            break;
-                        }
-                        tempEndIndex += 1;
-                    }
-                }
-            }
-            highlightTextPos.line = cursorTextPos.line;
-            setTextPosIndex(&highlightTextPos, tempStartIndex);
-            setTextPosIndex(&cursorTextPos, tempEndIndex);
-            scrollCursorOntoScreen();
-        }
-    }
     int8_t tempOldIsHighlighting = isHighlighting;
-    isHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_WORD_MODE || activityMode == HIGHLIGHT_LINE_MODE);
+    isHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_STATIC_MODE || activityMode == HIGHLIGHT_LINE_MODE);
     if (activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
-        if (tempOldIsHighlighting || activityMode == HIGHLIGHT_LINE_MODE) {
-            displayAllTextLines();
-        } else if (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_WORD_MODE) {
-            displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
+        if (isHighlighting || tempOldIsHighlighting) {
+            if (highlightTextPos.line == cursorTextPos.line) {
+                displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
+                displayCursor();
+            } else {
+                displayAllTextLines();
+            }
         }
     }
     if (activityMode == HELP_MODE || previousActivityMode == HELP_MODE) {
@@ -336,7 +309,7 @@ int8_t handleKey(int32_t key) {
         if (key == KEY_BTAB) {
             decreaseSelectionIndentationLevel();
         }
-        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_WORD_MODE) {
+        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_STATIC_MODE) {
             if (key == '\n') {
                 insertNewlineBeforeCursor();
             }
@@ -436,7 +409,17 @@ int8_t handleKey(int32_t key) {
                 }
                 case 'w':
                 {
-                    setActivityMode(HIGHLIGHT_WORD_MODE);
+                    highlightWord();
+                    break;
+                }
+                case 'e':
+                {
+                    highlightEnclosureExclusive();
+                    break;
+                }
+                case 'E':
+                {
+                    highlightEnclosureInclusive();
                     break;
                 }
                 case 'c':

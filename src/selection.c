@@ -295,3 +295,116 @@ void pasteAfterCursor() {
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
+
+void highlightWord() {
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempEndIndex = tempStartIndex;
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    if (tempStartIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        if (isWordCharacter(tempCharacter)) {
+            while (tempStartIndex > 0) {
+                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
+                if (!isWordCharacter(tempCharacter)) {
+                    break;
+                }
+                tempStartIndex -= 1;
+            }
+            while (tempEndIndex < tempLength - 1) {
+                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
+                if (!isWordCharacter(tempCharacter)) {
+                    break;
+                }
+                tempEndIndex += 1;
+            }
+        }
+    }
+    highlightTextPos.line = cursorTextPos.line;
+    setTextPosIndex(&highlightTextPos, tempStartIndex);
+    setTextPosIndex(&cursorTextPos, tempEndIndex);
+    scrollCursorOntoScreen();
+    setActivityMode(HIGHLIGHT_STATIC_MODE);
+}
+
+int8_t highlightEnclosureHelper() {
+    int8_t output = false;
+    notifyUser((int8_t *)"Type a character.");
+    int32_t tempKey = getch();
+    if (tempKey >= 32 && tempKey <= 126) {
+        int8_t tempStartCharacter = tempKey;
+        int8_t tempEndCharacter = tempKey;
+        if (tempKey == '(') {
+            tempEndCharacter = ')';
+        }
+        if (tempKey == ')') {
+            tempStartCharacter = '(';
+        }
+        if (tempKey == '[') {
+            tempEndCharacter = ']';
+        }
+        if (tempKey == ']') {
+            tempStartCharacter = '[';
+        }
+        if (tempKey == '{') {
+            tempEndCharacter = '}';
+        }
+        if (tempKey == '}') {
+            tempStartCharacter = '{';
+        }
+        if (tempKey == '<') {
+            tempEndCharacter = '>';
+        }
+        if (tempKey == '>') {
+            tempStartCharacter = '<';
+        }
+        textPos_t tempStartPos = cursorTextPos;
+        while (true) {
+            int8_t tempCharacter = getTextPosCharacter(&tempStartPos);
+            if (tempCharacter == tempStartCharacter) {
+                break;
+            }
+            int8_t tempResult = moveTextPosBackward(&tempStartPos);
+            if (!tempResult) {
+                notifyUser((int8_t *)"Could not find start character.");
+                return false;
+            }
+        }
+        textPos_t tempEndPos = cursorTextPos;
+        while (true) {
+            int8_t tempCharacter = getTextPosCharacter(&tempEndPos);
+            if (tempCharacter == tempEndCharacter) {
+                break;
+            }
+            int8_t tempResult = moveTextPosForward(&tempEndPos);
+            if (!tempResult) {
+                notifyUser((int8_t *)"Could not find end character.");
+                return false;
+            }
+        }
+        highlightTextPos = tempStartPos;
+        cursorTextPos = tempEndPos;
+        output = true;
+    }
+    eraseActivityModeOrNotification();
+    displayActivityMode();
+    return output;
+}
+
+void highlightEnclosureExclusive() {
+    int8_t tempResult = highlightEnclosureHelper();
+    if (tempResult) {
+        moveTextPosForward(&highlightTextPos);
+        moveTextPosBackward(&cursorTextPos);
+        scrollCursorOntoScreen();
+        setActivityMode(HIGHLIGHT_STATIC_MODE);
+    }
+}
+
+void highlightEnclosureInclusive() {
+    int8_t tempResult = highlightEnclosureHelper();
+    if (tempResult) {
+        scrollCursorOntoScreen();
+        setActivityMode(HIGHLIGHT_STATIC_MODE);
+    }
+}
+

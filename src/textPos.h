@@ -14,6 +14,9 @@ int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);
 void setTextPosIndex(textPos_t *pos, int64_t index);
 int8_t textPosIsAfterTextPos(textPos_t *textPos1, textPos_t *textPos2);
+int8_t moveTextPosForward(textPos_t *pos);
+int8_t moveTextPosBackward(textPos_t *pos);
+int8_t getTextPosCharacter(textPos_t *pos);
 
 // TEXT_POS_HEADER_FILE
 #endif

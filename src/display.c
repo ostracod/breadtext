@@ -28,7 +28,9 @@ int8_t *helpText[] = {
     (int8_t *)", + , (again) or Escape = Command mode",
     (int8_t *)"H = Character highlight mode",
     (int8_t *)"Shift + H = Line highlight mode",
-    (int8_t *)"W = Word highlight mode",    
+    (int8_t *)"W = Word highlight mode",
+    (int8_t *)"e = Exclusive enclosure highlight mode",
+    (int8_t *)"E = Inclusive enclosure highlight mode",
     (int8_t *)"/ = Enter command",
     (int8_t *)"",
     (int8_t *)"CURSOR MOVEMENT",
@@ -417,8 +419,8 @@ void displayActivityMode() {
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
         activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }
-    if (activityMode == HIGHLIGHT_WORD_MODE) {
-        int8_t tempMessage[] = "Word Highlight Mode";
+    if (activityMode == HIGHLIGHT_STATIC_MODE) {
+        int8_t tempMessage[] = "Static Highlight Mode";
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
         activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }

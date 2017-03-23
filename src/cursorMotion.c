@@ -13,7 +13,7 @@
 #include "breadtext.h"
 
 void moveCursor(textPos_t *pos) {
-    if (activityMode == HIGHLIGHT_WORD_MODE) {
+    if (activityMode == HIGHLIGHT_STATIC_MODE) {
         setActivityMode(COMMAND_MODE);
     }
     historyFrameIsConsecutive = false;
