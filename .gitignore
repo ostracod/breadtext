@@ -1,7 +1,9 @@
 build
 *.dSYM
 test.txt
+test.py
 *.swp
 .DS_store
 *.o
+
 

@@ -658,7 +658,7 @@ int8_t handleKey(int32_t key) {
                 }
             }
         }
-        if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
+        if (activityMode == COMMAND_MODE) {
             if (key == ' ') {
                 insertCharacterBeforeCursor(key);
             }
@@ -671,16 +671,17 @@ int8_t handleKey(int32_t key) {
             if (key == '.') {
                 promptAndReplaceCharacterUnderCursor();
             }
-            if (key == ';') {
-                toggleSemicolonAtEndOfLine();
-            }            
-        }
-        if (activityMode == COMMAND_MODE) {
             if (key == '+') {
                 incrementNumberUnderCursor();
             }
             if (key == '-') {
                 decrementNumberUnderCursor();
+            }
+            if (key == ';') {
+                toggleSemicolonAtEndOfLine();
+            }
+            if (key == ':') {
+                toggleLineComment();
             }
         }
     }

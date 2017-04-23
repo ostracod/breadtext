@@ -16,6 +16,9 @@
 #include "manipulation.h"
 #include "breadtext.h"
 
+int8_t *commentFlag1 = (int8_t *)"//";
+int8_t *commentFlag2 = (int8_t *)"#";
+
 int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     int64_t tempLength = strlen((char *)replacementText);
     int64_t output = 0;
@@ -342,4 +345,79 @@ void incrementNumberUnderCursor() {
 
 void decrementNumberUnderCursor() {
     addToNumberUnderCursor(-1);
+}
+
+void toggleLineComment() {
+    int8_t *tempExtension = NULL;
+    int32_t index = strlen((char *)filePath) - 1;
+    while (index >= 0) {
+        int8_t tempCharacter = filePath[index];
+        if (tempCharacter == '/') {
+            break;
+        }
+        if (tempCharacter == '.') {
+            tempExtension = filePath + index + 1;
+            break;
+        }
+        index -= 1;
+    }
+    int8_t *tempCommentFlag;
+    if (tempExtension == NULL) {
+        tempCommentFlag = commentFlag1;
+    } else {
+        if (strcmp((char *)tempExtension, "py") == 0) {
+            tempCommentFlag = commentFlag2;
+        } else if (strcmp((char *)tempExtension, "sh") == 0) {
+            tempCommentFlag = commentFlag2;
+        } else if (strcmp((char *)tempExtension, "pl") == 0) {
+            tempCommentFlag = commentFlag2;
+        } else if (strcmp((char *)tempExtension, "rb") == 0) {
+            tempCommentFlag = commentFlag2;
+        } else {
+            tempCommentFlag = commentFlag1;
+        }
+    }
+    int32_t tempCommentFlagLength = strlen((char *)tempCommentFlag);
+    textAllocation_t *tempTextAllocation = &(cursorTextPos.line->textAllocation);
+    index = 0;
+    while (index < tempTextAllocation->length) {
+        int8_t tempCharacter = tempTextAllocation->text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index += 1;
+    }
+    int8_t tempIsComment = true;
+    int32_t tempOffset = 0;
+    while (tempOffset < tempCommentFlagLength) {
+        int32_t tempIndex = index + tempOffset;
+        if (tempIndex >= tempTextAllocation->length) {
+            tempIsComment = false;
+            break;
+        }
+        int8_t tempCharacter1 = tempCommentFlag[tempOffset];
+        int8_t tempCharacter2 = tempTextAllocation->text[tempIndex];
+        if (tempCharacter1 != tempCharacter2) {
+            tempIsComment = false;
+            break;
+        }
+        tempOffset += 1;
+    }
+    int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
+    if (tempIsComment) {
+        removeTextFromTextAllocation(tempTextAllocation, index, tempCommentFlagLength);
+    } else {
+        insertTextIntoTextAllocation(tempTextAllocation, index, tempCommentFlag, tempCommentFlagLength);
+    }
+    if (getTextPosIndex(&cursorTextPos) > tempTextAllocation->length) {
+        setTextPosIndex(&cursorTextPos, tempTextAllocation->length);
+    }
+    int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
+    int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+    if (tempNewRowCount == tempOldRowCount) {
+        displayTextLine(tempPosY, cursorTextPos.line);
+    } else {
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+    }
+    displayCursor();
 }
