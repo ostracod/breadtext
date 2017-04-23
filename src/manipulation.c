@@ -347,9 +347,54 @@ void decrementNumberUnderCursor() {
     addToNumberUnderCursor(-1);
 }
 
-void toggleLineComment() {
+void toggleLineComment(textLine_t *line, int8_t *commentFlag) {
+    recordTextLineDeleted(line);
+    int32_t tempCommentFlagLength = strlen((char *)commentFlag);
+    textAllocation_t *tempTextAllocation = &(line->textAllocation);
+    int32_t index = 0;
+    while (index < tempTextAllocation->length) {
+        int8_t tempCharacter = tempTextAllocation->text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index += 1;
+    }
+    int8_t tempIsComment = true;
+    int32_t tempOffset = 0;
+    while (tempOffset < tempCommentFlagLength) {
+        int32_t tempIndex = index + tempOffset;
+        if (tempIndex >= tempTextAllocation->length) {
+            tempIsComment = false;
+            break;
+        }
+        int8_t tempCharacter1 = commentFlag[tempOffset];
+        int8_t tempCharacter2 = tempTextAllocation->text[tempIndex];
+        if (tempCharacter1 != tempCharacter2) {
+            tempIsComment = false;
+            break;
+        }
+        tempOffset += 1;
+    }
+    if (tempIsComment) {
+        removeTextFromTextAllocation(tempTextAllocation, index, tempCommentFlagLength);
+    } else {
+        insertTextIntoTextAllocation(tempTextAllocation, index, commentFlag, tempCommentFlagLength);
+    }
+    if (line == cursorTextPos.line) {
+        if (getTextPosIndex(&cursorTextPos) > tempTextAllocation->length) {
+            setTextPosIndex(&cursorTextPos, tempTextAllocation->length);
+        }
+    }
+    if (line == highlightTextPos.line) {
+        if (getTextPosIndex(&highlightTextPos) > tempTextAllocation->length) {
+            setTextPosIndex(&highlightTextPos, tempTextAllocation->length);
+        }
+    }
+    recordTextLineInserted(cursorTextPos.line);
+}
+
+void toggleSelectionComment() {
     addHistoryFrame();
-    recordTextLineDeleted(cursorTextPos.line);
     int8_t *tempExtension = NULL;
     int32_t index = strlen((char *)filePath) - 1;
     while (index >= 0) {
@@ -379,50 +424,25 @@ void toggleLineComment() {
             tempCommentFlag = commentFlag1;
         }
     }
-    int32_t tempCommentFlagLength = strlen((char *)tempCommentFlag);
-    textAllocation_t *tempTextAllocation = &(cursorTextPos.line->textAllocation);
-    index = 0;
-    while (index < tempTextAllocation->length) {
-        int8_t tempCharacter = tempTextAllocation->text[index];
-        if (tempCharacter != ' ' && tempCharacter != '\t') {
-            break;
-        }
-        index += 1;
-    }
-    int8_t tempIsComment = true;
-    int32_t tempOffset = 0;
-    while (tempOffset < tempCommentFlagLength) {
-        int32_t tempIndex = index + tempOffset;
-        if (tempIndex >= tempTextAllocation->length) {
-            tempIsComment = false;
-            break;
-        }
-        int8_t tempCharacter1 = tempCommentFlag[tempOffset];
-        int8_t tempCharacter2 = tempTextAllocation->text[tempIndex];
-        if (tempCharacter1 != tempCharacter2) {
-            tempIsComment = false;
-            break;
-        }
-        tempOffset += 1;
-    }
-    int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
-    if (tempIsComment) {
-        removeTextFromTextAllocation(tempTextAllocation, index, tempCommentFlagLength);
+    textPos_t tempFirstTextPos;
+    textPos_t tempLastTextPos;
+    if (isHighlighting) {
+        tempFirstTextPos = *(getFirstHighlightTextPos());
+        tempLastTextPos = *(getLastHighlightTextPos());
     } else {
-        insertTextIntoTextAllocation(tempTextAllocation, index, tempCommentFlag, tempCommentFlagLength);
+        tempFirstTextPos = cursorTextPos;
+        tempLastTextPos = cursorTextPos;
+    };
+    textLine_t *tempLine = tempFirstTextPos.line;
+    textLine_t *tempLastLine = tempLastTextPos.line;
+    while (true) {
+        toggleLineComment(tempLine, tempCommentFlag);
+        if (tempLine == tempLastLine) {
+            break;
+        }
+        tempLine = getNextTextLine(tempLine);
     }
-    if (getTextPosIndex(&cursorTextPos) > tempTextAllocation->length) {
-        setTextPosIndex(&cursorTextPos, tempTextAllocation->length);
-    }
-    int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
-    int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
-    if (tempNewRowCount == tempOldRowCount) {
-        displayTextLine(tempPosY, cursorTextPos.line);
-    } else {
-        displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
-    }
-    displayCursor();
-    recordTextLineInserted(cursorTextPos.line);
+    displayAllTextLines();
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
 }

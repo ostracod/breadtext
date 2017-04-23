@@ -8,7 +8,7 @@ void uppercaseSelection();
 void lowercaseSelection();
 void incrementNumberUnderCursor();
 void decrementNumberUnderCursor();
-void toggleLineComment();
+void toggleSelectionComment();
 
 // MANIPULATION_HEADER_FILE
 #endif

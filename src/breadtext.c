@@ -1,4 +1,5 @@
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -526,6 +527,11 @@ int8_t handleKey(int32_t key) {
                     uppercaseSelection();
                     break;
                 }
+                case ':':
+                {
+                    toggleSelectionComment();
+                    break;
+                }
                 case 'a':
                 {
                     moveTextUp(1);
@@ -699,9 +705,6 @@ int8_t handleKey(int32_t key) {
             }
             if (key == ';') {
                 toggleSemicolonAtEndOfLine();
-            }
-            if (key == ':') {
-                toggleLineComment();
             }
             if (key == '\\') {
                 insertLineAfterCursor();
