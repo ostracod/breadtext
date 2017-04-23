@@ -103,6 +103,7 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
             setTextPosIndex(&highlightTextPos, index);
         }
     }
+    cursorSnapColumn = cursorTextPos.column;
     textBufferIsDirty = true;
 }
 
@@ -174,6 +175,7 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
             setTextPosIndex(&highlightTextPos, index);
         }
     }
+    cursorSnapColumn = cursorTextPos.column;
     textBufferIsDirty = true;
 }
 
