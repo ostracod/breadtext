@@ -287,10 +287,30 @@ void promptAndReplaceCharacterUnderCursor() {
 }
 
 void insertLineBeforeCursor() {
-
+    addHistoryFrame();
+    textLine_t *tempLine = createEmptyTextLine();
+    insertTextLineLeft(cursorTextPos.line, tempLine);
+    recordTextLineInserted(tempLine);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempPosY = getTextLinePosY(tempLine);
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine);
+        displayCursor();
+    }
+    eraseLineNumber();
+    displayLineNumber();
+    finishCurrentHistoryFrame();
+    textBufferIsDirty = true;
 }
 
 void insertLineAfterCursor() {
-
+    addHistoryFrame();
+    textLine_t *tempLine = createEmptyTextLine();
+    insertTextLineRight(cursorTextPos.line, tempLine);
+    recordTextLineInserted(tempLine);
+    int64_t tempPosY = getTextLinePosY(tempLine);
+    displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine);
+    finishCurrentHistoryFrame();
+    textBufferIsDirty = true;
 }
 
