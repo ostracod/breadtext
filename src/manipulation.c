@@ -88,7 +88,6 @@ void toggleSemicolonAtEndOfLine() {
         moveCursor(&tempLastTextPos);
         cursorSnapColumn = tempSnapColumn;
     }
-    textBufferIsDirty = true;
 }
 
 void uppercaseSelection() {
@@ -425,4 +424,5 @@ void toggleLineComment() {
     displayCursor();
     recordTextLineInserted(cursorTextPos.line);
     finishCurrentHistoryFrame();
+    textBufferIsDirty = true;
 }
