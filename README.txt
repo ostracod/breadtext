@@ -17,6 +17,7 @@ FEATURES
 > Change selection to uppercase or lowercase
 > Increment or decrement number under cursor
 > Toggle semicolon at end of line
+> Toggle comment at beginning of line
 > Compatible with macOS and Linux
 
 INSTALLATION
