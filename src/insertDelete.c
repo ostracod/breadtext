@@ -8,7 +8,7 @@
 #include "textLine.h"
 #include "textPos.h"
 #include "display.h"
-#include "cursorMotion.h"
+#include "motion.h"
 #include "history.h"
 #include "indentation.h"
 #include "insertDelete.h"

@@ -33,10 +33,12 @@ int8_t *helpText[] = {
     (int8_t *)"E = Inclusive enclosure highlight mode",
     (int8_t *)"/ = Enter command",
     (int8_t *)"",
-    (int8_t *)"CURSOR MOVEMENT",
+    (int8_t *)"MOVEMENT",
     (int8_t *)"",
     (int8_t *)"IJKL or Arrow Keys = Scroll one character",
     (int8_t *)"Shift + IJKL = Scroll 10 characters",
+    (int8_t *)"AZ = Scroll text one line",
+    (int8_t *)"Shift + AZ = Scroll text 10 lines",
     (int8_t *)"[] = Scroll to beginning or end of line",
     (int8_t *)"{} = Scroll to beginning or end of file",
     (int8_t *)"N = Find next instance",
@@ -147,8 +149,12 @@ void eraseCursor() {
     if (isHighlighting) {
         return;
     }
+    int32_t tempPosY = getCursorPosY();
+    if (tempPosY < 0 || tempPosY >= viewPortHeight) {
+        return;
+    }
     attron(COLOR_PAIR(primaryColorPair));
-    mvaddch(getCursorPosY(), cursorTextPos.column, (char)getCursorCharacter());
+    mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
     attroff(COLOR_PAIR(primaryColorPair));
 }
 
@@ -156,9 +162,13 @@ void displayCursor() {
     if (isHighlighting) {
         return;
     }
+    int32_t tempPosY = getCursorPosY();
+    if (tempPosY < 0 || tempPosY >= viewPortHeight) {
+        return;
+    }
     refresh();
     attron(COLOR_PAIR(secondaryColorPair));
-    mvaddch(getCursorPosY(), cursorTextPos.column, (char)getCursorCharacter());
+    mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
     attroff(COLOR_PAIR(secondaryColorPair));
 }
 

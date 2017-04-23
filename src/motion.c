@@ -8,7 +8,7 @@
 #include "textPos.h"
 #include "display.h"
 #include "history.h"
-#include "cursorMotion.h"
+#include "motion.h"
 #include "insertDelete.h"
 #include "breadtext.h"
 
@@ -667,4 +667,41 @@ void findPreviousTermUnderCursor() {
     } else {
         notifyUser((int8_t *)"No word under cursor.");
     }
+}
+
+void moveTextUp(int32_t amount) {
+    int32_t tempCount = 0;
+    while (tempCount < amount) {
+        if (topTextLineRow > 0) {
+            topTextLineRow -= 1;
+        } else {
+            textLine_t *tempLine = getPreviousTextLine(topTextLine);
+            if (tempLine == NULL) {
+                break;
+            }
+            topTextLine = tempLine;
+            topTextLineRow = getTextLineRowCount(topTextLine) - 1;
+        }
+        tempCount += 1;
+    }
+    displayAllTextLines();
+}
+
+void moveTextDown(int32_t amount) {
+    int32_t tempCount = 0;
+    while (tempCount < amount) {
+        int64_t tempRowCount = getTextLineRowCount(topTextLine);
+        if (topTextLineRow + 1 < tempRowCount) {
+            topTextLineRow += 1;
+        } else {
+            textLine_t *tempLine = getNextTextLine(topTextLine);
+            if (tempLine == NULL) {
+                break;
+            }
+            topTextLine = tempLine;
+            topTextLineRow = 0;
+        }
+        tempCount += 1;
+    }
+    displayAllTextLines();
 }

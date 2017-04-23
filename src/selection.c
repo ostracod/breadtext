@@ -9,7 +9,7 @@
 #include "display.h"
 #include "history.h"
 #include "indentation.h"
-#include "cursorMotion.h"
+#include "motion.h"
 #include "insertDelete.h"
 #include "selection.h"
 #include "breadtext.h"

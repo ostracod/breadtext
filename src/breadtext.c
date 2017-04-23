@@ -13,7 +13,7 @@
 #include "textPos.h"
 #include "history.h"
 #include "display.h"
-#include "cursorMotion.h"
+#include "motion.h"
 #include "indentation.h"
 #include "insertDelete.h"
 #include "selection.h"
@@ -214,16 +214,16 @@ int8_t handleKey(int32_t key) {
         }
     }
     if (activityMode == HELP_MODE) {
-        if (key == KEY_UP || key == 'i') {
+        if (key == KEY_UP || key == 'i' || key == 'a') {
             scrollHelpMessageUp(1);
         }
-        if (key == KEY_DOWN || key == 'k') {
+        if (key == KEY_DOWN || key == 'k' || key == 'z') {
             scrollHelpMessageDown(1);
         }
-        if (key == 'I') {
+        if (key == 'I' || key == 'A') {
             scrollHelpMessageUp(10);
         }
-        if (key == 'K') {
+        if (key == 'K' || key == 'Z') {
             scrollHelpMessageDown(10);
         }
         if (key == 'q') {
@@ -524,6 +524,26 @@ int8_t handleKey(int32_t key) {
                 case 'B':
                 {
                     uppercaseSelection();
+                    break;
+                }
+                case 'a':
+                {
+                    moveTextUp(1);
+                    break;
+                }
+                case 'z':
+                {
+                    moveTextDown(1);
+                    break;
+                }
+                case 'A':
+                {
+                    moveTextUp(10);
+                    break;
+                }
+                case 'Z':
+                {
+                    moveTextDown(10);
                     break;
                 }
                 case '0':
