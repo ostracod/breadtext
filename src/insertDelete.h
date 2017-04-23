@@ -19,6 +19,8 @@ void promptAndInsertCharacterAfterCursor();
 void promptAndReplaceCharacterUnderCursor();
 void insertLineBeforeCursor();
 void insertLineAfterCursor();
+void insertAndEditLineBeforeCursor();
+void insertAndEditLineAfterCursor();
 
 // INSERT_DELETE_HEADER_FILE
 #endif

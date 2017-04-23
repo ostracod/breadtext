@@ -25,6 +25,8 @@ int8_t *helpText[] = {
     (int8_t *)"CHANGING MODES",
     (int8_t *)"",
     (int8_t *)"T = Text-entry mode",
+    (int8_t *)"O = Insert line before cursor and enter text-entry mode",
+    (int8_t *)"Shift + O = Insert line after cursor and enter text-entry mode",
     (int8_t *)", + , (again) or Escape = Command mode",
     (int8_t *)"H = Character highlight mode",
     (int8_t *)"Shift + H = Line highlight mode",

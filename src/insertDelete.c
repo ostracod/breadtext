@@ -314,3 +314,29 @@ void insertLineAfterCursor() {
     textBufferIsDirty = true;
 }
 
+void insertAndEditLineBeforeCursor() {
+    insertLineBeforeCursor();
+    eraseCursor();
+    cursorTextPos.line = getPreviousTextLine(cursorTextPos.line);
+    cursorTextPos.row = 0;
+    cursorTextPos.column = 0;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayCursor();
+    }
+    setActivityMode(TEXT_ENTRY_MODE);
+}
+
+void insertAndEditLineAfterCursor() {
+    insertLineAfterCursor();
+    eraseCursor();
+    cursorTextPos.line = getNextTextLine(cursorTextPos.line);
+    cursorTextPos.row = 0;
+    cursorTextPos.column = 0;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayCursor();
+    }
+    setActivityMode(TEXT_ENTRY_MODE);
+}
+

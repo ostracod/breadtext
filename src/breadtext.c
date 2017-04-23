@@ -689,6 +689,12 @@ int8_t handleKey(int32_t key) {
             if (key == '|') {
                 insertLineBeforeCursor();
             }
+            if (key == 'o') {
+                insertAndEditLineAfterCursor();
+            }
+            if (key == 'O') {
+                insertAndEditLineBeforeCursor();
+            }
         }
     }
     lastKey = key;
