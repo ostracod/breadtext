@@ -51,6 +51,7 @@ int8_t checkInitialFileContents();
 int8_t checkTextBufferHygiene();
 void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame);
 int32_t getNextKey();
+int32_t promptSingleCharacter();
 
 // BREADTEXT_HEADER_FILE
 #endif

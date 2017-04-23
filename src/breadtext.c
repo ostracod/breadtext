@@ -546,6 +546,26 @@ int8_t handleKey(int32_t key) {
                     moveTextDown(10);
                     break;
                 }
+                case 'g':
+                {
+                    goToCharacterExclusive();
+                    break;
+                }
+                case 'G':
+                {
+                    goToCharacterInclusive();
+                    break;
+                }
+                case 'r':
+                {
+                    reverseGoToCharacterExclusive();
+                    break;
+                }
+                case 'R':
+                {
+                    reverseGoToCharacterInclusive();
+                    break;
+                }
                 case '`':
                 {
                     scrollCursorOntoScreen();
@@ -731,6 +751,17 @@ int32_t getNextKey() {
 void playMacro() {
     isPlayingMacro = true;
     macroIndex = 0;
+}
+
+int32_t promptSingleCharacter() {
+    notifyUser((int8_t *)"Type a character.");
+    int32_t tempKey = getNextKey();
+    eraseActivityModeOrNotification();
+    displayActivityMode();
+    if (tempKey < 32 || tempKey > 126) {
+        return 0;
+    }
+    return tempKey;
 }
 
 int8_t setConfigurationVariable(int8_t *name, int64_t value) {

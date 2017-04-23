@@ -714,3 +714,19 @@ void moveCursorToVisibleText() {
     displayCursor();
 }
 
+void goToCharacterExclusive() {
+
+}
+
+void goToCharacterInclusive() {
+
+}
+
+void reverseGoToCharacterExclusive() {
+
+}
+
+void reverseGoToCharacterInclusive() {
+
+}
+

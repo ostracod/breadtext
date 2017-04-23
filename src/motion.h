@@ -46,6 +46,10 @@ void findPreviousTermUnderCursor();
 void moveTextUp(int32_t amount);
 void moveTextDown(int32_t amount);
 void moveCursorToVisibleText();
+void goToCharacterExclusive();
+void goToCharacterInclusive();
+void reverseGoToCharacterExclusive();
+void reverseGoToCharacterInclusive();
 
 // CURSOR_MOTION_HEADER_FILE
 #endif

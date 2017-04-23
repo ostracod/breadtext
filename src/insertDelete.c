@@ -252,38 +252,29 @@ void insertNewlineBeforeCursor() {
 }
 
 void promptAndInsertCharacterBeforeCursor() {
-    notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getNextKey();
-    if (tempKey >= 32 && tempKey <= 126) {
+    int32_t tempKey = promptSingleCharacter();
+    if (tempKey != 0) {
         insertCharacterBeforeCursor(tempKey);
     }
-    eraseActivityModeOrNotification();
-    displayActivityMode();    
 }
 
 void promptAndInsertCharacterAfterCursor() {
-    notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getNextKey();
-    if (tempKey >= 32 && tempKey <= 126) {
+    int32_t tempKey = promptSingleCharacter();
+    if (tempKey != 0) {
         moveCursorRight(1);
         insertCharacterBeforeCursor(tempKey);
         moveCursorLeft(2);
     }
-    eraseActivityModeOrNotification();
-    displayActivityMode();
 }
 
 void promptAndReplaceCharacterUnderCursor() {
-    notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getNextKey();
-    if (tempKey >= 32 && tempKey <= 126) {
+    int32_t tempKey = promptSingleCharacter();
+    if (tempKey != 0) {
         moveCursorRight(1);
         deleteCharacterBeforeCursor(true);
         insertCharacterBeforeCursor(tempKey);
         moveCursorLeft(1);
     }
-    eraseActivityModeOrNotification();
-    displayActivityMode();
 }
 
 void insertLineBeforeCursor() {

@@ -327,10 +327,8 @@ void highlightWord() {
 }
 
 int8_t highlightEnclosureHelper() {
-    int8_t output = false;
-    notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getNextKey();
-    if (tempKey >= 32 && tempKey <= 126) {
+    int32_t tempKey = promptSingleCharacter();
+    if (tempKey != 0) {
         int8_t tempStartCharacter = tempKey;
         int8_t tempEndCharacter = tempKey;
         if (tempKey == '(') {
@@ -398,11 +396,9 @@ int8_t highlightEnclosureHelper() {
         }
         highlightTextPos = tempStartPos;
         cursorTextPos = tempEndPos;
-        output = true;
+        return true;
     }
-    eraseActivityModeOrNotification();
-    displayActivityMode();
-    return output;
+    return false;
 }
 
 void highlightEnclosureExclusive() {
