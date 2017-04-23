@@ -50,6 +50,7 @@ void clearInitialFileContents();
 int8_t checkInitialFileContents();
 int8_t checkTextBufferHygiene();
 void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame);
+int32_t getNextKey();
 
 // BREADTEXT_HEADER_FILE
 #endif

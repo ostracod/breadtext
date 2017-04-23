@@ -24,6 +24,8 @@
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
 int32_t macroKeyListLength = 0;
 int8_t isRecordingMacro = false;
+int32_t macroIndex = 0;
+int8_t isPlayingMacro = false;
 int32_t lastKey = 0;
 int8_t *initialFileContents = NULL;
 int64_t initialFileSize;
@@ -196,16 +198,6 @@ void playMacro();
 
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key) {
-    if (isRecordingMacro && key != 'M') {
-        if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
-            isRecordingMacro = false;
-        } else {
-            if (activityMode == TEXT_ENTRY_MODE || key != 'm') {
-                macroKeyList[macroKeyListLength] = key;
-                macroKeyListLength += 1;
-            }
-        }
-    }
     if (isShowingNotification) {
         eraseNotification();
         displayActivityMode();
@@ -666,13 +658,36 @@ int8_t handleKey(int32_t key) {
     return false;
 }
 
-void playMacro() {
-    int64_t index = 0;
-    while (index < macroKeyListLength) {
-        int32_t tempKey = macroKeyList[index];
-        handleKey(tempKey);
-        index += 1;
+int32_t getNextKey() {
+    int32_t output;
+    if (macroIndex >= macroKeyListLength) {
+        isPlayingMacro = false;
     }
+    if (isPlayingMacro) {
+        output = macroKeyList[macroIndex];
+        macroIndex += 1;
+    } else {
+        output = getch();
+        if (isRecordingMacro && output != 'M') {
+            if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
+                isRecordingMacro = false;
+            } else {
+                if (activityMode == TEXT_ENTRY_MODE || output != 'm') {
+                    macroKeyList[macroKeyListLength] = output;
+                    macroKeyListLength += 1;
+                }
+            }
+        }
+    }
+    if (macroIndex >= macroKeyListLength) {
+        isPlayingMacro = false;
+    }
+    return output;
+}
+
+void playMacro() {
+    isPlayingMacro = true;
+    macroIndex = 0;
 }
 
 int8_t setConfigurationVariable(int8_t *name, int64_t value) {
@@ -956,7 +971,7 @@ int main(int argc, const char *argv[]) {
             copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
         #endif
         
-        int32_t tempKey = getch();
+        int32_t tempKey = getNextKey();
         int8_t tempResult = handleKey(tempKey);
         if (tempResult) {
             break;

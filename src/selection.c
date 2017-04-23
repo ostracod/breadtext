@@ -329,7 +329,7 @@ void highlightWord() {
 int8_t highlightEnclosureHelper() {
     int8_t output = false;
     notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getch();
+    int32_t tempKey = getNextKey();
     if (tempKey >= 32 && tempKey <= 126) {
         int8_t tempStartCharacter = tempKey;
         int8_t tempEndCharacter = tempKey;
