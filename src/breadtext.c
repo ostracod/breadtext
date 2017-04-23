@@ -546,6 +546,16 @@ int8_t handleKey(int32_t key) {
                     moveTextDown(10);
                     break;
                 }
+                case '`':
+                {
+                    scrollCursorOntoScreen();
+                    break;
+                }
+                case '~':
+                {
+                    moveCursorToVisibleText();
+                    break;
+                }
                 case '0':
                 {
                     gotoMark(0);

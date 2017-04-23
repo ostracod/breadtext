@@ -705,3 +705,12 @@ void moveTextDown(int32_t amount) {
     }
     displayAllTextLines();
 }
+
+void moveCursorToVisibleText() {
+    eraseCursor();
+    cursorTextPos.line = topTextLine;
+    cursorTextPos.row = topTextLineRow;
+    cursorTextPos.column = 0;
+    displayCursor();
+}
+
