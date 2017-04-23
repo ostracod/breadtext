@@ -714,19 +714,61 @@ void moveCursorToVisibleText() {
     displayCursor();
 }
 
-void goToCharacterExclusive() {
-
+int8_t goToCharacterInclusive() {
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter == 0) {
+        return false;
+    }
+    textPos_t tempTextPos = cursorTextPos;
+    while (true) {
+        int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
+        if (tempCharacter2 == tempCharacter) {
+            moveCursor(&tempTextPos);
+            return true;
+        }
+        int8_t tempResult = moveTextPosForward(&tempTextPos);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find character.");
+            return false;
+        }
+    }
 }
 
-void goToCharacterInclusive() {
-
+int8_t goToCharacterExclusive() {
+    int8_t tempResult = goToCharacterInclusive();
+    if (!tempResult) {
+        return false;
+    }
+    moveCursorLeft(1);
+    return true;
 }
 
-void reverseGoToCharacterExclusive() {
-
+int8_t reverseGoToCharacterInclusive() {
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter == 0) {
+        return false;
+    }
+    textPos_t tempTextPos = cursorTextPos;
+    while (true) {
+        int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
+        if (tempCharacter2 == tempCharacter) {
+            moveCursor(&tempTextPos);
+            return true;
+        }
+        int8_t tempResult = moveTextPosBackward(&tempTextPos);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find character.");
+            return false;
+        }
+    }
 }
 
-void reverseGoToCharacterInclusive() {
-
+int8_t reverseGoToCharacterExclusive() {
+    int8_t tempResult = reverseGoToCharacterInclusive();
+    if (!tempResult) {
+        return false;
+    }
+    moveCursorRight(1);
+    return true;
 }
 

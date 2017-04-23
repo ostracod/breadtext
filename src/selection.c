@@ -327,32 +327,32 @@ void highlightWord() {
 }
 
 int8_t highlightEnclosureHelper() {
-    int32_t tempKey = promptSingleCharacter();
-    if (tempKey != 0) {
-        int8_t tempStartCharacter = tempKey;
-        int8_t tempEndCharacter = tempKey;
-        if (tempKey == '(') {
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter != 0) {
+        int8_t tempStartCharacter = tempCharacter;
+        int8_t tempEndCharacter = tempCharacter;
+        if (tempCharacter == '(') {
             tempEndCharacter = ')';
         }
-        if (tempKey == ')') {
+        if (tempCharacter == ')') {
             tempStartCharacter = '(';
         }
-        if (tempKey == '[') {
+        if (tempCharacter == '[') {
             tempEndCharacter = ']';
         }
-        if (tempKey == ']') {
+        if (tempCharacter == ']') {
             tempStartCharacter = '[';
         }
-        if (tempKey == '{') {
+        if (tempCharacter == '{') {
             tempEndCharacter = '}';
         }
-        if (tempKey == '}') {
+        if (tempCharacter == '}') {
             tempStartCharacter = '{';
         }
-        if (tempKey == '<') {
+        if (tempCharacter == '<') {
             tempEndCharacter = '>';
         }
-        if (tempKey == '>') {
+        if (tempCharacter == '>') {
             tempStartCharacter = '<';
         }
         int16_t tempDepth;

@@ -252,27 +252,27 @@ void insertNewlineBeforeCursor() {
 }
 
 void promptAndInsertCharacterBeforeCursor() {
-    int32_t tempKey = promptSingleCharacter();
-    if (tempKey != 0) {
-        insertCharacterBeforeCursor(tempKey);
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter != 0) {
+        insertCharacterBeforeCursor(tempCharacter);
     }
 }
 
 void promptAndInsertCharacterAfterCursor() {
-    int32_t tempKey = promptSingleCharacter();
-    if (tempKey != 0) {
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter != 0) {
         moveCursorRight(1);
-        insertCharacterBeforeCursor(tempKey);
+        insertCharacterBeforeCursor(tempCharacter);
         moveCursorLeft(2);
     }
 }
 
 void promptAndReplaceCharacterUnderCursor() {
-    int32_t tempKey = promptSingleCharacter();
-    if (tempKey != 0) {
+    int8_t tempCharacter = promptSingleCharacter();
+    if (tempCharacter != 0) {
         moveCursorRight(1);
         deleteCharacterBeforeCursor(true);
-        insertCharacterBeforeCursor(tempKey);
+        insertCharacterBeforeCursor(tempCharacter);
         moveCursorLeft(1);
     }
 }
