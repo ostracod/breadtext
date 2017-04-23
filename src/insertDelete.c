@@ -286,4 +286,11 @@ void promptAndReplaceCharacterUnderCursor() {
     displayActivityMode();
 }
 
+void insertLineBeforeCursor() {
+
+}
+
+void insertLineAfterCursor() {
+
+}
 

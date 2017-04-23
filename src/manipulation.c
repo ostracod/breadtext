@@ -88,6 +88,7 @@ void toggleSemicolonAtEndOfLine() {
         moveCursor(&tempLastTextPos);
         cursorSnapColumn = tempSnapColumn;
     }
+    textBufferIsDirty = true;
 }
 
 void uppercaseSelection() {
@@ -348,6 +349,8 @@ void decrementNumberUnderCursor() {
 }
 
 void toggleLineComment() {
+    addHistoryFrame();
+    recordTextLineDeleted(cursorTextPos.line);
     int8_t *tempExtension = NULL;
     int32_t index = strlen((char *)filePath) - 1;
     while (index >= 0) {
@@ -420,4 +423,6 @@ void toggleLineComment() {
         displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
     }
     displayCursor();
+    recordTextLineInserted(cursorTextPos.line);
+    finishCurrentHistoryFrame();
 }
