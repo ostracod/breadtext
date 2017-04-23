@@ -357,11 +357,19 @@ int8_t highlightEnclosureHelper() {
         if (tempKey == '>') {
             tempStartCharacter = '<';
         }
+        int16_t tempDepth;
         textPos_t tempStartPos = cursorTextPos;
+        tempDepth = 1;
         while (true) {
             int8_t tempCharacter = getTextPosCharacter(&tempStartPos);
             if (tempCharacter == tempStartCharacter) {
-                break;
+                tempDepth -= 1;
+                if (tempDepth <= 0) {
+                    break;
+                }
+            }
+            if (tempCharacter == tempEndCharacter && tempStartCharacter != tempEndCharacter) {
+                tempDepth += 1;
             }
             int8_t tempResult = moveTextPosBackward(&tempStartPos);
             if (!tempResult) {
@@ -370,10 +378,17 @@ int8_t highlightEnclosureHelper() {
             }
         }
         textPos_t tempEndPos = cursorTextPos;
+        tempDepth = 1;
         while (true) {
             int8_t tempCharacter = getTextPosCharacter(&tempEndPos);
             if (tempCharacter == tempEndCharacter) {
-                break;
+                tempDepth -= 1;
+                if (tempDepth <= 0) {
+                    break;
+                }
+            }
+            if (tempCharacter == tempStartCharacter && tempStartCharacter != tempEndCharacter) {
+                tempDepth += 1;
             }
             int8_t tempResult = moveTextPosForward(&tempEndPos);
             if (!tempResult) {
