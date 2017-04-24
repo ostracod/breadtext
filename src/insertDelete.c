@@ -280,6 +280,12 @@ void promptAndReplaceCharacterUnderCursor() {
 void insertLineBeforeCursor() {
     addHistoryFrame();
     textLine_t *tempLine = createEmptyTextLine();
+    int32_t tempIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    int32_t tempCount = 0;
+    while (tempCount < tempIndentationLevel) {
+        increaseTextLineIndentationLevelHelper(tempLine, false);
+        tempCount += 1;
+    }
     insertTextLineLeft(cursorTextPos.line, tempLine);
     recordTextLineInserted(tempLine);
     int8_t tempResult = scrollCursorOntoScreen();
@@ -297,6 +303,12 @@ void insertLineBeforeCursor() {
 void insertLineAfterCursor() {
     addHistoryFrame();
     textLine_t *tempLine = createEmptyTextLine();
+    int32_t tempIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    int32_t tempCount = 0;
+    while (tempCount < tempIndentationLevel) {
+        increaseTextLineIndentationLevelHelper(tempLine, false);
+        tempCount += 1;
+    }
     insertTextLineRight(cursorTextPos.line, tempLine);
     recordTextLineInserted(tempLine);
     int64_t tempPosY = getTextLinePosY(tempLine);
@@ -309,8 +321,7 @@ void insertAndEditLineBeforeCursor() {
     insertLineBeforeCursor();
     eraseCursor();
     cursorTextPos.line = getPreviousTextLine(cursorTextPos.line);
-    cursorTextPos.row = 0;
-    cursorTextPos.column = 0;
+    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayCursor();
@@ -322,8 +333,7 @@ void insertAndEditLineAfterCursor() {
     insertLineAfterCursor();
     eraseCursor();
     cursorTextPos.line = getNextTextLine(cursorTextPos.line);
-    cursorTextPos.row = 0;
-    cursorTextPos.column = 0;
+    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayCursor();
