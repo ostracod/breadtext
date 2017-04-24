@@ -61,6 +61,7 @@ int8_t *helpText[] = {
     (int8_t *)"D = Delete",
     (int8_t *)"Shift + D = Delete and enter text-entry mode",
     (int8_t *)"C = Copy",
+    (int8_t *)"Shift + C = Change lines",
     (int8_t *)"X = Cut",
     (int8_t *)"Shift + X = Cut and enter text-entry mode",
     (int8_t *)"P = Paste after cursor",

@@ -322,6 +322,7 @@ void insertAndEditLineBeforeCursor() {
     eraseCursor();
     cursorTextPos.line = getPreviousTextLine(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
+    cursorSnapColumn = cursorTextPos.column;
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayCursor();
@@ -334,6 +335,7 @@ void insertAndEditLineAfterCursor() {
     eraseCursor();
     cursorTextPos.line = getNextTextLine(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
+    cursorSnapColumn = cursorTextPos.column;
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayCursor();

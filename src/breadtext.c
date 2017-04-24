@@ -420,6 +420,11 @@ int8_t handleKey(int32_t key) {
                     copySelection();
                     break;
                 }
+                case 'C':
+                {
+                    changeLine();
+                    break;
+                }
                 case 'x':
                 {
                     cutSelection();

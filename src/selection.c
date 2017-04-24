@@ -419,3 +419,55 @@ void highlightEnclosureInclusive() {
     }
 }
 
+void changeLine() {
+    addHistoryFrame();
+    textPos_t tempFirstTextPos;
+    textPos_t tempLastTextPos;
+    if (isHighlighting) {
+        tempFirstTextPos = *(getFirstHighlightTextPos());
+        tempLastTextPos = *(getLastHighlightTextPos());
+    } else {
+        tempFirstTextPos = cursorTextPos;
+        tempLastTextPos = cursorTextPos;
+    };
+    textLine_t *tempFirstLine = tempFirstTextPos.line;
+    textLine_t *tempLastLine = tempLastTextPos.line;
+    if (tempFirstLine != tempLastLine) {
+        textLine_t *tempLine = getNextTextLine(tempFirstLine);
+        while (true) {
+            textLine_t *tempNextLine = getNextTextLine(tempLine);
+            recordTextLineDeleted(tempLine);
+            handleTextLineDeleted(tempLine);
+            deleteTextLine(tempLine);
+            if (tempLine == tempLastLine) {
+                break;
+            }
+            tempLine = tempNextLine;
+        }
+    }
+    int64_t tempLength = tempFirstLine->textAllocation.length;
+    int64_t index = 0;
+    while (index < tempLength) {
+        int8_t tempCharacter = tempFirstLine->textAllocation.text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index += 1;
+    }
+    recordTextLineDeleted(tempFirstLine);
+    removeTextFromTextAllocation(&(tempFirstLine->textAllocation), index, tempLength - index);
+    recordTextLineInserted(tempFirstLine);
+    cursorTextPos.line = tempFirstLine;
+    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
+    cursorSnapColumn = cursorTextPos.column;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayAllTextLines();
+    }
+    eraseLineNumber();
+    displayLineNumber();
+    finishCurrentHistoryFrame();
+    setActivityMode(TEXT_ENTRY_MODE);
+    textBufferIsDirty = true;
+}
+

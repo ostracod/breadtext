@@ -13,6 +13,7 @@ void pasteAfterCursor();
 void highlightWord();
 void highlightEnclosureExclusive();
 void highlightEnclosureInclusive();
+void changeLine();
 
 // SELECTION_HEADER_FILE
 #endif

@@ -351,7 +351,7 @@ void toggleLineComment(textLine_t *line, int8_t *commentFlag) {
     recordTextLineDeleted(line);
     int32_t tempCommentFlagLength = strlen((char *)commentFlag);
     textAllocation_t *tempTextAllocation = &(line->textAllocation);
-    int32_t index = 0;
+    int64_t index = 0;
     while (index < tempTextAllocation->length) {
         int8_t tempCharacter = tempTextAllocation->text[index];
         if (tempCharacter != ' ' && tempCharacter != '\t') {
