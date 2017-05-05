@@ -587,11 +587,6 @@ int8_t handleKey(int32_t key) {
                     moveCursorToVisibleText();
                     break;
                 }
-                case '0':
-                {
-                    gotoMark(0);
-                    break;
-                }
                 case '1':
                 {
                     gotoMark(1);
@@ -630,16 +625,6 @@ int8_t handleKey(int32_t key) {
                 case '8':
                 {
                     gotoMark(8);
-                    break;
-                }
-                case '9':
-                {
-                    gotoMark(9);
-                    break;
-                }
-                case ')':
-                {
-                    setMark(0);
                     break;
                 }
                 case '!':
@@ -682,11 +667,6 @@ int8_t handleKey(int32_t key) {
                     setMark(8);
                     break;
                 }
-                case '(':
-                {
-                    setMark(9);
-                    break;
-                }
             }
         }
         if (activityMode == COMMAND_MODE) {
@@ -722,6 +702,18 @@ int8_t handleKey(int32_t key) {
             }
             if (key == 'O') {
                 insertAndEditLineBeforeCursor();
+            }
+            if (key == '9') {
+                deleteUntilBeginningOfLineExclusive();
+            }
+            if (key == '(') {
+                deleteUntilBeginningOfLineInclusive();
+            }
+            if (key == '0') {
+                deleteUntilEndOfLineExclusive();
+            }
+            if (key == ')') {
+                deleteUntilEndOfLineInclusive();
             }
         }
     }

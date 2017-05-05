@@ -21,6 +21,10 @@ void insertLineBeforeCursor();
 void insertLineAfterCursor();
 void insertAndEditLineBeforeCursor();
 void insertAndEditLineAfterCursor();
+void deleteUntilBeginningOfLineInclusive();
+void deleteUntilBeginningOfLineExclusive();
+void deleteUntilEndOfLineInclusive();
+void deleteUntilEndOfLineExclusive();
 
 // INSERT_DELETE_HEADER_FILE
 #endif

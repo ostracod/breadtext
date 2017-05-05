@@ -343,3 +343,89 @@ void insertAndEditLineAfterCursor() {
     setActivityMode(TEXT_ENTRY_MODE);
 }
 
+void deleteInLineHelper(int64_t startIndex, int64_t endIndex, int8_t shouldMoveCursor) {
+    if (startIndex >= endIndex) {
+        return;
+    }
+    if (startIndex < 0 || endIndex > cursorTextPos.line->textAllocation.length) {
+        return;
+    }
+    int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
+    addHistoryFrame();
+    recordTextLineDeleted(cursorTextPos.line);
+    removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), startIndex, endIndex - startIndex);
+    recordTextLineInserted(cursorTextPos.line);
+    if (shouldMoveCursor) {
+        int64_t index = getTextPosIndex(&cursorTextPos);
+        index -= endIndex - startIndex;
+        if (index < 0) {
+            index = 0;
+        }
+        setTextPosIndex(&cursorTextPos, index);
+        cursorSnapColumn = cursorTextPos.column;
+    }
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
+        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+        if (tempNewRowCount == tempOldRowCount) {
+            displayTextLine(tempPosY, cursorTextPos.line);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+        }
+        displayCursor();
+    }
+    finishCurrentHistoryFrame();
+    textBufferIsDirty = true;
+}
+
+void deleteUntilBeginningOfLineInclusive() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempStartIndex = 0;
+    int64_t tempEndIndex = getTextPosIndex(&cursorTextPos) + 1;
+    if (tempEndIndex >= tempLength) {
+        tempEndIndex = tempLength;
+    }
+    while (tempStartIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        tempStartIndex += 1;
+    }
+    deleteInLineHelper(tempStartIndex, tempEndIndex, true);
+}
+
+void deleteUntilBeginningOfLineExclusive() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempStartIndex = 0;
+    int64_t tempEndIndex = getTextPosIndex(&cursorTextPos);
+    while (tempStartIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        tempStartIndex += 1;
+    }
+    deleteInLineHelper(tempStartIndex, tempEndIndex, true);
+}
+
+void deleteUntilEndOfLineInclusive() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempEndIndex = tempLength;
+    deleteInLineHelper(tempStartIndex, tempEndIndex, false);
+}
+
+void deleteUntilEndOfLineExclusive() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos) + 1;
+    int64_t tempEndIndex = tempLength;
+    if (tempStartIndex >= tempLength) {
+        return;
+    }
+    deleteInLineHelper(tempStartIndex, tempEndIndex, false);
+}
+
+
+
