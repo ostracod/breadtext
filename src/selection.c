@@ -460,6 +460,7 @@ void changeLine() {
     cursorTextPos.line = tempFirstLine;
     setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
     cursorSnapColumn = cursorTextPos.column;
+    setActivityMode(TEXT_ENTRY_MODE);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         displayAllTextLines();
@@ -467,7 +468,6 @@ void changeLine() {
     eraseLineNumber();
     displayLineNumber();
     finishCurrentHistoryFrame();
-    setActivityMode(TEXT_ENTRY_MODE);
     textBufferIsDirty = true;
 }
 
