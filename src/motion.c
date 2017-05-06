@@ -598,9 +598,9 @@ void gotoMark(int64_t index) {
         return;
     }
     textPos_t tempTextPos;
-    tempTextPos.line = markList[index];
-    tempTextPos.row = 0;
-    tempTextPos.column = 0;
+    textLine_t *tempLine = markList[index];
+    tempTextPos.line = tempLine;
+    setTextPosIndex(&tempTextPos, tempLine->textAllocation.length);
     moveCursor(&tempTextPos);
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
