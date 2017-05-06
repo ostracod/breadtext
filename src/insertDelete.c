@@ -343,88 +343,66 @@ void insertAndEditLineAfterCursor() {
     setActivityMode(TEXT_ENTRY_MODE);
 }
 
-void deleteInLineHelper(int64_t startIndex, int64_t endIndex, int8_t shouldMoveCursor) {
-    if (startIndex >= endIndex) {
+void selectInLineHelper(int64_t cursorIndex, int64_t highlightIndex) {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    if (cursorIndex < 0 || highlightIndex < 0
+            || cursorIndex > tempLength || highlightIndex > tempLength) {
         return;
     }
-    if (startIndex < 0 || endIndex > cursorTextPos.line->textAllocation.length) {
-        return;
-    }
-    int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
-    addHistoryFrame();
-    recordTextLineDeleted(cursorTextPos.line);
-    removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), startIndex, endIndex - startIndex);
-    recordTextLineInserted(cursorTextPos.line);
-    if (shouldMoveCursor) {
-        int64_t index = getTextPosIndex(&cursorTextPos);
-        index -= endIndex - startIndex;
-        if (index < 0) {
-            index = 0;
-        }
-        setTextPosIndex(&cursorTextPos, index);
-        cursorSnapColumn = cursorTextPos.column;
-    }
-    int8_t tempResult = scrollCursorOntoScreen();
-    if (!tempResult) {
-        int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
-        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
-        if (tempNewRowCount == tempOldRowCount) {
-            displayTextLine(tempPosY, cursorTextPos.line);
-        } else {
-            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
-        }
-        displayCursor();
-    }
-    finishCurrentHistoryFrame();
-    textBufferIsDirty = true;
+    setTextPosIndex(&cursorTextPos, cursorIndex);
+    highlightTextPos.line = cursorTextPos.line;
+    setTextPosIndex(&highlightTextPos, highlightIndex);
+    cursorSnapColumn = cursorTextPos.column;
+    scrollCursorOntoScreen();
+    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
 }
 
-void deleteUntilBeginningOfLineInclusive() {
+void selectUntilBeginningOfLineInclusive() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempStartIndex = 0;
-    int64_t tempEndIndex = getTextPosIndex(&cursorTextPos) + 1;
-    if (tempEndIndex >= tempLength) {
-        tempEndIndex = tempLength;
-    }
-    while (tempStartIndex < tempLength) {
-        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+    int64_t tempCursorIndex = 0;
+    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos);
+    while (tempCursorIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempCursorIndex];
         if (tempCharacter != ' ' && tempCharacter != '\t') {
             break;
         }
-        tempStartIndex += 1;
+        tempCursorIndex += 1;
     }
-    deleteInLineHelper(tempStartIndex, tempEndIndex, true);
+    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 
-void deleteUntilBeginningOfLineExclusive() {
+void selectUntilBeginningOfLineExclusive() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempStartIndex = 0;
-    int64_t tempEndIndex = getTextPosIndex(&cursorTextPos);
-    while (tempStartIndex < tempLength) {
-        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+    int64_t tempCursorIndex = 0;
+    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos) - 1;
+    if (tempHighlightIndex < 0) {
+        return;
+    }
+    while (tempCursorIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempCursorIndex];
         if (tempCharacter != ' ' && tempCharacter != '\t') {
             break;
         }
-        tempStartIndex += 1;
+        tempCursorIndex += 1;
     }
-    deleteInLineHelper(tempStartIndex, tempEndIndex, true);
+    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 
-void deleteUntilEndOfLineInclusive() {
+void selectUntilEndOfLineInclusive() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
-    int64_t tempEndIndex = tempLength;
-    deleteInLineHelper(tempStartIndex, tempEndIndex, false);
+    int64_t tempCursorIndex = tempLength - 1;
+    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos);
+    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 
-void deleteUntilEndOfLineExclusive() {
+void selectUntilEndOfLineExclusive() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos) + 1;
-    int64_t tempEndIndex = tempLength;
-    if (tempStartIndex >= tempLength) {
+    int64_t tempCursorIndex = tempLength - 1;
+    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos) + 1;
+    if (tempHighlightIndex > tempLength) {
         return;
     }
-    deleteInLineHelper(tempStartIndex, tempEndIndex, false);
+    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 
 

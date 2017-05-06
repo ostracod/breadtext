@@ -14,6 +14,10 @@ void highlightWord();
 void highlightEnclosureExclusive();
 void highlightEnclosureInclusive();
 void changeLine();
+void selectUntilBeginningOfLineInclusive();
+void selectUntilBeginningOfLineExclusive();
+void selectUntilEndOfLineInclusive();
+void selectUntilEndOfLineExclusive();
 
 // SELECTION_HEADER_FILE
 #endif

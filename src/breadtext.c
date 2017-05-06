@@ -82,13 +82,6 @@ void setActivityMode(int8_t mode) {
         previousActivityMode = activityMode;
         activityMode = mode;
     }
-    if (activityMode == HIGHLIGHT_CHARACTER_MODE) {
-        if (mode != PREVIOUS_MODE) {
-            highlightTextPos.line = cursorTextPos.line;
-            highlightTextPos.column = cursorTextPos.column;
-            highlightTextPos.row = cursorTextPos.row;
-        }
-    }
     if (activityMode == HIGHLIGHT_LINE_MODE) {
         if (mode != PREVIOUS_MODE) {
             highlightTextPos.line = cursorTextPos.line;
@@ -392,6 +385,7 @@ int8_t handleKey(int32_t key) {
                 }
                 case 'h':
                 {
+                    highlightTextPos = cursorTextPos;
                     setActivityMode(HIGHLIGHT_CHARACTER_MODE);
                     break;
                 }
@@ -704,16 +698,16 @@ int8_t handleKey(int32_t key) {
                 insertAndEditLineBeforeCursor();
             }
             if (key == '9') {
-                deleteUntilBeginningOfLineExclusive();
+                selectUntilBeginningOfLineExclusive();
             }
             if (key == '(') {
-                deleteUntilBeginningOfLineInclusive();
+                selectUntilBeginningOfLineInclusive();
             }
             if (key == '0') {
-                deleteUntilEndOfLineExclusive();
+                selectUntilEndOfLineExclusive();
             }
             if (key == ')') {
-                deleteUntilEndOfLineInclusive();
+                selectUntilEndOfLineInclusive();
             }
         }
     }
