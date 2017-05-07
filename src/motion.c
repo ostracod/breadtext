@@ -724,6 +724,8 @@ int8_t goToCharacterInclusive() {
         int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
         if (tempCharacter2 == tempCharacter) {
             moveCursor(&tempTextPos);
+            cursorSnapColumn = cursorTextPos.column;
+            historyFrameIsConsecutive = false;
             return true;
         }
         int8_t tempResult = moveTextPosForward(&tempTextPos);
@@ -753,6 +755,8 @@ int8_t reverseGoToCharacterInclusive() {
         int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
         if (tempCharacter2 == tempCharacter) {
             moveCursor(&tempTextPos);
+            cursorSnapColumn = cursorTextPos.column;
+            historyFrameIsConsecutive = false;
             return true;
         }
         int8_t tempResult = moveTextPosBackward(&tempTextPos);
@@ -772,3 +776,18 @@ int8_t reverseGoToCharacterExclusive() {
     return true;
 }
 
+void moveCursorToEndOfIndentation() {
+    textPos_t tempNextTextPos = cursorTextPos;
+    int64_t index = 0;
+    while (index < tempNextTextPos.line->textAllocation.length) {
+        int8_t tempCharacter = tempNextTextPos.line->textAllocation.text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index += 1;
+    }
+    setTextPosIndex(&tempNextTextPos, index);
+    moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
+    historyFrameIsConsecutive = false;
+}

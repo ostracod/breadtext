@@ -21,6 +21,7 @@ void moveLineSelectionUp(int32_t amount);
 void moveLineSelectionDown(int32_t amount);
 void moveCursorToBeginningOfLine();
 void moveCursorToEndOfLine();
+void moveCursorToEndOfIndentation();
 void moveCursorToBeginningOfFile();
 void moveCursorToEndOfFile();
 textPos_t findNextTermInTextLine(textPos_t *pos, int8_t *isMissing);

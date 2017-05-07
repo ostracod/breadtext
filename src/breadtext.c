@@ -373,6 +373,11 @@ int8_t handleKey(int32_t key) {
                     moveCursorToEndOfLine();
                     break;
                 }
+                case '=':
+                {
+                    moveCursorToEndOfIndentation();
+                    break;
+                }
                 case '{':
                 {
                     moveCursorToBeginningOfFile();

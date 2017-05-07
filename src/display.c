@@ -49,6 +49,7 @@ int8_t *helpText[] = {
     (int8_t *)"Shift + ` = Scroll cursor to text",
     (int8_t *)"[] = Scroll to beginning or end of line",
     (int8_t *)"{} = Scroll to beginning or end of file",
+    (int8_t *)"= = Scroll to end of indentation",
     (int8_t *)"G = Go to character exclusive",
     (int8_t *)"Shift + G = Go to character inclusive",
     (int8_t *)"R = Reverse go to character exclusive",
