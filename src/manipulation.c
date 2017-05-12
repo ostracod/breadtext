@@ -390,7 +390,7 @@ void toggleLineComment(textLine_t *line, int8_t *commentFlag) {
             setTextPosIndex(&highlightTextPos, tempTextAllocation->length);
         }
     }
-    recordTextLineInserted(cursorTextPos.line);
+    recordTextLineInserted(line);
 }
 
 void toggleSelectionComment() {
