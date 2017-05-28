@@ -94,6 +94,7 @@ int8_t *helpText[] = {
     (int8_t *)"Shift + B = Uppercase",
     (int8_t *)"+ = Increment number under cursor",
     (int8_t *)"- = Decrement number under cursor",
+    (int8_t *)"_ = Toggle boolean literal",
     (int8_t *)"",
     (int8_t *)"COMMANDS",
     (int8_t *)"",

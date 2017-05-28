@@ -687,6 +687,9 @@ int8_t handleKey(int32_t key) {
             if (key == '-') {
                 decrementNumberUnderCursor();
             }
+            if (key == '_') {
+                toggleBooleanLiteral();
+            }
             if (key == ';') {
                 toggleSemicolonAtEndOfLine();
             }

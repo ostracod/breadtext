@@ -446,3 +446,84 @@ void toggleSelectionComment() {
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
 }
+
+void toggleBooleanLiteral() {
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempEndIndex = tempStartIndex;
+    int8_t *tempText = cursorTextPos.line->textAllocation.text;
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    while (tempStartIndex > 0) {
+        int8_t tempCharacter = tempText[tempStartIndex - 1];
+        if (!((tempCharacter >= 'A' && tempCharacter <= 'Z') || (tempCharacter >= 'a' && tempCharacter <= 'z'))) {
+            break;
+        }
+        tempStartIndex -= 1;
+    }
+    while (tempEndIndex < tempLength) {
+        int8_t tempCharacter = tempText[tempEndIndex];
+        if (!((tempCharacter >= 'A' && tempCharacter <= 'Z') || (tempCharacter >= 'a' && tempCharacter <= 'z'))) {
+            break;
+        }
+        tempEndIndex += 1;
+    }
+    int64_t tempLength2 = tempEndIndex - tempStartIndex;
+    if (tempLength2 != 4 && tempLength2 != 5) {
+        return;
+    }
+    int8_t tempBuffer[10];
+    copyData(tempBuffer, tempText + tempStartIndex, tempLength2);
+    tempBuffer[tempLength2] = 0;
+    int8_t tempNewText[10];
+    int8_t tempHasSetNewText = false;
+    if (strcmp((char *)tempBuffer, "false") == 0) {
+        strcpy((char *)tempNewText, "true");
+        tempHasSetNewText = true;
+    }
+    if (strcmp((char *)tempBuffer, "False") == 0) {
+        strcpy((char *)tempNewText, "True");
+        tempHasSetNewText = true;
+    }
+    if (strcmp((char *)tempBuffer, "FALSE") == 0) {
+        strcpy((char *)tempNewText, "TRUE");
+        tempHasSetNewText = true;
+    }
+    if (strcmp((char *)tempBuffer, "true") == 0) {
+        strcpy((char *)tempNewText, "false");
+        tempHasSetNewText = true;
+    }
+    if (strcmp((char *)tempBuffer, "True") == 0) {
+        strcpy((char *)tempNewText, "False");
+        tempHasSetNewText = true;
+    }
+    if (strcmp((char *)tempBuffer, "TRUE") == 0) {
+        strcpy((char *)tempNewText, "FALSE");
+        tempHasSetNewText = true;
+    }
+    if (!tempHasSetNewText) {
+        return;
+    }
+    int64_t tempLength3 = strlen((char *)tempNewText);
+    addHistoryFrame();
+    int64_t tempRowCount1 = getTextLineRowCount(cursorTextPos.line);
+    recordTextLineDeleted(cursorTextPos.line);
+    eraseCursor();
+    removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), tempStartIndex, tempLength2);
+    insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempStartIndex, tempNewText, tempLength3);
+    recordTextLineInserted(cursorTextPos.line);
+    setTextPosIndex(&cursorTextPos, tempStartIndex);
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        int64_t tempRowCount2 = getTextLineRowCount(cursorTextPos.line);
+        int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
+        if (tempRowCount1 == tempRowCount2) {
+            displayTextLine(tempPosY, cursorTextPos.line);
+        } else {
+            displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
+        }
+    }
+    displayCursor();
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;    
+    textBufferIsDirty = true;
+}
+

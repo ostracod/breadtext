@@ -9,6 +9,7 @@ void lowercaseSelection();
 void incrementNumberUnderCursor();
 void decrementNumberUnderCursor();
 void toggleSelectionComment();
+void toggleBooleanLiteral();
 
 // MANIPULATION_HEADER_FILE
 #endif
