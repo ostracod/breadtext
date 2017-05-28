@@ -12,6 +12,27 @@
 #include "insertDelete.h"
 #include "breadtext.h"
 
+int8_t equalDataWithCaseSensitivity(int8_t *source1, int8_t *source2, int64_t amount) {
+    int64_t index = 0;
+    while (index < amount) {
+        int8_t tempCharacter1 = source1[index];
+        int8_t tempCharacter2 = source2[index];
+        if (!isCaseSensitive) {
+            if (tempCharacter1 >= 'a' && tempCharacter1 <= 'z') {
+                tempCharacter1 -= 'a' - 'A';
+            }
+            if (tempCharacter2 >= 'a' && tempCharacter2 <= 'z') {
+                tempCharacter2 -= 'a' - 'A';
+            }
+        }
+        if (tempCharacter1 != tempCharacter2) {
+            return false;
+        }
+        index += 1;
+    }
+    return true;
+}
+
 void moveCursor(textPos_t *pos) {
     if (activityMode == HIGHLIGHT_STATIC_MODE) {
         setActivityMode(COMMAND_MODE);
@@ -267,7 +288,7 @@ textPos_t findNextTermInTextLine(textPos_t *pos, int8_t *isMissing) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     while (index <= tempLength - searchTermLength) {
-        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
             textPos_t tempTextPos;
             tempTextPos.line = pos->line;
             setTextPosIndex(&tempTextPos, index);
@@ -287,7 +308,7 @@ textPos_t findPreviousTermInTextLine(textPos_t *pos, int8_t *isMissing) {
         index = tempLength - searchTermLength;
     }
     while (index >= 0) {
-        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
             textPos_t tempTextPos;
             tempTextPos.line = pos->line;
             setTextPosIndex(&tempTextPos, index);
@@ -329,7 +350,7 @@ textPos_t findNextWordInTextLine(textPos_t *pos, int8_t *isMissing) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     while (index <= tempLength - searchTermLength) {
-        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
             textPos_t tempTextPos;
             tempTextPos.line = pos->line;
             setTextPosIndex(&tempTextPos, index);
@@ -351,7 +372,7 @@ textPos_t findPreviousWordInTextLine(textPos_t *pos, int8_t *isMissing) {
         index = tempLength - searchTermLength;
     }
     while (index >= 0) {
-        if (equalData(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
             textPos_t tempTextPos;
             tempTextPos.line = pos->line;
             setTextPosIndex(&tempTextPos, index);

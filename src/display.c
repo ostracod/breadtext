@@ -111,6 +111,7 @@ int8_t *helpText[] = {
     (int8_t *)"colorScheme: 0 is black on white, 1 is white on black.",
     (int8_t *)"shouldUseHardTabs: 0 means no, 1 means yes.",
     (int8_t *)"indentationWidth: The number of spaces to use for soft tabs.",
+    (int8_t *)"isCaseSensitive: 0 means no, 1 means yes.",
     (int8_t *)"",
     (int8_t *)"On start-up, breadtext looks for the file ~/.breadtextrc to read configuration variables. Each line of .breadtextrc contains a variable name and a value separated by a space.",
     (int8_t *)"",

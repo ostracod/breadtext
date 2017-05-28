@@ -784,6 +784,10 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
         shouldUseHardTabs = value;
         output = true;
     }
+    if (strcmp((char *)name, "isCaseSensitive") == 0) {
+        isCaseSensitive = value;
+        output = true;
+    }
     return output;
 }
 
@@ -1020,6 +1024,7 @@ int main(int argc, const char *argv[]) {
     }
     indentationWidth = 4;
     shouldUseHardTabs = false;
+    isCaseSensitive = true;
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;

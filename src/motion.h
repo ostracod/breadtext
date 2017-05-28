@@ -10,6 +10,7 @@ int8_t searchTerm[1000];
 int64_t searchTermLength;
 textLine_t *markList[MARK_AMOUNT];
 int8_t markIsSetList[MARK_AMOUNT];
+int8_t isCaseSensitive;
 
 void moveCursor(textPos_t *pos);
 void moveCursorLeft(int32_t amount);
