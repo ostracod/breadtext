@@ -1,6 +1,8 @@
 
 #include <curses.h>
+#include "textAllocation.h"
 #include "textLine.h"
+#include "textPos.h"
 #include "breadtext.h"
 
 #ifndef DISPLAY_HEADER_FILE

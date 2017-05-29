@@ -14,6 +14,7 @@
 #include "insertDelete.h"
 #include "selection.h"
 #include "manipulation.h"
+#include "secret.h"
 #include "textCommand.h"
 #include "breadtext.h"
 
@@ -236,6 +237,16 @@ void executeTextCommand() {
         clearInitialFileContents();
         setActivityMode(PREVIOUS_MODE);
         notifyUser((int8_t *)"Changed file path.");
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "crane") == 0) {
+        craneSecret();
+        setActivityMode(PREVIOUS_MODE);
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "jitter") == 0) {
+        craneSecret();
+        setActivityMode(PREVIOUS_MODE);
         return;
     }
     setActivityMode(PREVIOUS_MODE);

@@ -1,11 +1,11 @@
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <curses.h>
 #include "utilities.h"
 #include "textAllocation.h"
@@ -933,6 +933,8 @@ int8_t checkTextBufferHygiene() {
 }
 
 int main(int argc, const char *argv[]) {
+    
+    srand((unsigned)time(NULL));
     
     #ifdef __APPLE__
         applicationPlatform = PLATFORM_MAC;
