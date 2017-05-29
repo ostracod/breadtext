@@ -245,7 +245,7 @@ void executeTextCommand() {
         return;
     }
     if (strcmp((char *)(tempTermList[0]), "jitter") == 0) {
-        craneSecret();
+        jitterSecret();
         setActivityMode(PREVIOUS_MODE);
         return;
     }

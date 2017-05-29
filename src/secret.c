@@ -176,7 +176,87 @@ void craneSecret() {
 }
 
 void jitterSecret() {
-    
+    int8_t *tempScreenArray = allocateScreenArray();
+    timeout(0);
+    int64_t tempSize = (viewPortWidth + 1) * viewPortHeight;
+    int8_t tempJitterDelay = 0;
+    while (true) {
+        int32_t tempKey = getch();
+        if (tempKey == KEY_RESIZE || tempKey == 27 || tempKey == 'q') {
+            break;
+        }
+        while (true) {
+            int32_t tempKey = getch();
+            if (tempKey == ERR) {
+                break;
+            }
+        }
+        tempJitterDelay += 1;
+        if (tempJitterDelay >= 2) {
+            int8_t tempScreenArray2[tempSize];
+            int64_t index = 0;
+            while (index < tempSize) {
+                if (tempScreenArray[index] == 0) {
+                    tempScreenArray2[index] = 0;
+                } else {
+                    tempScreenArray2[index] = ' ';
+                }
+                index += 1;
+            }
+            int64_t tempPosY = 0;
+            while (tempPosY < viewPortHeight) {
+                int64_t tempPosX = 0;
+                while (tempPosX < viewPortWidth) {
+                    int64_t tempIndex1 = tempPosX + tempPosY * (viewPortWidth + 1);
+                    int8_t tempCharacter1 = tempScreenArray[tempIndex1];
+                    if (tempCharacter1 != ' ') {
+                        int64_t tempPosX2 = tempPosX;
+                        int64_t tempPosY2 = tempPosY;
+                        int8_t tempNumber;
+                        tempNumber = rand() % 99;
+                        if (tempNumber < 33) {
+                            tempPosX2 += 1;
+                        }
+                        if (tempNumber >= 66) {
+                            tempPosX2 -= 1;
+                        }
+                        tempNumber = rand() % 99;
+                        if (tempNumber < 33) {
+                            tempPosY2 += 1;
+                        }
+                        if (tempNumber >= 66) {
+                            tempPosY2 -= 1;
+                        }
+                        if (tempPosX2 >= 0 && tempPosX2 < viewPortWidth && tempPosY2 >= 0 && tempPosY2 < viewPortHeight) {
+                            int64_t tempIndex2 = tempPosX2 + tempPosY2 * (viewPortWidth + 1);
+                            int8_t tempCharacter2 = tempScreenArray[tempIndex2];
+                            int8_t tempCharacter3 = tempScreenArray2[tempIndex2];
+                            if (tempCharacter2 != ' ' || tempCharacter3 != ' ') {
+                                tempPosX2 = tempPosX;
+                                tempPosY2 = tempPosY;
+                            }
+                        } else {
+                            tempPosX2 = tempPosX;
+                            tempPosY2 = tempPosY;
+                        }
+                        int64_t tempIndex4 = tempPosX2 + tempPosY2 * (viewPortWidth + 1);
+                        tempScreenArray2[tempIndex4] = tempCharacter1;
+                    }
+                    tempPosX += 1;
+                }
+                tempPosY += 1;
+            }
+            memcpy(tempScreenArray, tempScreenArray2, tempSize);
+            tempJitterDelay = 0;
+        }
+        displayScreenArray(tempScreenArray);
+        refresh();
+        sleepMilliseconds(50);
+    }
+    timeout(-1);
+    free(tempScreenArray);
+    handleResize();
+    redrawEverything();
 }
 
 
