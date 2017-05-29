@@ -733,11 +733,11 @@ int32_t getNextKey() {
         macroIndex += 1;
     } else {
         output = getch();
-        if (isRecordingMacro && output != 'M') {
+        if (isRecordingMacro && !(output == 'M' && activityMode != TEXT_ENTRY_MODE)) {
             if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
                 isRecordingMacro = false;
             } else {
-                if (activityMode == TEXT_ENTRY_MODE || output != 'm') {
+                if (!(output == 'm' && activityMode != TEXT_ENTRY_MODE)) {
                     macroKeyList[macroKeyListLength] = output;
                     macroKeyListLength += 1;
                 }
