@@ -66,7 +66,7 @@ void displayScreenArray(int8_t *screenArray) {
     attron(COLOR_PAIR(primaryColorPair));
     int64_t tempPosY = 0;
     while (tempPosY < viewPortHeight) {
-        mvprintw(tempPosY, 0, (char *)(screenArray + tempPosY * (viewPortWidth + 1)));
+        mvprintw(tempPosY, 0, "%s", (char *)(screenArray + tempPosY * (viewPortWidth + 1)));
         tempPosY += 1;
     }
     attroff(COLOR_PAIR(primaryColorPair));
