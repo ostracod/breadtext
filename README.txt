@@ -8,7 +8,7 @@ If you find any bugs, please report them to esperantanaso@gmail.com.
 FEATURES
 
 > You can edit text
-> Copy, cut, and paste from system clipboard
+> Copy, cut, and paste from system or internal clipboard
 > Undo and redo
 > Find and replace
 > Customizable indentation
@@ -27,12 +27,9 @@ To install:
 make
 sudo mv ./build/breadtext /usr/local/bin/breadtext
 
-On Linux you must install xclip for clipboard functionality:
+On Linux you will need to install the following packages:
 
 sudo apt-get install xclip
-
-You may also have to perform:
-
 sudo apt-get install libncurses-dev
 
 CONTROLS

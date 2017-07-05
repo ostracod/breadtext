@@ -37,6 +37,7 @@ int32_t helpScroll;
 int8_t *filePath;
 int8_t *rcFilePath;
 int64_t fileLastModifiedTime;
+int8_t shouldUseSystemClipboard;
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);

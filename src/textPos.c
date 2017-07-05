@@ -79,3 +79,38 @@ int8_t getTextPosCharacter(textPos_t *pos) {
     }
 }
 
+int64_t getCharacterCountInRange(textPos_t *startPos, textPos_t *endPos) {
+    int64_t output = 0;
+    textLine_t *tempLine = startPos->line;
+    while (true) {
+        int64_t tempStartIndex;
+        int64_t tempEndIndex;
+        if (tempLine == startPos->line) {
+            tempStartIndex = getTextPosIndex(startPos);
+        } else {
+            tempStartIndex = 0;
+        }
+        if (tempLine == endPos->line) {
+            tempEndIndex = getTextPosIndex(endPos) + 1;
+        } else {
+            tempEndIndex = tempLine->textAllocation.length + 1;
+        }
+        int8_t tempHasNewline;
+        if (tempEndIndex > tempLine->textAllocation.length) {
+            tempHasNewline = true;
+            tempEndIndex = tempLine->textAllocation.length;
+        } else {
+            tempHasNewline = false;
+        }
+        output += tempEndIndex - tempStartIndex;
+        if (tempHasNewline) {
+            output += 1;
+        }
+        if (tempLine == endPos->line) {
+            break;
+        }
+        tempLine = getNextTextLine(tempLine);
+    }
+    return output;
+}
+

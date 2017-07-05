@@ -17,6 +17,7 @@ int8_t textPosIsAfterTextPos(textPos_t *textPos1, textPos_t *textPos2);
 int8_t moveTextPosForward(textPos_t *pos);
 int8_t moveTextPosBackward(textPos_t *pos);
 int8_t getTextPosCharacter(textPos_t *pos);
+int64_t getCharacterCountInRange(textPos_t *startPos, textPos_t *endPos);
 
 // TEXT_POS_HEADER_FILE
 #endif

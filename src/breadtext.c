@@ -189,6 +189,7 @@ void handleResize() {
 }
 
 void playMacro();
+void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key) {
@@ -586,6 +587,16 @@ int8_t handleKey(int32_t key) {
                     moveCursorToVisibleText();
                     break;
                 }
+                case 'y':
+                {
+                    setShouldUseSystemClipboard(false);
+                    break;
+                }
+                case 'Y':
+                {
+                    setShouldUseSystemClipboard(true);
+                    break;
+                }
                 case '1':
                 {
                     gotoMark(1);
@@ -791,6 +802,10 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
         isCaseSensitive = value;
         output = true;
     }
+    if (strcmp((char *)name, "shouldUseSystemClipboard") == 0) {
+        shouldUseSystemClipboard = value;
+        output = true;
+    }
     return output;
 }
 
@@ -932,6 +947,15 @@ int8_t checkTextBufferHygiene() {
     return true;
 }
 
+void setShouldUseSystemClipboard(int8_t value) {
+    shouldUseSystemClipboard = value;
+    if (shouldUseSystemClipboard) {
+        notifyUser((int8_t *)"Using system clipboard.");
+    } else {
+        notifyUser((int8_t *)"Using internal clipboard.");
+    }
+}
+
 int main(int argc, const char *argv[]) {
     
     srand((unsigned)time(NULL));
@@ -1033,6 +1057,7 @@ int main(int argc, const char *argv[]) {
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;
+    shouldUseSystemClipboard = true;
     
     processRcFile();    
     

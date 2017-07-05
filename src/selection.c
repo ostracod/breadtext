@@ -14,12 +14,10 @@
 #include "selection.h"
 #include "breadtext.h"
 
+int8_t *internalClipboard = NULL;
+int64_t internalClipboardSize;
+
 int8_t copySelectionHelper() {
-    FILE *tempFile = fopen((char *)clipboardFilePath, "w");
-    if (tempFile == NULL) {
-        notifyUser((int8_t *)"ERROR: Could not copy text.");
-        return false;
-    }
     textPos_t *tempFirstTextPos;
     textPos_t *tempLastTextPos;
     if (isHighlighting) {
@@ -28,6 +26,20 @@ int8_t copySelectionHelper() {
     } else {
         tempFirstTextPos = &cursorTextPos;
         tempLastTextPos = &cursorTextPos;
+    }
+    FILE *tempFile;
+    int64_t internalClipboardIndex = 0;
+    if (shouldUseSystemClipboard) {
+        tempFile = fopen((char *)clipboardFilePath, "w");
+        if (tempFile == NULL) {
+            notifyUser((int8_t *)"ERROR: Could not copy text.");
+            return false;
+        }
+    } else {
+        if (internalClipboard != NULL) {
+            free(internalClipboard);
+        }
+        internalClipboard = malloc(getCharacterCountInRange(tempFirstTextPos, tempLastTextPos) + 1);
     }
     textLine_t *tempLine = tempFirstTextPos->line;
     while (true) {
@@ -51,18 +63,32 @@ int8_t copySelectionHelper() {
             tempShouldWriteNewline = false;
         }
         int64_t tempAmount = tempEndIndex - tempStartIndex;
-        fwrite(tempLine->textAllocation.text + tempStartIndex, 1, tempAmount, tempFile);
+        if (shouldUseSystemClipboard) {
+            fwrite(tempLine->textAllocation.text + tempStartIndex, 1, tempAmount, tempFile);
+        } else {
+            copyData(internalClipboard + internalClipboardIndex, tempLine->textAllocation.text + tempStartIndex, tempAmount);
+            internalClipboardIndex += tempAmount;
+        }
         if (tempShouldWriteNewline) {
-            fwrite("\n", 1, 1, tempFile);
+            if (shouldUseSystemClipboard) {
+                fwrite("\n", 1, 1, tempFile);
+            } else {
+                internalClipboard[internalClipboardIndex] = '\n';
+                internalClipboardIndex += 1;
+            }
         }
         if (tempLine == tempLastTextPos->line) {
             break;
         }
         tempLine = getNextTextLine(tempLine);
     }
-    fclose(tempFile);
-    systemCopyClipboardFile();
-    remove((char *)clipboardFilePath);
+    if (shouldUseSystemClipboard) {
+        fclose(tempFile);
+        systemCopyClipboardFile();
+        remove((char *)clipboardFilePath);
+    } else {
+        internalClipboardSize = internalClipboardIndex;
+    }
     return true;
 }
 
@@ -72,7 +98,11 @@ void copySelection() {
         return;
     }
     setActivityMode(COMMAND_MODE);
-    notifyUser((int8_t *)"Copied selection.");
+    if (shouldUseSystemClipboard) {
+        notifyUser((int8_t *)"Copied selection. (System)");
+    } else {
+        notifyUser((int8_t *)"Copied selection. (Internal)");
+    }
 }
 
 void deleteSelectionHelper() {
@@ -151,20 +181,60 @@ void cutSelection() {
     }
     addHistoryFrame();
     deleteSelectionHelper();
-    notifyUser((int8_t *)"Cut selection.");
+    if (shouldUseSystemClipboard) {
+        notifyUser((int8_t *)"Cut selection. (System)");
+    } else {
+        notifyUser((int8_t *)"Cut selection. (Internal)");
+    }
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
 
 void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
-    fseek(file, 0, SEEK_SET);
+    int64_t internalClipboardIndex = 0;
+    if (shouldUseSystemClipboard) {
+        fseek(file, 0, SEEK_SET);
+    } else {
+        if (internalClipboard == NULL) {
+            return;
+        }
+    }
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
-        int8_t *tempText = NULL;
-        size_t tempSize = 0;
-        int64_t tempCount = getline((char **)&tempText, &tempSize, file);
-        if (tempCount < 0) {
-            break;
+        int8_t *tempText;
+        size_t tempSize;
+        int64_t tempCount;
+        int64_t tempBufferSize;
+        if (shouldUseSystemClipboard) {
+            tempText = NULL;
+            tempSize = 0;
+            int64_t tempCount = getline((char **)&tempText, &tempSize, file);
+            if (tempCount < 0) {
+                break;
+            }
+            tempBufferSize = 0;
+        } else {
+            if (internalClipboardIndex >= internalClipboardSize) {
+                break;
+            }
+            tempText = internalClipboard + internalClipboardIndex; 
+            tempSize = 0;
+            tempCount = 0;
+            while (internalClipboardIndex < internalClipboardSize) {
+                int8_t tempCharacter = internalClipboard[internalClipboardIndex];
+                tempCount += 1;
+                internalClipboardIndex += 1;
+                if (tempCharacter == '\n') {
+                    break;
+                }
+            }
+            tempBufferSize = tempCount + 1;
+        }
+        int8_t tempBuffer[tempBufferSize];
+        if (!shouldUseSystemClipboard) {
+            copyData(tempBuffer, tempText, tempCount);
+            tempBuffer[tempCount] = 0;
+            tempText = tempBuffer;
         }
         int8_t tempContainsNewline;
         tempCount = removeBadCharacters(tempText, &tempContainsNewline);
@@ -180,7 +250,9 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
             setTextPosIndex(&cursorTextPos, index);
         }
         cursorSnapColumn = cursorTextPos.column;
-        free(tempText);
+        if (shouldUseSystemClipboard) {
+            free(tempText);
+        }
     }
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
@@ -192,16 +264,20 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
     textBufferIsDirty = true;
 }
 
-int8_t fileEndsInNewline(FILE *file) {
-    fseek(file, 0, SEEK_END);
-    int64_t tempSize = ftell(file);
-    if (tempSize <= 0) {
-        return false;
+int8_t clipboardEndsInNewline(FILE *file) {
+    if (shouldUseSystemClipboard) {
+        fseek(file, 0, SEEK_END);
+        int64_t tempSize = ftell(file);
+        if (tempSize <= 0) {
+            return false;
+        }
+        fseek(file, -1, SEEK_END);
+        int8_t tempCharacter;
+        fread(&tempCharacter, 1, 1, file);
+        return (tempCharacter == '\n');
+    } else {
+        return (internalClipboard[internalClipboardSize - 1] == '\n');
     }
-    fseek(file, -1, SEEK_END);
-    int8_t tempCharacter;
-    fread(&tempCharacter, 1, 1, file);
-    return (tempCharacter == '\n');
 }
 
 int8_t isHighlightingLines() {
@@ -216,11 +292,19 @@ int8_t isHighlightingLines() {
 }
 
 void pasteBeforeCursor() {
-    systemPasteClipboardFile();
-    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
-    if (tempFile == NULL) {
-        notifyUser((int8_t *)"ERROR: Could not paste text.");
-        return;
+    FILE *tempFile;
+    if (shouldUseSystemClipboard) {
+        systemPasteClipboardFile();
+        tempFile = fopen((char *)clipboardFilePath, "r");
+        if (tempFile == NULL) {
+            notifyUser((int8_t *)"ERROR: Could not paste text.");
+            return;
+        }
+    } else {
+        if (internalClipboard == NULL) {
+            return;
+        }
+        tempFile = NULL;
     }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
@@ -232,7 +316,7 @@ void pasteBeforeCursor() {
         tempLastIsHighlightingLines = false;
     }
     int32_t tempLevel;
-    if (fileEndsInNewline(tempFile) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
+    if (clipboardEndsInNewline(tempFile) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
         tempLevel = 0;
@@ -240,18 +324,28 @@ void pasteBeforeCursor() {
         tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
     }
     pasteBeforeCursorHelper(tempFile, tempLevel);
-    fclose(tempFile);
-    remove((char *)clipboardFilePath);
+    if (shouldUseSystemClipboard) {
+        fclose(tempFile);
+        remove((char *)clipboardFilePath);
+    }
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
 
 void pasteAfterCursor() {
-    systemPasteClipboardFile();
-    FILE *tempFile = fopen((char *)clipboardFilePath, "r");
-    if (tempFile == NULL) {
-        notifyUser((int8_t *)"ERROR: Could not paste text.");
-        return;
+    FILE *tempFile;
+    if (shouldUseSystemClipboard) {
+        systemPasteClipboardFile();
+        tempFile = fopen((char *)clipboardFilePath, "r");
+        if (tempFile == NULL) {
+            notifyUser((int8_t *)"ERROR: Could not paste text.");
+            return;
+        }
+    } else {
+        if (internalClipboard == NULL) {
+            return;
+        }
+        tempFile = NULL;
     }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
@@ -262,14 +356,14 @@ void pasteAfterCursor() {
     } else {
         tempLastIsHighlightingLines = false;
     }
-    int8_t tempFileEndsInNewline = fileEndsInNewline(tempFile);
+    int8_t tempClipboardEndsInNewline = clipboardEndsInNewline(tempFile);
     int32_t tempLevel;
-    if (tempLastIsHighlightingLines && tempFileEndsInNewline) {
+    if (tempLastIsHighlightingLines && tempClipboardEndsInNewline) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
         tempLevel = 0;
     } else if (!tempLastIsHighlighting) {
-        if (tempFileEndsInNewline) {
+        if (tempClipboardEndsInNewline) {
             eraseCursor();
             textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
             if (tempLine == NULL) {
@@ -290,8 +384,10 @@ void pasteAfterCursor() {
         tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
     }
     pasteBeforeCursorHelper(tempFile, tempLevel);
-    fclose(tempFile);
-    remove((char *)clipboardFilePath);
+    if (shouldUseSystemClipboard) {
+        fclose(tempFile);
+        remove((char *)clipboardFilePath);
+    }
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
 }
