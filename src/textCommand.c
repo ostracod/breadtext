@@ -170,6 +170,42 @@ void executeTextCommand() {
         }
         return;
     }
+    if (strcmp((char *)(tempTermList[0]), "findWord") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        setActivityMode(PREVIOUS_MODE);
+        int8_t tempResult = gotoNextWordHelper();
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find word.");
+            return;
+        }
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "reverseFindWord") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        setActivityMode(PREVIOUS_MODE);
+        int8_t tempResult = gotoPreviousWordHelper();
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find word.");
+            return;
+        }
+        return;
+    }
     if (strcmp((char *)(tempTermList[0]), "replace") == 0) {
         if (tempTermListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
