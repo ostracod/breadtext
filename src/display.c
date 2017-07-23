@@ -31,6 +31,7 @@ int8_t *helpText[] = {
     (int8_t *)"H = Character highlight mode",
     (int8_t *)"Shift + H = Line highlight mode",
     (int8_t *)"W = Word highlight mode",
+    (int8_t *)"Shift + W = Highlight word with magic",
     (int8_t *)"E = Exclusive enclosure highlight mode",
     (int8_t *)"Shift + E = Inclusive enclosure highlight mode",
     (int8_t *)"9 = Select until beginning of line exclusive",

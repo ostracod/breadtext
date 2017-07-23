@@ -405,6 +405,11 @@ int8_t handleKey(int32_t key) {
                     highlightWord();
                     break;
                 }
+                case 'W':
+                {
+                    highlightWordByDelimiter();
+                    break;
+                }
                 case 'e':
                 {
                     highlightEnclosureExclusive();

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "utilities.h"
 #include "textAllocation.h"
 #include "textLine.h"
@@ -409,6 +410,76 @@ void highlightWord() {
             while (tempEndIndex < tempLength - 1) {
                 int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
                 if (!isWordCharacter(tempCharacter)) {
+                    break;
+                }
+                tempEndIndex += 1;
+            }
+        }
+    }
+    highlightTextPos.line = cursorTextPos.line;
+    setTextPosIndex(&highlightTextPos, tempStartIndex);
+    setTextPosIndex(&cursorTextPos, tempEndIndex);
+    scrollCursorOntoScreen();
+    setActivityMode(HIGHLIGHT_STATIC_MODE);
+}
+
+int8_t *delimiterSet1 = (int8_t *)"()[]{}\"'`";
+int8_t *delimiterSet2 = (int8_t *)"~!@#$%^&*-=+|:<>/?";
+
+int8_t getDelimiterRank(int8_t delimiter) {
+    if (delimiter == ' ' || delimiter == '\n') {
+        return 7;
+    }
+    if (delimiter == ';') {
+        return 6;
+    }
+    if (strchr((char *)delimiterSet1, delimiter) != NULL) {
+        return 5;
+    }
+    if (delimiter == ',') {
+        return 4;
+    }
+    if (strchr((char *)delimiterSet2, delimiter) != NULL) {
+        return 3;
+    }
+    if (delimiter == '.') {
+        return 2;
+    }
+    if (delimiter == '_') {
+        return 1;
+    }
+    return 0;
+}
+
+void highlightWordByDelimiter() {
+    int8_t tempDelimiter = promptSingleCharacter();
+    if (tempDelimiter == 0) {
+        return;
+    }
+    int8_t tempRank = getDelimiterRank(tempDelimiter);
+    if (tempRank == 0) {
+        notifyUser((int8_t *)"Invalid delimiter.");
+        return;
+    }
+    int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
+    int64_t tempEndIndex = tempStartIndex;
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    if (tempStartIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex];
+        int8_t tempRank2 = getDelimiterRank(tempCharacter);
+        if (tempRank2 < tempRank) {
+            while (tempStartIndex > 0) {
+                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempStartIndex - 1];
+                int8_t tempRank2 = getDelimiterRank(tempCharacter);
+                if (tempRank2 >= tempRank) {
+                    break;
+                }
+                tempStartIndex -= 1;
+            }
+            while (tempEndIndex < tempLength - 1) {
+                int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempEndIndex + 1];
+                int8_t tempRank2 = getDelimiterRank(tempCharacter);
+                if (tempRank2 >= tempRank) {
                     break;
                 }
                 tempEndIndex += 1;

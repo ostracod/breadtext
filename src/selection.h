@@ -11,6 +11,7 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel);
 void pasteBeforeCursor();
 void pasteAfterCursor();
 void highlightWord();
+void highlightWordByDelimiter();
 void highlightEnclosureExclusive();
 void highlightEnclosureInclusive();
 void changeLine();
