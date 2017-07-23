@@ -5,6 +5,7 @@
 void insertTextCommandCharacter(int8_t character);
 void deleteTextCommandCharacter();
 void executeTextCommand();
+void enterBeginningOfCommand(int8_t *text);
 
 // TEXT_COMMAND_HEADER_FILE
 #endif

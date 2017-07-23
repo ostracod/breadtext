@@ -39,6 +39,7 @@ int8_t *helpText[] = {
     (int8_t *)"0 = Select until end of line exclusive",
     (int8_t *)"Shift + 0 = Select until end of line inclusive",
     (int8_t *)"/ = Enter command",
+    (int8_t *)"Shift + / = Enter find command",
     (int8_t *)"",
     (int8_t *)"MOVEMENT",
     (int8_t *)"",

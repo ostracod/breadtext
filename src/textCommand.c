@@ -288,3 +288,12 @@ void executeTextCommand() {
     setActivityMode(PREVIOUS_MODE);
     notifyUser((int8_t *)"Error: Unrecognized command name.");
 }
+
+void enterBeginningOfCommand(int8_t *text) {
+    setActivityMode(TEXT_COMMAND_MODE);
+    strcpy((char *)textCommandBuffer, (char *)text);
+    attron(COLOR_PAIR(secondaryColorPair));
+    mvprintw(windowHeight - 1, 1, "%s", (char *)textCommandBuffer);
+    attroff(COLOR_PAIR(secondaryColorPair));
+    displayTextCommandCursor();
+}
