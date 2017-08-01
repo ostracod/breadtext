@@ -59,7 +59,7 @@ int8_t *helpText[] = {
     (int8_t *)"N = Find next instance",
     (int8_t *)"Shift + N = Find previous instance",
     (int8_t *)"F = Find next instance of word under cursor",
-    (int8_t *)"Shift + F = Find next instance of word under cursor",    
+    (int8_t *)"Shift + F = Find previous instance of word under cursor",
     (int8_t *)"1-8 = Go to mark",
     (int8_t *)"Shift + 1-8 = Set mark",
     (int8_t *)"",
