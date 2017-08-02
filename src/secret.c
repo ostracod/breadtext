@@ -13,14 +13,6 @@
 #include "secret.h"
 #include "breadtext.h"
 
-void sleepMilliseconds(int32_t milliseconds)
-{
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-}
-
 int8_t *allocateScreenArray() {
     int64_t tempSize = (viewPortWidth + 1) * viewPortHeight;
     int8_t *output = malloc(tempSize);

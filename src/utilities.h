@@ -23,6 +23,7 @@ int8_t *mallocRealpath(int8_t *path);
 void systemCopyClipboardFile();
 void systemPasteClipboardFile();
 void addToHexadecimalText(int8_t *text, int64_t offset);
+void sleepMilliseconds(int32_t milliseconds);
 
 // UTILITIES_HEADER_FILE
 #endif

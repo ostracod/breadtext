@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 #include <wordexp.h>
 #include <unistd.h>
 #include "utilities.h"
@@ -199,4 +200,12 @@ void addToHexadecimalText(int8_t *text, int64_t offset) {
         tempOffset += 4;
         index -= 1;
     }
+}
+
+void sleepMilliseconds(int32_t milliseconds)
+{
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
 }

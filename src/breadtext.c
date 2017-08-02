@@ -20,6 +20,7 @@
 #include "selection.h"
 #include "manipulation.h"
 #include "textCommand.h"
+#include "fuzz.h"
 #include "breadtext.h"
 
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
@@ -985,7 +986,12 @@ int main(int argc, const char *argv[]) {
         printf("Usage: breadtext [file path]\n");
         return 0;
     }
-    filePath = mallocRealpath((int8_t *)(argv[1]));
+    isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
+    if (isPerformingFuzzTest) {
+        filePath = mallocRealpath((int8_t *)"./bupkis.txt");
+    } else {
+        filePath = mallocRealpath((int8_t *)(argv[1]));
+    }
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
         
@@ -1081,31 +1087,35 @@ int main(int argc, const char *argv[]) {
     init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
     handleResize();
     
-    while (true) {
-        #if IS_IN_DEBUG_MODE
-            textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
-            int64_t tempLength = tempLine1->textAllocation.length;
-            int8_t tempBuffer[tempLength];
-            copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
-        #endif
-        
-        int32_t tempKey = getNextKey();
-        int8_t tempResult = handleKey(tempKey);
-        if (tempResult) {
-            break;
-        }
-        
-        #if IS_IN_DEBUG_MODE
-            textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
-            if (tempLength != tempLine2->textAllocation.length
-                || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
-                endwin();
-                printf("FIRST LINE CHANGED.\n");
-                printf("CHARACTER TYPED: %c\n", tempKey);
-                printf("ACTIVITY MODE: %d\n", activityMode);
-                exit(0);
+    if (isPerformingFuzzTest) {
+        performFuzzTest();
+    } else {
+        while (true) {
+            #if IS_IN_DEBUG_MODE
+                textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
+                int64_t tempLength = tempLine1->textAllocation.length;
+                int8_t tempBuffer[tempLength];
+                copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
+            #endif
+            
+            int32_t tempKey = getNextKey();
+            int8_t tempResult = handleKey(tempKey);
+            if (tempResult) {
+                break;
             }
-        #endif
+            
+            #if IS_IN_DEBUG_MODE
+                textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
+                if (tempLength != tempLine2->textAllocation.length
+                    || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
+                    endwin();
+                    printf("FIRST LINE CHANGED.\n");
+                    printf("CHARACTER TYPED: %c\n", tempKey);
+                    printf("ACTIVITY MODE: %d\n", activityMode);
+                    exit(0);
+                }
+            #endif
+        }
     }
     
     endwin();

@@ -1,5 +1,6 @@
 
 #include "textLine.h"
+#include "textPos.h"
 
 #ifndef BREADTEXT_HEADER_FILE
 #define BREADTEXT_HEADER_FILE
@@ -38,6 +39,7 @@ int8_t *filePath;
 int8_t *rcFilePath;
 int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
+int8_t isPerformingFuzzTest;
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);
@@ -54,6 +56,7 @@ void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame);
 int32_t getNextKey();
 int32_t promptSingleCharacter();
 void handleResize();
+int8_t handleKey(int32_t key);
 
 // BREADTEXT_HEADER_FILE
 #endif
