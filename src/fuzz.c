@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <curses.h>
+#include <signal.h>
 #include "utilities.h"
 #include "breadtext.h"
 #include "fuzz.h"
@@ -25,3 +27,10 @@ void performFuzzTest() {
     }
 }
 
+void handleSegmentationFault(int signum) {
+    // Set SEGFAULT behavior back to normal.
+    signal(SIGSEGV, SIG_DFL);
+    endwin();
+    printf("Failure!!!\n");
+    exit(1);
+}

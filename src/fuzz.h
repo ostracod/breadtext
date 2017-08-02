@@ -8,6 +8,7 @@ typedef struct fuzzKey {
 } fuzzKey_t;
 
 void performFuzzTest();
+void handleSegmentationFault(int signum);
 
 // FUZZ_HEADER_FILE
 #endif

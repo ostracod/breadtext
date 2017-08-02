@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <curses.h>
+#include <signal.h>
 #include "utilities.h"
 #include "textAllocation.h"
 #include "textLine.h"
@@ -1088,6 +1089,10 @@ int main(int argc, const char *argv[]) {
     handleResize();
     
     if (isPerformingFuzzTest) {
+        struct sigaction tempAction;
+        memset(&tempAction, 0, sizeof(tempAction));
+        tempAction.sa_handler = handleSegmentationFault;
+        sigaction(SIGSEGV, &tempAction, NULL);
         performFuzzTest();
     } else {
         while (true) {
