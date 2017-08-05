@@ -74,12 +74,12 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
     }
     index -= 1;
     if (index < 0) {
-        if (shouldRecordHistory) {
-            addHistoryFrame();
-        }
         textLine_t *tempLine = getPreviousTextLine(cursorTextPos.line);
         if (tempLine == NULL) {
             return;
+        }
+        if (shouldRecordHistory) {
+            addHistoryFrame();
         }
         addHistoryFrame();
         index = tempLine->textAllocation.length;
