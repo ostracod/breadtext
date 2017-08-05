@@ -25,7 +25,7 @@ INSTALLATION
 To install:
 
 make
-sudo mv ./build/breadtext /usr/local/bin/breadtext
+sudo make install
 
 On Linux you will need to install the following packages:
 

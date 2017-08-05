@@ -16,6 +16,9 @@ $(EXECUTABLE): $(OBJECTS)
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
 
+install:
+	mv $(EXECUTABLE) /usr/local/bin/breadtext
+
 clean: 
 	rm $(OBJECTS) $(EXECUTABLE)
 
