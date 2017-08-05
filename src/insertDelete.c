@@ -229,7 +229,9 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
     int64_t tempIndex = getTextLineIndentationEndIndex(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, tempIndex);
     cursorSnapColumn = cursorTextPos.column;
-    setActivityMode(COMMAND_MODE);
+    if (activityMode != TEXT_ENTRY_MODE && activityMode != COMMAND_MODE) {
+        setActivityMode(COMMAND_MODE);
+    }
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
         int64_t tempPosY = getTextLinePosY(tempLine2);
