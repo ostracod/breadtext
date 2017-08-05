@@ -71,8 +71,8 @@ To view controls within BreadText, enter `/help`.
 `Shift + IJKL` = Scroll 10 characters  
 `AZ` = Scroll text one line  
 `Shift + AZ` = Scroll text 10 lines  
-```` = Scroll text to cursor  
-`Shift + ``` = Scroll cursor to text  
+`` ` `` = Scroll text to cursor  
+``Shift + ` `` = Scroll cursor to text  
 `[]` = Scroll to beginning or end of line  
 `{}` = Scroll to beginning or end of file  
 `=` = Scroll to end of indentation  
