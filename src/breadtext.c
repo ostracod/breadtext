@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <time.h>
 #include <curses.h>
 #include <signal.h>
@@ -1011,7 +1012,9 @@ void setShouldUseSystemClipboard(int8_t value) {
 
 int main(int argc, const char *argv[]) {
     
-    srand((unsigned)time(NULL));
+    struct timeval timeValue;
+    gettimeofday(&timeValue, NULL);
+    srand((unsigned)(timeValue.tv_sec * 1000 + timeValue.tv_usec / 1000));
     
     #ifdef __APPLE__
         applicationPlatform = PLATFORM_MAC;
