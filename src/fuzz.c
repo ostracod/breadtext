@@ -8,6 +8,8 @@
 #include "utilities.h"
 #include "breadtext.h"
 #include "textLine.h"
+#include "textAllocation.h"
+#include "display.h"
 #include "fuzz.h"
 
 #define FUZZ_KEY_AMOUNT 20
@@ -57,7 +59,38 @@ int8_t *mallocBufferContents() {
     return output;
 }
 
+void putRandomTextIntoLine(textLine_t *line) {
+    int32_t tempLength = rand() % 100;
+    int8_t tempBuffer[tempLength];
+    int32_t index = 0;
+    while (index < tempLength) {
+        if (rand() % 8 == 0) {
+            tempBuffer[index] = 32;
+        } else {
+            tempBuffer[index] = 32 + rand() % 95;
+        }
+        index += 1;
+    }
+    insertTextIntoTextAllocation(&(line->textAllocation), 0, tempBuffer, tempLength);
+}
+
+void putRandomTextIntoBuffer() {
+    textLine_t *tempLine = rootTextLine;
+    putRandomTextIntoLine(tempLine);
+    int32_t tempAmount = 10 + rand() % 100;
+    int32_t tempCount = 1;
+    while (tempCount < tempAmount) {
+        textLine_t *tempNextLine = createEmptyTextLine();
+        insertTextLineRight(tempLine, tempNextLine);
+        tempLine = tempNextLine;
+        putRandomTextIntoLine(tempLine);
+        tempCount += 1;
+    }
+}
+
 void performFuzzTest() {
+    putRandomTextIntoBuffer();
+    redrawEverything();
     initialBufferContents = mallocBufferContents();
     int32_t tempCount = 0;
     while (tempCount < FUZZ_KEY_AMOUNT) {
