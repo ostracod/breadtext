@@ -1040,7 +1040,12 @@ int main(int argc, const char *argv[]) {
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
         
-    FILE *tempFile = fopen((char *)filePath, "r");
+    FILE *tempFile;
+    if (isPerformingFuzzTest) {
+        tempFile = NULL;
+    } else {
+        tempFile = fopen((char *)filePath, "r");
+    }
     if (tempFile == NULL) {
         if (errno == EACCES) {
             printf("Permission denied.\n");

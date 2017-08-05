@@ -190,9 +190,9 @@ void putRandomTextIntoBuffer() {
     int32_t tempCount = 1;
     while (tempCount < tempAmount) {
         textLine_t *tempNextLine = createEmptyTextLine();
+        putRandomTextIntoLine(tempNextLine);
         insertTextLineRight(tempLine, tempNextLine);
         tempLine = tempNextLine;
-        putRandomTextIntoLine(tempLine);
         tempCount += 1;
     }
 }
