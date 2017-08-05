@@ -17,18 +17,18 @@ If you find any bugs, please report them on GitHub.
 
 BreadText is compatible with Linux and macOS.
 
-To install:
-
-```
-make
-sudo make install
-```
-
-On Linux you will need to install the following packages:
+On Linux systems, you will first need to install xclip and ncurses. (This step is not necessary on macOS.) If you are using Ubuntu, you can run:
 
 ```
 sudo apt-get install xclip
 sudo apt-get install libncurses-dev
+```
+
+Then compile and install BreadText:
+
+```
+make
+sudo make install
 ```
 
 ## Controls
