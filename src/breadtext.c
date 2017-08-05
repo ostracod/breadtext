@@ -49,6 +49,9 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
                 *tempTextLine = getNextTextLine(lineToBeDeleted);
                 if (*tempTextLine == NULL) {
                     *tempTextLine = getPreviousTextLine(lineToBeDeleted);
+                    if (*tempTextLine == NULL) {
+                        markIsSetList[index] = false;
+                    }
                 }
             }
         }
