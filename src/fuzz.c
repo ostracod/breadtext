@@ -232,7 +232,7 @@ void handleSegmentationFault(int signum) {
     endwin();
     int8_t *tempPath = mallocRealpath((int8_t *)"./failure.txt");
     FILE *tempFile = fopen((char *)tempPath, "w");
-    fprintf(tempFile, "%s\n\n", initialBufferContents);
+    fprintf(tempFile, "START OF BUFFER\n%s\nEND OF BUFFER\n\nKEYS\n", initialBufferContents);
     int32_t index = 0;
     while (index < fuzzKeyCount) {
         fuzzKey_t *tempFuzzKey = fuzzKeyList[index];
@@ -245,7 +245,8 @@ void handleSegmentationFault(int signum) {
     }
     int32_t tempLineNumber = getTextLineNumber(cursorTextPos.line);
     int32_t tempIndex = getTextPosIndex(&cursorTextPos);
-    fprintf(tempFile, "\n\nCursor pos: %d %d\n\n%s\n", tempLineNumber, tempIndex, lastBufferContents);
+    fprintf(tempFile, "\n\nCURSOR POS\n%d %d\n\nWINDOW DIMENSIONS\n%d %d\n\nSTART OF BUFFER\n%s\nEND OF BUFFER\n",
+        tempLineNumber, tempIndex, windowWidth, windowHeight, lastBufferContents);
     fclose(tempFile);
     exit(1);
 }
