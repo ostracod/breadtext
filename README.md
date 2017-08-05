@@ -145,7 +145,7 @@ To view controls within BreadText, enter `/help`.
 `isCaseSensitive`: 0 means no, 1 means yes.  
 `shouldUseSystemClipboard`: 0 means no, 1 means yes.
 
-On start-up, breadtext looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
+On start-up, BreadText looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
 
 Example contents of `.breadtextrc` file:
 
