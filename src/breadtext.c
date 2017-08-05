@@ -627,6 +627,11 @@ int8_t handleKey(int32_t key) {
                     setShouldUseSystemClipboard(true);
                     break;
                 }
+                case 'V':
+                {
+                    enterBeginningOfCommand((int8_t *)"gotoLine ");
+                    break;
+                }
                 case '1':
                 {
                     gotoMark(1);
