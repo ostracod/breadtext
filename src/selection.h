@@ -14,6 +14,7 @@ void highlightWord();
 void highlightWordByDelimiter();
 void highlightEnclosureExclusive();
 void highlightEnclosureInclusive();
+void highlightLineContents();
 void changeLine();
 void selectUntilBeginningOfLineInclusive();
 void selectUntilBeginningOfLineExclusive();

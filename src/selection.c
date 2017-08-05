@@ -586,6 +586,25 @@ void highlightEnclosureInclusive() {
     }
 }
 
+void selectInLineHelper(int64_t cursorIndex, int64_t highlightIndex);
+
+void highlightLineContents() {
+    int64_t tempLength = cursorTextPos.line->textAllocation.length;
+    int64_t tempCursorIndex = tempLength - 1;
+    int64_t tempHighlightIndex = 0;
+    while (tempHighlightIndex < tempLength) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempHighlightIndex];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        tempHighlightIndex += 1;
+    }
+    if (tempHighlightIndex > tempCursorIndex) {
+        return;
+    }
+    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
+}
+
 void changeLine() {
     addHistoryFrame();
     textPos_t tempFirstTextPos;
