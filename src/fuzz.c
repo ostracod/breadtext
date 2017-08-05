@@ -128,8 +128,8 @@ fuzzKey_t fuzzKeySet2[] = {
 
 fuzzKey_t *fuzzKeyList[FUZZ_KEY_AMOUNT];
 int32_t fuzzKeyCount = 0;
-int8_t *initialBufferContents;
-int8_t *lastBufferContents;
+int8_t *initialBufferContents = NULL;
+int8_t *lastBufferContents = NULL;
 
 int8_t *mallocBufferContents() {
     int64_t tempLength = 0;
@@ -211,6 +211,9 @@ fuzzKey_t *getNextFuzzKey() {
     }
     fuzzKeyList[fuzzKeyCount] = tempFuzzKey;
     fuzzKeyCount += 1;
+    if (lastBufferContents != NULL) {
+        free(lastBufferContents);
+    }
     lastBufferContents = mallocBufferContents();
     return tempFuzzKey;
 }
