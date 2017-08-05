@@ -1,11 +1,11 @@
 
-# BREADTEXT
+# BreadText
 
 A terminal-based text editor by Jack Eisenmann
 
 If you find any bugs, please report them on GitHub.
 
-## DESIGN GOALS
+## Design Goals
 
 * Focus on editing code and plain text
 * Stay lightweight and fast
@@ -13,7 +13,7 @@ If you find any bugs, please report them on GitHub.
 * Use the system-wide clipboard by default
 * Bread
 
-## INSTALLATION
+## Installation
 
 BreadText is compatible with Linux and macOS.
 
@@ -31,7 +31,7 @@ sudo apt-get install xclip
 sudo apt-get install libncurses-dev
 ```
 
-## CONTROLS
+## Controls
 
 To view controls within BreadText, enter "/help".
 
