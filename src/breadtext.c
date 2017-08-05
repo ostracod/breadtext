@@ -193,6 +193,8 @@ void handleResize() {
     redrawEverything();
 }
 
+void startRecordingMacro();
+void stopRecordingMacro();
 void playMacro();
 void setShouldUseSystemClipboard(int8_t value);
 
@@ -489,12 +491,21 @@ int8_t handleKey(int32_t key) {
                 case 'M':
                 {
                     if (isRecordingMacro) {
-                        notifyUser((int8_t *)"Finished recording.");
+                        // Test code.
+                        /*
+                        endwin();
+                        int32_t index = 0;
+                        while (index < macroKeyListLength) {
+                            int32_t tempKey = macroKeyList[index];
+                            printf("%c\n", (char)tempKey);
+                            index += 1;
+                        }
+                        exit(0);
+                        */
+                        stopRecordingMacro();
                     } else {
-                        macroKeyListLength = 0;
-                        notifyUser((int8_t *)"Recording macro.");
+                        startRecordingMacro();
                     }
-                    isRecordingMacro = !isRecordingMacro;
                     break;
                 }
                 case '>':
@@ -764,14 +775,12 @@ int32_t getNextKey() {
         } else {
             output = getch();
         }
-        if (isRecordingMacro && !(output == 'M' && activityMode != TEXT_ENTRY_MODE)) {
+        if (isRecordingMacro) {
             if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
-                isRecordingMacro = false;
+                stopRecordingMacro();
             } else {
-                if (!(output == 'm' && activityMode != TEXT_ENTRY_MODE)) {
-                    macroKeyList[macroKeyListLength] = output;
-                    macroKeyListLength += 1;
-                }
+                macroKeyList[macroKeyListLength] = output;
+                macroKeyListLength += 1;
             }
         }
     }
@@ -781,7 +790,24 @@ int32_t getNextKey() {
     return output;
 }
 
+void startRecordingMacro() {
+    macroKeyListLength = 0;
+    isRecordingMacro = true;
+    notifyUser((int8_t *)"Recording macro.");
+}
+
+void stopRecordingMacro() {
+    if (macroKeyList[macroKeyListLength - 1] == 'M') {
+        macroKeyListLength -= 1;
+    }
+    isRecordingMacro = false;
+    notifyUser((int8_t *)"Finished recording.");
+}
+
 void playMacro() {
+    if (isPlayingMacro) {
+        return;
+    }
     isPlayingMacro = true;
     macroIndex = 0;
 }
