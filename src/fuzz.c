@@ -21,7 +21,9 @@ fuzzKey_t fuzzKeySet1[] = {
     {KEY_LEFT, (int8_t *)"LEFT"},
     {KEY_RIGHT, (int8_t *)"RIGHT"},
     {KEY_UP, (int8_t *)"UP"},
-    {KEY_DOWN, (int8_t *)"DOWN"}
+    {KEY_DOWN, (int8_t *)"DOWN"},
+    {'\n', (int8_t *)"NEWLINE"},
+    {127, (int8_t *)"BACKSPACE"}
 };
 
 fuzzKey_t fuzzKeySet2[] = {
