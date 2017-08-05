@@ -7,7 +7,8 @@ typedef struct fuzzKey {
     int8_t *name;
 } fuzzKey_t;
 
-void performFuzzTest();
+fuzzKey_t *getNextFuzzKey();
+void startFuzzTest();
 void handleSegmentationFault(int signum);
 
 // FUZZ_HEADER_FILE

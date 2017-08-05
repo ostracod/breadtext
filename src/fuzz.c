@@ -12,11 +12,116 @@
 #include "display.h"
 #include "fuzz.h"
 
-#define FUZZ_KEY_AMOUNT 20
+#define FUZZ_KEY_AMOUNT 500
 
-fuzzKey_t fuzzKeySet[] = {
+fuzzKey_t fuzzKeySet1[] = {
     {'t', NULL},
-    {27, (int8_t *)"ESC"}
+    {'h', NULL},
+    {27, (int8_t *)"ESC"},
+    {KEY_LEFT, (int8_t *)"LEFT"},
+    {KEY_RIGHT, (int8_t *)"RIGHT"},
+    {KEY_UP, (int8_t *)"UP"},
+    {KEY_DOWN, (int8_t *)"DOWN"}
+};
+
+fuzzKey_t fuzzKeySet2[] = {
+    {' ', (int8_t *)"SPACE"},
+    {'0', NULL},
+    {'1', NULL},
+    {'2', NULL},
+    {'3', NULL},
+    {'4', NULL},
+    {'5', NULL},
+    {'6', NULL},
+    {'7', NULL},
+    {'8', NULL},
+    {'9', NULL},
+    {'a', NULL},
+    {'b', NULL},
+    {'c', NULL},
+    {'d', NULL},
+    {'e', NULL},
+    {'f', NULL},
+    {'g', NULL},
+    {'h', NULL},
+    {'i', NULL},
+    {'j', NULL},
+    {'k', NULL},
+    {'l', NULL},
+    {'m', NULL},
+    {'n', NULL},
+    {'o', NULL},
+    {'p', NULL},
+    {'q', NULL},
+    {'r', NULL},
+    {'s', NULL},
+    {'t', NULL},
+    {'u', NULL},
+    {'v', NULL},
+    {'w', NULL},
+    {'x', NULL},
+    {'y', NULL},
+    {'z', NULL},
+    {'A', NULL},
+    {'B', NULL},
+    {'C', NULL},
+    {'D', NULL},
+    {'E', NULL},
+    {'F', NULL},
+    {'G', NULL},
+    {'H', NULL},
+    {'I', NULL},
+    {'J', NULL},
+    {'K', NULL},
+    {'L', NULL},
+    {'M', NULL},
+    {'N', NULL},
+    {'O', NULL},
+    {'P', NULL},
+    {'Q', NULL},
+    {'R', NULL},
+    {'S', NULL},
+    {'T', NULL},
+    {'U', NULL},
+    {'V', NULL},
+    {'W', NULL},
+    {'X', NULL},
+    {'Y', NULL},
+    {'Z', NULL},
+    {'`', NULL},
+    {'~', NULL},
+    {'!', NULL},
+    {'@', NULL},
+    {'#', NULL},
+    {'$', NULL},
+    {'%', NULL},
+    {'^', NULL},
+    {'&', NULL},
+    {'*', NULL},
+    {'(', NULL},
+    {')', NULL},
+    {'-', NULL},
+    {'_', NULL},
+    {'=', NULL},
+    {'+', NULL},
+    {'[', NULL},
+    {'{', NULL},
+    {']', NULL},
+    {'}', NULL},
+    {'\\', NULL},
+    {'|', NULL},
+    {';', NULL},
+    {':', NULL},
+    {'\'', NULL},
+    {'"', NULL},
+    {',', NULL},
+    {'<', NULL},
+    {'.', NULL},
+    {'>', NULL},
+    {'/', NULL},
+    {'?', NULL},
+    {'\t', (int8_t *)"TAB"},
+    {KEY_BTAB, (int8_t *)"BTAB"}
 };
 
 fuzzKey_t *fuzzKeyList[FUZZ_KEY_AMOUNT];
@@ -88,23 +193,35 @@ void putRandomTextIntoBuffer() {
     }
 }
 
-void performFuzzTest() {
+fuzzKey_t *getNextFuzzKey() {
+    if (fuzzKeyCount >= FUZZ_KEY_AMOUNT) {
+        endwin();
+        exit(0);
+    }
+    sleepMilliseconds(1);
+    fuzzKey_t *tempFuzzKey;
+    if (rand() % 5 == 0) {
+        int32_t index = rand() % (sizeof(fuzzKeySet1) / sizeof(*fuzzKeySet1));
+        tempFuzzKey = fuzzKeySet1 + index;
+    } else {
+        int32_t index = rand() % (sizeof(fuzzKeySet2) / sizeof(*fuzzKeySet2));
+        tempFuzzKey = fuzzKeySet2 + index;
+    }
+    fuzzKeyList[fuzzKeyCount] = tempFuzzKey;
+    fuzzKeyCount += 1;
+    lastBufferContents = mallocBufferContents();
+    return tempFuzzKey;
+}
+
+void startFuzzTest() {
+    struct sigaction tempAction;
+    memset(&tempAction, 0, sizeof(tempAction));
+    tempAction.sa_handler = handleSegmentationFault;
+    sigaction(SIGSEGV, &tempAction, NULL);
+    shouldUseSystemClipboard = false;
     putRandomTextIntoBuffer();
     redrawEverything();
     initialBufferContents = mallocBufferContents();
-    int32_t tempCount = 0;
-    while (tempCount < FUZZ_KEY_AMOUNT) {
-        int32_t index = rand() % (sizeof(fuzzKeySet) / sizeof(*fuzzKeySet));
-        fuzzKey_t *tempFuzzKey = fuzzKeySet + index;
-        fuzzKeyList[fuzzKeyCount] = tempFuzzKey;
-        fuzzKeyCount += 1;
-        lastBufferContents = mallocBufferContents();
-        handleKey(tempFuzzKey->key);
-        sleepMilliseconds(1);
-        tempCount += 1;
-    }
-    // TEST CODE.
-    handleSegmentationFault(0);
 }
 
 void handleSegmentationFault(int signum) {
@@ -124,7 +241,9 @@ void handleSegmentationFault(int signum) {
         }
         index += 1;
     }
-    fprintf(tempFile, "\n\n%s\n", lastBufferContents);
+    int32_t tempLineNumber = getTextLineNumber(cursorTextPos.line);
+    int32_t tempIndex = getTextPosIndex(&cursorTextPos);
+    fprintf(tempFile, "\n\nCursor pos: %d %d\n\n%s\n", tempLineNumber, tempIndex, lastBufferContents);
     fclose(tempFile);
     exit(1);
 }

@@ -125,6 +125,9 @@ void setActivityMode(int8_t mode) {
 }
 
 void saveFile(int8_t shouldCheckForModifications) {
+    if (isPerformingFuzzTest) {
+        return;
+    }
     struct stat attributes;
     if (shouldCheckForModifications) {
         int32_t tempResult = stat((char *)filePath, &attributes);
@@ -755,7 +758,12 @@ int32_t getNextKey() {
         output = macroKeyList[macroIndex];
         macroIndex += 1;
     } else {
-        output = getch();
+        if (isPerformingFuzzTest) {
+            fuzzKey_t *tempFuzzKey = getNextFuzzKey();
+            output = tempFuzzKey->key;
+        } else {
+            output = getch();
+        }
         if (isRecordingMacro && !(output == 'M' && activityMode != TEXT_ENTRY_MODE)) {
             if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
                 isRecordingMacro = false;
@@ -960,7 +968,11 @@ int8_t checkTextBufferHygiene() {
 }
 
 void setShouldUseSystemClipboard(int8_t value) {
-    shouldUseSystemClipboard = value;
+    if (isPerformingFuzzTest) {
+        shouldUseSystemClipboard = false;
+    } else {
+        shouldUseSystemClipboard = value;
+    }
     if (shouldUseSystemClipboard) {
         notifyUser((int8_t *)"Using system clipboard.");
     } else {
@@ -1089,41 +1101,36 @@ int main(int argc, const char *argv[]) {
     handleResize();
     
     if (isPerformingFuzzTest) {
-        struct sigaction tempAction;
-        memset(&tempAction, 0, sizeof(tempAction));
-        tempAction.sa_handler = handleSegmentationFault;
-        sigaction(SIGSEGV, &tempAction, NULL);
-        performFuzzTest();
-    } else {
-        while (true) {
-            #if IS_IN_DEBUG_MODE
-                textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
-                int64_t tempLength = tempLine1->textAllocation.length;
-                int8_t tempBuffer[tempLength];
-                copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
-            #endif
-            
-            int32_t tempKey = getNextKey();
-            int8_t tempResult = handleKey(tempKey);
-            if (tempResult) {
-                break;
-            }
-            
-            #if IS_IN_DEBUG_MODE
-                textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
-                if (tempLength != tempLine2->textAllocation.length
-                    || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
-                    endwin();
-                    printf("FIRST LINE CHANGED.\n");
-                    printf("CHARACTER TYPED: %c\n", tempKey);
-                    printf("ACTIVITY MODE: %d\n", activityMode);
-                    exit(0);
-                }
-            #endif
+        startFuzzTest();
+    }
+    
+    while (true) {
+        #if IS_IN_DEBUG_MODE
+            textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
+            int64_t tempLength = tempLine1->textAllocation.length;
+            int8_t tempBuffer[tempLength];
+            copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
+        #endif
+        
+        int32_t tempKey = getNextKey();
+        int8_t tempResult = handleKey(tempKey);
+        if (tempResult && !isPerformingFuzzTest) {
+            break;
         }
+        
+        #if IS_IN_DEBUG_MODE
+            textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
+            if (tempLength != tempLine2->textAllocation.length
+                || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
+                endwin();
+                printf("FIRST LINE CHANGED.\n");
+                printf("CHARACTER TYPED: %c\n", tempKey);
+                printf("ACTIVITY MODE: %d\n", activityMode);
+                exit(0);
+            }
+        #endif
     }
     
     endwin();
-    
     return 0;
 }
