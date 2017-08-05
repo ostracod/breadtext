@@ -248,6 +248,7 @@ void handleSegmentationFault(int signum) {
         }
         index += 1;
     }
+    fflush(tempFile);
     int32_t tempLineNumber = getTextLineNumber(cursorTextPos.line);
     int32_t tempIndex = getTextPosIndex(&cursorTextPos);
     fprintf(tempFile, "\n\nCURSOR POS\n%d %d\n\nWINDOW DIMENSIONS\n%d %d\n\nSTART OF BUFFER\n%s\nEND OF BUFFER\n",
