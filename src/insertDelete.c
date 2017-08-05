@@ -159,12 +159,12 @@ void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     if (index >= tempLength) {
-        if (shouldAddHistoryFrame) {
-            addHistoryFrame();
-        }
         textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
         if (tempLine == NULL) {
             return;
+        }
+        if (shouldAddHistoryFrame) {
+            addHistoryFrame();
         }
         if (!textLineOnlyContainsWhitespace(tempLine)) {        
             recordTextLineDeleted(cursorTextPos.line);
