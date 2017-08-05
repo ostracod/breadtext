@@ -23,7 +23,9 @@ fuzzKey_t fuzzKeySet1[] = {
     {KEY_UP, (int8_t *)"UP"},
     {KEY_DOWN, (int8_t *)"DOWN"},
     {'\n', (int8_t *)"NEWLINE"},
-    {127, (int8_t *)"BACKSPACE"}
+    {127, (int8_t *)"BACKSPACE"},
+    {'u', NULL},
+    {'U', NULL}
 };
 
 fuzzKey_t fuzzKeySet2[] = {
@@ -202,7 +204,7 @@ fuzzKey_t *getNextFuzzKey() {
     }
     sleepMilliseconds(1);
     fuzzKey_t *tempFuzzKey;
-    if (rand() % 5 == 0) {
+    if (rand() % 4 == 0) {
         int32_t index = rand() % (sizeof(fuzzKeySet1) / sizeof(*fuzzKeySet1));
         tempFuzzKey = fuzzKeySet1 + index;
     } else {
