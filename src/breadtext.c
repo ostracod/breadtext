@@ -33,6 +33,7 @@ int8_t isPlayingMacro = false;
 int32_t lastKey = 0;
 int8_t *initialFileContents = NULL;
 int64_t initialFileSize;
+int64_t keyPressCount = 0;
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted == topTextLine) {
@@ -773,6 +774,12 @@ int8_t handleKey(int32_t key) {
 }
 
 int32_t getNextKey() {
+    keyPressCount += 1;
+    if (isPerformingFuzzTest) {
+        if (keyPressCount > 20000) {
+            exit(0);
+        }
+    }
     int32_t output;
     if (macroIndex >= macroKeyListLength) {
         isPlayingMacro = false;
