@@ -14,34 +14,10 @@
 #include "insertDelete.h"
 #include "breadtext.h"
 
-void insertCharacterBeforeCursor(int8_t character) {
-    lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
-    isStartOfNonconsecutiveEscapeSequence = (character == ',' && !historyFrameIsConsecutive);
+void insertCharacterBeforeCursorHelper(int8_t character) {
     int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
     int64_t index = getTextPosIndex(&cursorTextPos);
-    if (isStartOfNonconsecutiveEscapeSequence) {
-        if (firstNonconsecutiveEscapeSequenceAction.text != NULL) {
-            cleanUpHistoryAction(&firstNonconsecutiveEscapeSequenceAction);
-        }
-        firstNonconsecutiveEscapeSequenceAction = createHistoryActionFromTextLine(cursorTextPos.line, HISTORY_ACTION_DELETE);
-        nonconsecutiveEscapeSequencePreviousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
-    } else {
-        if (lastIsStartOfNonconsecutiveEscapeSequence) {
-            addNonconsecutiveEscapeSequenceAction(false);
-        } else if (!historyFrameIsConsecutive) {
-            addHistoryFrame();
-            recordTextLineDeleted(cursorTextPos.line);
-        }
-    }
     insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, &character, 1);
-    if (!isStartOfNonconsecutiveEscapeSequence) {
-        if (historyFrameIsConsecutive) {
-            updateHistoryFrameInsertAction(cursorTextPos.line);
-        } else {
-            recordTextLineInserted(cursorTextPos.line);
-            historyFrameIsConsecutive = true;
-        }
-    }
     cursorTextPos.column += 1;
     if (cursorTextPos.column >= viewPortWidth) {
         cursorTextPos.column = 0;
@@ -59,7 +35,48 @@ void insertCharacterBeforeCursor(int8_t character) {
         }
         displayCursor();
     }
+}
+
+void insertCharacterBeforeCursor(int8_t character) {
+    lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
+    isStartOfNonconsecutiveEscapeSequence = false;
+    historyFrameIsConsecutive = false;
+    if (lastIsStartOfNonconsecutiveEscapeSequence) {
+        addNonconsecutiveEscapeSequenceAction(true);
+    }
+    addHistoryFrame();
+    recordTextLineDeleted(cursorTextPos.line);
+    insertCharacterBeforeCursorHelper(character);
+    recordTextLineInserted(cursorTextPos.line);
+    textBufferIsDirty = true;
+    finishCurrentHistoryFrame();
+}
+
+void insertTextEntryModeCharacterBeforeCursor(int8_t character) {
+    lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
+    isStartOfNonconsecutiveEscapeSequence = (character == ',' && !historyFrameIsConsecutive);
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        if (firstNonconsecutiveEscapeSequenceAction.text != NULL) {
+            cleanUpHistoryAction(&firstNonconsecutiveEscapeSequenceAction);
+        }
+        firstNonconsecutiveEscapeSequenceAction = createHistoryActionFromTextLine(cursorTextPos.line, HISTORY_ACTION_DELETE);
+        nonconsecutiveEscapeSequencePreviousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
+    } else {
+        if (lastIsStartOfNonconsecutiveEscapeSequence) {
+            addNonconsecutiveEscapeSequenceAction(false);
+        } else if (!historyFrameIsConsecutive) {
+            addHistoryFrame();
+            recordTextLineDeleted(cursorTextPos.line);
+        }
+    }
+    insertCharacterBeforeCursorHelper(character);
     if (!isStartOfNonconsecutiveEscapeSequence) {
+        if (historyFrameIsConsecutive) {
+            updateHistoryFrameInsertAction(cursorTextPos.line);
+        } else {
+            recordTextLineInserted(cursorTextPos.line);
+            historyFrameIsConsecutive = true;
+        }
         textBufferIsDirty = true;
         finishCurrentHistoryFrame();
     }
