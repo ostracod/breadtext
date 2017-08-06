@@ -871,6 +871,10 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
         shouldUseSystemClipboard = value;
         output = true;
     }
+    if (strcmp((char *)name, "shouldHighlightSyntax") == 0) {
+        shouldHighlightSyntax = value;
+        output = true;
+    }
     return output;
 }
 
@@ -1139,8 +1143,9 @@ int main(int argc, const char *argv[]) {
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;
     shouldUseSystemClipboard = true;
+    shouldHighlightSyntax = true;
     
-    processRcFile();    
+    processRcFile();
     
     window = initscr();
     noecho();
