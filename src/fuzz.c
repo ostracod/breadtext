@@ -18,6 +18,7 @@ fuzzKey_t fuzzKeySet1[] = {
     {'t', NULL},
     {'h', NULL},
     {27, (int8_t *)"ESC"},
+    {27, (int8_t *)"ESC"},
     {KEY_LEFT, (int8_t *)"LEFT"},
     {KEY_RIGHT, (int8_t *)"RIGHT"},
     {KEY_UP, (int8_t *)"UP"},
