@@ -143,7 +143,7 @@ To view controls within BreadText, enter `/help`.
 `shouldUseHardTabs`: 0 means no, 1 means yes.  
 `indentationWidth`: The number of spaces to use for soft tabs.  
 `isCaseSensitive`: 0 means no, 1 means yes.  
-`shouldUseSystemClipboard`: 0 means no, 1 means yes.
+`shouldUseSystemClipboard`: 0 means no, 1 means yes.  
 `shouldHighlightSyntax`: 0 means no, 1 means yes.
 
 On start-up, BreadText looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
