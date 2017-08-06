@@ -25,7 +25,8 @@ fuzzKey_t fuzzKeySet1[] = {
     {'\n', (int8_t *)"NEWLINE"},
     {127, (int8_t *)"BACKSPACE"},
     {'u', NULL},
-    {'U', NULL}
+    {'U', NULL},
+    {',', NULL}
 };
 
 fuzzKey_t fuzzKeySet2[] = {

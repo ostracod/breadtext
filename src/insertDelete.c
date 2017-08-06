@@ -15,6 +15,8 @@
 #include "breadtext.h"
 
 void insertCharacterBeforeCursor(int8_t character) {
+    lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
+    isStartOfNonconsecutiveEscapeSequence = (character == ',' && !historyFrameIsConsecutive);
     int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
     int64_t index = getTextPosIndex(&cursorTextPos);
     if (isStartOfNonconsecutiveEscapeSequence) {
@@ -69,8 +71,10 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
         decreaseSelectionIndentationLevel();
         return;
     }
-    if (isStartOfNonconsecutiveEscapeSequence) {
-        addNonconsecutiveEscapeSequenceAction(true);
+    if (shouldRecordHistory) {
+        if (isStartOfNonconsecutiveEscapeSequence) {
+            addNonconsecutiveEscapeSequenceAction(true);
+        }
     }
     index -= 1;
     if (index < 0) {

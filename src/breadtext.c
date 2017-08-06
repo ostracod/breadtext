@@ -330,8 +330,6 @@ int8_t handleKey(int32_t key) {
                 isStartOfNonconsecutiveEscapeSequence = false;
                 setActivityMode(COMMAND_MODE);
             } else if (key >= 32 && key <= 126) {
-                lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
-                isStartOfNonconsecutiveEscapeSequence = (key == ',' && !historyFrameIsConsecutive);
                 insertCharacterBeforeCursor((int8_t)key);
             } else {
                 isStartOfNonconsecutiveEscapeSequence = false;
