@@ -23,6 +23,7 @@
 #include "manipulation.h"
 #include "textCommand.h"
 #include "fuzz.h"
+#include "syntax.h"
 #include "breadtext.h"
 
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
@@ -873,6 +874,7 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
     }
     if (strcmp((char *)name, "shouldHighlightSyntax") == 0) {
         shouldHighlightSyntax = value;
+        updateSyntaxDefinition();
         output = true;
     }
     return output;
@@ -1058,7 +1060,8 @@ int main(int argc, const char *argv[]) {
     }
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
-        
+    syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
+    
     FILE *tempFile;
     if (isPerformingFuzzTest) {
         tempFile = NULL;
@@ -1144,6 +1147,8 @@ int main(int argc, const char *argv[]) {
     lastIsStartOfNonconsecutiveEscapeSequence = false;
     shouldUseSystemClipboard = true;
     shouldHighlightSyntax = true;
+    commentPrefix = NULL;
+    keywordList = NULL;
     
     processRcFile();
     
@@ -1156,6 +1161,7 @@ int main(int argc, const char *argv[]) {
     init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
     init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
     handleResize();
+    updateSyntaxDefinition();
     
     if (isPerformingFuzzTest) {
         startFuzzTest();

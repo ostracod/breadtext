@@ -15,6 +15,7 @@
 #include "selection.h"
 #include "manipulation.h"
 #include "secret.h"
+#include "syntax.h"
 #include "textCommand.h"
 #include "breadtext.h"
 
@@ -271,6 +272,7 @@ void executeTextCommand() {
         filePath = mallocRealpath(tempTermList[1]);
         fileLastModifiedTime = TIME_NEVER;
         clearInitialFileContents();
+        updateSyntaxDefinition();
         setActivityMode(PREVIOUS_MODE);
         notifyUser((int8_t *)"Changed file path.");
         return;

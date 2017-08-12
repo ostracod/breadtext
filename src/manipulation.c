@@ -395,19 +395,7 @@ void toggleLineComment(textLine_t *line, int8_t *commentFlag) {
 
 void toggleSelectionComment() {
     addHistoryFrame();
-    int8_t *tempExtension = NULL;
-    int32_t index = strlen((char *)filePath) - 1;
-    while (index >= 0) {
-        int8_t tempCharacter = filePath[index];
-        if (tempCharacter == '/') {
-            break;
-        }
-        if (tempCharacter == '.') {
-            tempExtension = filePath + index + 1;
-            break;
-        }
-        index -= 1;
-    }
+    int8_t *tempExtension = getFileExtension(filePath);
     int8_t *tempCommentFlag;
     if (tempExtension == NULL) {
         tempCommentFlag = commentFlag1;

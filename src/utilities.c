@@ -202,10 +202,24 @@ void addToHexadecimalText(int8_t *text, int64_t offset) {
     }
 }
 
-void sleepMilliseconds(int32_t milliseconds)
-{
+void sleepMilliseconds(int32_t milliseconds) {
     struct timespec ts;
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
     nanosleep(&ts, NULL);
+}
+
+int8_t *getFileExtension(int8_t *path) {
+    int32_t index = strlen((char *)path) - 1;
+    while (index >= 0) {
+        int8_t tempCharacter = path[index];
+        if (tempCharacter == '/') {
+            return NULL;
+        }
+        if (tempCharacter == '.') {
+            return path + index + 1;
+        }
+        index -= 1;
+    }
+    return NULL;
 }

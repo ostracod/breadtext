@@ -24,6 +24,7 @@ void systemCopyClipboardFile();
 void systemPasteClipboardFile();
 void addToHexadecimalText(int8_t *text, int64_t offset);
 void sleepMilliseconds(int32_t milliseconds);
+int8_t *getFileExtension(int8_t *path);
 
 // UTILITIES_HEADER_FILE
 #endif
