@@ -201,7 +201,26 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
     int8_t *tempHighlighting = malloc(allocation->length);
     int64_t index = 0;
     while (index < allocation->length) {
-        tempHighlighting[index] = index % 4;
+        tempHighlighting[index] = DEFAULT_COLOR;
+        index += 1;
+    }
+    int32_t commentPrefixLength;
+    if (commentPrefix != NULL) {
+        commentPrefixLength = strlen((char *)commentPrefix);
+    }
+    int8_t isInComment = false;
+    index = 0;
+    while (index < allocation->length) {
+        if (commentPrefix != NULL && !isInComment) {
+            if (index + commentPrefixLength <= allocation->length) {
+                if (equalData(allocation->text + index, commentPrefix, commentPrefixLength)) {
+                    isInComment = true;
+                }
+            }
+        }
+        if (isInComment) {
+            tempHighlighting[index] = COMMENT_COLOR;
+        }
         index += 1;
     }
     allocation->syntaxHighlighting = tempHighlighting;
