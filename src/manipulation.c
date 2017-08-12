@@ -13,6 +13,7 @@
 #include "motion.h"
 #include "insertDelete.h"
 #include "selection.h"
+#include "syntax.h"
 #include "manipulation.h"
 #include "breadtext.h"
 
@@ -397,19 +398,23 @@ void toggleSelectionComment() {
     addHistoryFrame();
     int8_t *tempExtension = getFileExtension(filePath);
     int8_t *tempCommentFlag;
-    if (tempExtension == NULL) {
-        tempCommentFlag = commentFlag1;
+    if (commentPrefix != NULL) {
+        tempCommentFlag = commentPrefix;
     } else {
-        if (strcmp((char *)tempExtension, "py") == 0) {
-            tempCommentFlag = commentFlag2;
-        } else if (strcmp((char *)tempExtension, "sh") == 0) {
-            tempCommentFlag = commentFlag2;
-        } else if (strcmp((char *)tempExtension, "pl") == 0) {
-            tempCommentFlag = commentFlag2;
-        } else if (strcmp((char *)tempExtension, "rb") == 0) {
-            tempCommentFlag = commentFlag2;
-        } else {
+        if (tempExtension == NULL) {
             tempCommentFlag = commentFlag1;
+        } else {
+            if (strcmp((char *)tempExtension, "py") == 0) {
+                tempCommentFlag = commentFlag2;
+            } else if (strcmp((char *)tempExtension, "sh") == 0) {
+                tempCommentFlag = commentFlag2;
+            } else if (strcmp((char *)tempExtension, "pl") == 0) {
+                tempCommentFlag = commentFlag2;
+            } else if (strcmp((char *)tempExtension, "rb") == 0) {
+                tempCommentFlag = commentFlag2;
+            } else {
+                tempCommentFlag = commentFlag1;
+            }
         }
     }
     textPos_t tempFirstTextPos;

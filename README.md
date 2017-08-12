@@ -33,6 +33,8 @@ make
 sudo make install
 ```
 
+Hint: You may want to adjust the brightness levels of ANSI colors in your terminal.
+
 ## Controls
 
 To view controls within BreadText, enter `/help`.
