@@ -22,6 +22,7 @@ void removeAllSyntax() {
             index += 1;
         }
         free(keywordList);
+        keywordList = NULL;
     }
     hasFoundSyntaxFile = false;
 }
@@ -213,6 +214,7 @@ void updateSyntaxDefinition() {
         fclose(tempFile);
     }
     free(tempFilePath);
+    redrawEverything();
 }
 
 void generateSyntaxHighlighting(textAllocation_t *allocation) {
