@@ -18,6 +18,8 @@ $(EXECUTABLE): $(OBJECTS)
 
 install:
 	mv $(EXECUTABLE) /usr/local/bin/breadtext
+	mkdir -p ~/.breadtextsyntax
+	cp ./syntax/* ~/.breadtextsyntax
 
 clean: 
 	rm $(OBJECTS) $(EXECUTABLE)
