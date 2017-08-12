@@ -86,6 +86,29 @@ void sortKeywordList() {
     }
 }
 
+int8_t isKeyword(int8_t *word) {
+    if (keywordList == NULL) {
+        return false;
+    }
+    int32_t tempStartIndex = 0;
+    int32_t tempEndIndex = keywordListLength;
+    while (true) {
+        if (tempStartIndex >= tempEndIndex) {
+            return false;
+        }
+        int32_t index = (tempStartIndex + tempEndIndex) / 2;
+        int8_t *tempKeyword = keywordList[index];
+        int32_t tempResult = strcmp((char *)word, (char *)tempKeyword);
+        if (tempResult == 0) {
+            return true;
+        } else if (tempResult > 0) {
+            tempStartIndex = index + 1;
+        } else {
+            tempEndIndex = index;
+        }
+    }
+}
+
 void processSyntaxFileDirective(int8_t *line1, int8_t *line2) {
     if (strcmp((char *)line1, "COMMENT") == 0) {
         commentPrefix = malloc(strlen((char *)line2) + 1);
@@ -259,6 +282,30 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
                         index += 1;
                     }
                 }
+            }
+        } else if (keywordList != NULL && !isWordCharacter(tempLastCharacter) && isWordCharacter(tempCharacter)) {
+            int64_t tempLength = 1;
+            int64_t tempIndex = index + 1;
+            while (tempIndex < allocation->length) {
+                int8_t tempCharacter = allocation->text[tempIndex];
+                if (!isWordCharacter(tempCharacter)) {
+                    break;
+                }
+                tempLength += 1;
+                tempIndex += 1;
+            }
+            int8_t tempBuffer[tempLength + 1];
+            copyData(tempBuffer, allocation->text + index, tempLength);
+            tempBuffer[tempLength] = 0;
+            if (isKeyword(tempBuffer)) {
+                int64_t tempCount = 0;
+                while (tempCount < tempLength) {
+                    tempHighlighting[index] = KEYWORD_COLOR;
+                    tempCount += 1;
+                    index += 1;
+                }
+            } else {
+                index += tempLength;
             }
         } else {
             index += 1;
