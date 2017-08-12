@@ -23,6 +23,7 @@ void removeAllSyntax() {
         }
         free(keywordList);
     }
+    hasFoundSyntaxFile = false;
 }
 
 int8_t syntaxFileMatchesExtension(int8_t *fileName, int8_t *extension) {
@@ -157,6 +158,7 @@ void updateSyntaxDefinition() {
     tempFilePath[tempLength1 + 1 + tempLength2] = 0;
     FILE *tempFile = fopen((char *)tempFilePath, "r");
     if (tempFile != NULL) {
+        hasFoundSyntaxFile = true;
         while (true) {
             int8_t tempShouldBreak = true;
             int8_t *tempText1 = NULL;
@@ -194,7 +196,7 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
     if (allocation->syntaxHighlighting != NULL) {
         free(allocation->syntaxHighlighting);
     }
-    if (!shouldHighlightSyntax || allocation->length <= 0) {
+    if (!shouldHighlightSyntax || !hasFoundSyntaxFile || allocation->length <= 0) {
         allocation->syntaxHighlighting = NULL;
         return;
     }
@@ -208,20 +210,41 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
     if (commentPrefix != NULL) {
         commentPrefixLength = strlen((char *)commentPrefix);
     }
-    int8_t isInComment = false;
     index = 0;
     while (index < allocation->length) {
-        if (commentPrefix != NULL && !isInComment) {
+        if (commentPrefix != NULL) {
             if (index + commentPrefixLength <= allocation->length) {
                 if (equalData(allocation->text + index, commentPrefix, commentPrefixLength)) {
-                    isInComment = true;
+                    while (index < allocation->length) {
+                        tempHighlighting[index] = COMMENT_COLOR;
+                        index += 1;
+                    }
+                    break;
                 }
             }
         }
-        if (isInComment) {
-            tempHighlighting[index] = COMMENT_COLOR;
+        int8_t tempCharacter = allocation->text[index];
+        int8_t tempLastCharacter;
+        if (index > 0) {
+            tempLastCharacter = allocation->text[index - 1];
+        } else {
+            tempLastCharacter = 0;
         }
-        index += 1;
+        if ((tempCharacter >= '0' && tempCharacter <= '9')
+                || (tempCharacter == '.' && !isWordCharacter(tempLastCharacter))) {
+            tempHighlighting[index] = LITERAL_COLOR;
+            index += 1;
+            while (index < allocation->length) {
+                int8_t tempCharacter = allocation->text[index];
+                if (!isWordCharacter(tempCharacter) && tempCharacter != '.') {
+                    break;
+                }
+                tempHighlighting[index] = LITERAL_COLOR;
+                index += 1;
+            }
+        } else {
+            index += 1;
+        }
     }
     allocation->syntaxHighlighting = tempHighlighting;
 }

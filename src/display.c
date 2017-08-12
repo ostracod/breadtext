@@ -200,7 +200,11 @@ int8_t getCursorCharacter() {
 int8_t getCursorColorIndex() {
     int64_t index = getTextPosIndex(&cursorTextPos);
     if (index < cursorTextPos.line->textAllocation.length) {
-        return cursorTextPos.line->textAllocation.syntaxHighlighting[index];
+        if (cursorTextPos.line->textAllocation.syntaxHighlighting == NULL) {
+            return DEFAULT_COLOR;
+        } else {
+            return cursorTextPos.line->textAllocation.syntaxHighlighting[index];
+        }
     } else {
         return DEFAULT_COLOR;
     }
