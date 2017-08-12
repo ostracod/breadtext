@@ -1,6 +1,8 @@
 
 # BreadText
 
+![BreadText logo](logo.png)
+
 A terminal-based text editor by Jack Eisenmann
 
 If you find any bugs, please report them on GitHub.
