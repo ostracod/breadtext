@@ -242,6 +242,24 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
                 tempHighlighting[index] = LITERAL_COLOR;
                 index += 1;
             }
+        } else if (tempCharacter == '"' || tempCharacter == '\'') {
+            int8_t tempFirstCharacter = tempCharacter;
+            tempHighlighting[index] = LITERAL_COLOR;
+            index += 1;
+            while (index < allocation->length) {
+                int8_t tempCharacter = allocation->text[index];
+                tempHighlighting[index] = LITERAL_COLOR;
+                index += 1;
+                if (tempCharacter == tempFirstCharacter) {
+                    break;
+                }
+                if (tempCharacter == '\\') {
+                    if (index < allocation->length) {
+                        tempHighlighting[index] = LITERAL_COLOR;
+                        index += 1;
+                    }
+                }
+            }
         } else {
             index += 1;
         }
