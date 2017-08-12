@@ -189,3 +189,20 @@ void updateSyntaxDefinition() {
     }
     free(tempFilePath);
 }
+
+void generateSyntaxHighlighting(textAllocation_t *allocation) {
+    if (allocation->syntaxHighlighting != NULL) {
+        free(allocation->syntaxHighlighting);
+    }
+    if (!shouldHighlightSyntax || allocation->length <= 0) {
+        allocation->syntaxHighlighting = NULL;
+        return;
+    }
+    int8_t *tempHighlighting = malloc(allocation->length);
+    int64_t index = 0;
+    while (index < allocation->length) {
+        tempHighlighting[index] = index % 4;
+        index += 1;
+    }
+    allocation->syntaxHighlighting = tempHighlighting;
+}

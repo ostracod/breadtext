@@ -8,6 +8,7 @@
 #include "textAllocation.h"
 #include "textLine.h"
 #include "textPos.h"
+#include "syntax.h"
 #include "display.h"
 #include "breadtext.h"
 
@@ -133,6 +134,28 @@ int8_t *helpText[] = {
     (int8_t *)"indentationWidth 4"
 };
 
+void setColorScheme(int32_t number) {
+    if (number == 1) {
+        colorSet[DEFAULT_COLOR] = WHITE_ON_BLACK;
+        colorSet[COMMENT_COLOR] = RED_ON_BLACK;
+        colorSet[LITERAL_COLOR] = GREEN_ON_BLACK;
+        colorSet[KEYWORD_COLOR] = CYAN_ON_BLACK;
+        colorSet[HIGHLIGHTED_DEFAULT_COLOR] = BLACK_ON_WHITE;
+        colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_WHITE;
+        colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_WHITE;
+        colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_WHITE;
+        return;
+    }
+    colorSet[DEFAULT_COLOR] = BLACK_ON_WHITE;
+    colorSet[COMMENT_COLOR] = RED_ON_WHITE;
+    colorSet[LITERAL_COLOR] = GREEN_ON_WHITE;
+    colorSet[KEYWORD_COLOR] = CYAN_ON_WHITE;
+    colorSet[HIGHLIGHTED_DEFAULT_COLOR] = WHITE_ON_BLACK;
+    colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_BLACK;
+    colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_BLACK;
+    colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_BLACK;
+}
+
 int64_t getTextLineRowCount(textLine_t *line) {
     return line->textAllocation.length / viewPortWidth + 1;
 }
@@ -174,6 +197,15 @@ int8_t getCursorCharacter() {
     }
 }
 
+int8_t getCursorColorIndex() {
+    int64_t index = getTextPosIndex(&cursorTextPos);
+    if (index < cursorTextPos.line->textAllocation.length) {
+        return cursorTextPos.line->textAllocation.syntaxHighlighting[index];
+    } else {
+        return DEFAULT_COLOR;
+    }
+}
+
 void eraseCursor() {
     if (isHighlighting) {
         return;
@@ -182,9 +214,10 @@ void eraseCursor() {
     if (tempPosY < 0 || tempPosY >= viewPortHeight) {
         return;
     }
-    attron(COLOR_PAIR(primaryColorPair));
+    int8_t tempColorIndex = getCursorColorIndex();
+    attron(COLOR_PAIR(colorSet[tempColorIndex]));
     mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
-    attroff(COLOR_PAIR(primaryColorPair));
+    attroff(COLOR_PAIR(colorSet[tempColorIndex]));
 }
 
 void displayCursor() {
@@ -196,9 +229,10 @@ void displayCursor() {
         return;
     }
     refresh();
-    attron(COLOR_PAIR(secondaryColorPair));
+    int8_t tempColorIndex = getCursorColorIndex() + HIGHLIGHTED_COLOR_OFFSET;
+    attron(COLOR_PAIR(colorSet[tempColorIndex]));
     mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[tempColorIndex]));
 }
 
 void eraseTextCommandCursor() {
@@ -206,9 +240,9 @@ void eraseTextCommandCursor() {
         return;
     }
     int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvaddch(windowHeight - 1, tempPosX, ' ');
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void displayTextCommandCursor() {
@@ -217,9 +251,9 @@ void displayTextCommandCursor() {
     }
     refresh();
     int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
-    attron(COLOR_PAIR(primaryColorPair));
+    attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
     mvaddch(windowHeight - 1, tempPosX, ' ');
-    attroff(COLOR_PAIR(primaryColorPair));
+    attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
 }
 
 textPos_t *getFirstHighlightTextPos() {
@@ -238,6 +272,7 @@ textPos_t *getLastHighlightTextPos() {
 
 // Returns the next Y position.
 int64_t displayTextLine(int64_t posY, textLine_t *line) {
+    generateSyntaxHighlighting(&(line->textAllocation));
     int64_t tempRowCount = getTextLineRowCount(line);
     if (posY + tempRowCount <= 0 || posY >= viewPortHeight) {
         return posY + tempRowCount;
@@ -256,126 +291,85 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
     }
     int64_t tempLength = (tempEndRow - tempStartRow) * viewPortWidth;
     int8_t tempBuffer[tempLength + 1];
-    int64_t tempStartIndex = tempStartRow * viewPortWidth;
-    int64_t tempEndIndex = tempEndRow * viewPortWidth;
-    if (tempEndIndex > line->textAllocation.length) {
-        tempEndIndex = line->textAllocation.length;
-    }
-    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    int64_t tempBufferIndex = 0;
+    textPos_t *tempFirstHighlightTextPos;
+    textPos_t *tempLastHighlightTextPos;
+    int64_t tempFirstHighlightIndex;
+    int64_t tempLastHighlightIndex;
+    int8_t tempFirstHighlightTextPosIsAfterLine;
+    int8_t tempLastHighlightTextPosIsAfterLine;
+    int8_t tempFirstHighlightTextPosIsOnLine;
+    int8_t tempLastHighlightTextPosIsOnLine;
+    int8_t tempFirstHighlightTextPosIsBeforeLine;
+    int8_t tempLastHighlightTextPosIsBeforeLine;
     if (isHighlighting) {
-        int64_t tempStartIndex2;
-        int64_t tempEndIndex2;
-        int64_t tempAmount2;
-        textPos_t *tempFirstTextPos = getFirstHighlightTextPos();
-        textPos_t *tempLastTextPos = getLastHighlightTextPos();
-        textPos_t tempStartTextPos;
-        textPos_t tempEndTextPos;
-        tempStartTextPos.line = line;
-        tempStartTextPos.row = tempStartRow;
-        tempStartTextPos.column = 0;
-        tempEndTextPos.line = line;
-        if (tempFirstTextPos->line == line) {
-            if (getTextPosIndex(tempFirstTextPos) < tempStartIndex) {
-                setTextPosIndex(&tempEndTextPos, tempStartIndex);
-            } else if (getTextPosIndex(tempFirstTextPos) > tempEndIndex) {
-                setTextPosIndex(&tempEndTextPos, tempEndIndex);
+        tempFirstHighlightTextPos = getFirstHighlightTextPos();
+        tempLastHighlightTextPos = getLastHighlightTextPos();
+        tempFirstHighlightIndex = getTextPosIndex(tempFirstHighlightTextPos);
+        tempLastHighlightIndex = getTextPosIndex(tempLastHighlightTextPos);
+        tempFirstHighlightTextPosIsAfterLine = textLineIsAfterTextLine(tempFirstHighlightTextPos->line, line);
+        tempLastHighlightTextPosIsAfterLine = textLineIsAfterTextLine(tempLastHighlightTextPos->line, line);
+        tempFirstHighlightTextPosIsOnLine = (tempFirstHighlightTextPos->line == line);
+        tempLastHighlightTextPosIsOnLine = (tempLastHighlightTextPos->line == line);
+        tempFirstHighlightTextPosIsBeforeLine = (!tempFirstHighlightTextPosIsAfterLine && !tempFirstHighlightTextPosIsOnLine);
+        tempLastHighlightTextPosIsBeforeLine = (!tempLastHighlightTextPosIsAfterLine && !tempLastHighlightTextPosIsOnLine);
+    }
+    int8_t tempColor = -1;
+    textPos_t tempStartTextPos;
+    textPos_t tempTextPos;
+    tempTextPos.line = line;
+    tempTextPos.column = 0;
+    tempTextPos.row = tempStartRow;
+    while (tempTextPos.row < tempEndRow) {
+        int64_t index = getTextPosIndex(&tempTextPos);
+        int64_t tempIndexToHighlight;
+        int8_t tempCharacter;
+        int8_t tempNextColorIndex;
+        if (index < line->textAllocation.length) {
+            tempCharacter = line->textAllocation.text[index];
+            if (line->textAllocation.syntaxHighlighting != NULL) {
+                tempNextColorIndex = line->textAllocation.syntaxHighlighting[index];
             } else {
-                tempEndTextPos.row = tempFirstTextPos->row;
-                tempEndTextPos.column = tempFirstTextPos->column;
+                tempNextColorIndex = DEFAULT_COLOR;
             }
-        } else if (textLineIsAfterTextLine(tempFirstTextPos->line, line)) {
-            setTextPosIndex(&tempEndTextPos, tempEndIndex);
+            tempIndexToHighlight = index;
         } else {
-            tempEndTextPos = tempStartTextPos;
+            tempIndexToHighlight = line->textAllocation.length;
+            tempCharacter = ' ';
+            tempNextColorIndex = DEFAULT_COLOR;
         }
-        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
-        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
-        tempAmount2 = tempEndIndex2 - tempStartIndex2;
-        if (tempAmount2 > 0) {
-            copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
-            tempBuffer[tempAmount2] = 0;
-            convertTabsToSpaces(tempBuffer);
-            attron(COLOR_PAIR(primaryColorPair));
-            mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
-            attroff(COLOR_PAIR(primaryColorPair));
-        }
-        tempStartTextPos = tempEndTextPos;
-        if (tempLastTextPos->line == line) {
-            if (getTextPosIndex(tempLastTextPos) < tempStartIndex) {
-                setTextPosIndex(&tempEndTextPos, tempStartIndex);
-            } else if (getTextPosIndex(tempLastTextPos) + 1 > tempEndIndex) {
-                setTextPosIndex(&tempEndTextPos, tempEndIndex);
-            } else {
-                tempEndTextPos.row = tempLastTextPos->row;
-                tempEndTextPos.column = tempLastTextPos->column;
-                tempEndTextPos.column += 1;
-                if (tempEndTextPos.column >= viewPortWidth) {
-                    tempEndTextPos.column = 0;
-                    tempEndTextPos.row += 1;
+        if (isHighlighting && !tempFirstHighlightTextPosIsAfterLine && !tempLastHighlightTextPosIsBeforeLine) {
+            if (tempFirstHighlightTextPosIsBeforeLine
+                    || (tempFirstHighlightTextPosIsOnLine && tempFirstHighlightIndex <= tempIndexToHighlight)) {
+                if (tempLastHighlightTextPosIsAfterLine
+                        || (tempLastHighlightTextPosIsOnLine && tempLastHighlightIndex >= tempIndexToHighlight)) {
+                    tempNextColorIndex += HIGHLIGHTED_COLOR_OFFSET;
                 }
             }
-        } else if (textLineIsAfterTextLine(tempLastTextPos->line, line)) {
-            setTextPosIndex(&tempEndTextPos, tempEndIndex);
-        } else {
-            tempEndTextPos = tempStartTextPos;
         }
-        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
-        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
-        tempAmount2 = tempEndIndex2 - tempStartIndex2;
-        if (tempAmount2 > 0) {
-            copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
-            tempBuffer[tempAmount2] = 0;
-            attron(COLOR_PAIR(secondaryColorPair));
-            convertTabsToSpaces(tempBuffer);
-            mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
-            attroff(COLOR_PAIR(secondaryColorPair));
-        }
-        tempStartTextPos = tempEndTextPos;
-        setTextPosIndex(&tempEndTextPos, tempEndIndex);
-        tempStartIndex2 = getTextPosIndex(&tempStartTextPos);
-        tempEndIndex2 = getTextPosIndex(&tempEndTextPos);
-        tempAmount2 = tempEndIndex2 - tempStartIndex2;
-        if (tempAmount2 > 0) {
-            copyData(tempBuffer, line->textAllocation.text + tempStartIndex2, tempAmount2);
-            tempBuffer[tempAmount2] = 0;
-            attron(COLOR_PAIR(primaryColorPair));
-            convertTabsToSpaces(tempBuffer);
-            mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
-            attroff(COLOR_PAIR(primaryColorPair));
-        }
-        tempAmount2 = tempLength - tempAmount;
-        if (tempAmount2 > 0) {
-            int64_t index = 0;
-            while (index < tempAmount2) {
-                tempBuffer[index] = ' ';
-                index += 1;
+        int8_t tempNextColor = colorSet[tempNextColorIndex];
+        if (tempNextColor != tempColor) {
+            if (tempBufferIndex != 0) {
+                tempBuffer[tempBufferIndex] = 0;
+                convertTabsToSpaces(tempBuffer);
+                attron(COLOR_PAIR(tempColor));
+                mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
+                attroff(COLOR_PAIR(tempColor));
             }
-            tempBuffer[tempAmount2] = 0;
-            textPos_t tempTextPos;
-            tempTextPos.line = line;
-            setTextPosIndex(&tempTextPos, tempEndIndex);
-            int8_t tempColor;
-            if (!textPosIsAfterTextPos(tempFirstTextPos, &tempTextPos) && !textPosIsAfterTextPos(&tempTextPos, tempLastTextPos)) {
-                tempColor = secondaryColorPair;
-            } else {
-                tempColor = primaryColorPair;
-            }
-            attron(COLOR_PAIR(tempColor));
-            mvprintw(posY + tempTextPos.row, tempTextPos.column, "%s", tempBuffer);
-            attroff(COLOR_PAIR(tempColor));
+            tempStartTextPos = tempTextPos;
+            tempColor = tempNextColor;
+            tempBufferIndex = 0;
         }
-    } else {
-        copyData(tempBuffer, line->textAllocation.text + tempStartIndex, tempAmount);
-        int64_t index = tempAmount;
-        while (index < tempLength) {
-            tempBuffer[index] = ' ';
-            index += 1;
-        }
-        tempBuffer[tempLength] = 0;
-        attron(COLOR_PAIR(primaryColorPair));
+        tempBuffer[tempBufferIndex] = tempCharacter;
+        tempBufferIndex += 1;
+        setTextPosIndex(&tempTextPos, index + 1);
+    }
+    if (tempBufferIndex != 0) {
+        tempBuffer[tempBufferIndex] = 0;
         convertTabsToSpaces(tempBuffer);
-        mvprintw(posY + tempStartRow, 0, "%s", tempBuffer);
-        attroff(COLOR_PAIR(primaryColorPair));
+        attron(COLOR_PAIR(tempColor));
+        mvprintw(posY + tempStartTextPos.row, tempStartTextPos.column, "%s", tempBuffer);
+        attroff(COLOR_PAIR(tempColor));
     }
     return posY + tempEndRow;
 }
@@ -397,9 +391,9 @@ void displayTextLinesUnderAndIncludingTextLine(int64_t posY, textLine_t *line) {
             tempBuffer[index] = ' ';
             index += 1;
         }
-        attron(COLOR_PAIR(primaryColorPair));
+        attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
         mvprintw(tempPosY, 0, "%s", tempBuffer);
-        attroff(COLOR_PAIR(primaryColorPair));
+        attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
     }
 }
 
@@ -418,9 +412,9 @@ void eraseStatusBar() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 0, "%s", tempBuffer);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void eraseActivityMode() {
@@ -431,13 +425,13 @@ void eraseActivityMode() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void displayActivityMode() {
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     if (activityMode == COMMAND_MODE) {
         int8_t tempMessage[] = "Command Mode";
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
@@ -466,7 +460,7 @@ void displayActivityMode() {
     if (activityMode == TEXT_COMMAND_MODE) {
         activityModeTextLength = 0;
     }
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void eraseLineNumber() {
@@ -477,18 +471,18 @@ void eraseLineNumber() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void displayLineNumber() {
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     int8_t tempMessage[100];
     sprintf((char *)tempMessage, "Line %lld", (long long)(getTextLineNumber(cursorTextPos.line)));
     lineNumberTextLength = (int32_t)strlen((char *)tempMessage);
     mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempMessage);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
 void eraseNotification() {
@@ -499,17 +493,17 @@ void eraseNotification() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     isShowingNotification = false;
 }
 
 void displayNotification(int8_t *message) {
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     notificationTextLength = (int32_t)strlen((char *)message);
     mvprintw(windowHeight - 1, 0, "%s", (char *)message);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     isShowingNotification = true;
 }
 
@@ -529,10 +523,10 @@ void notifyUser(int8_t *message) {
 void displayStatusBar() {
     eraseStatusBar();
     if (activityMode == TEXT_COMMAND_MODE) {
-        attron(COLOR_PAIR(secondaryColorPair));
+        attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
         mvprintw(windowHeight - 1, 0, "/");
         mvprintw(windowHeight - 1, 1, "%s", textCommandBuffer);
-        attroff(COLOR_PAIR(secondaryColorPair));
+        attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
         displayTextCommandCursor();
     } else {
         displayActivityMode();
@@ -541,7 +535,7 @@ void displayStatusBar() {
 }
 
 void displayHelpMessage() {
-    bkgd(COLOR_PAIR(primaryColorPair));
+    bkgd(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
     clear();
     int64_t tempPosY = 0;
     int64_t tempLength = sizeof(helpText) / sizeof(*helpText);
@@ -555,9 +549,9 @@ void displayHelpMessage() {
             int64_t tempRowCount2 = windowHeight - tempPosY;
             tempBuffer[tempRowCount2 * windowWidth] = 0;
         }
-        attron(COLOR_PAIR(primaryColorPair));
+        attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
         mvprintw(tempPosY, 0, "%s", tempBuffer);
-        attroff(COLOR_PAIR(primaryColorPair));
+        attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
         tempPosY += tempRowCount;
         index += 1;
     }

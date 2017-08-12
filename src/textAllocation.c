@@ -6,6 +6,10 @@
 #include "textAllocation.h"
 
 void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
+    if (allocation->syntaxHighlighting != NULL) {
+        free(allocation->syntaxHighlighting);
+    }
+    allocation->syntaxHighlighting = NULL;
     int8_t *tempText = malloc(size);
     if (allocation->text != NULL) {
         int64_t tempSize;
@@ -22,6 +26,10 @@ void setTextAllocationSize(textAllocation_t *allocation, int64_t size) {
 }
 
 void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, int8_t *text, int64_t amount) {
+    if (allocation->syntaxHighlighting != NULL) {
+        free(allocation->syntaxHighlighting);
+    }
+    allocation->syntaxHighlighting = NULL;
     int64_t tempLength = allocation->length + amount;
     if (tempLength > allocation->allocationSize || allocation->text == NULL) {
         setTextAllocationSize(allocation, tempLength * 2);
@@ -33,6 +41,10 @@ void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, i
 }
 
 void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, int64_t amount) {
+    if (allocation->syntaxHighlighting != NULL) {
+        free(allocation->syntaxHighlighting);
+    }
+    allocation->syntaxHighlighting = NULL;
     int64_t tempLength = allocation->length - amount;
     int64_t tempAmount = allocation->length - index;
     copyData(allocation->text + index, allocation->text + index + amount, tempAmount);
@@ -45,6 +57,9 @@ void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, i
 void cleanUpTextAllocation(textAllocation_t *allocation) {
     if (allocation->text != NULL) {
         free(allocation->text);
+    }
+    if (allocation->syntaxHighlighting != NULL) {
+        free(allocation->syntaxHighlighting);
     }
 }
 

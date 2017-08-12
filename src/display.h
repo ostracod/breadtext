@@ -8,16 +8,26 @@
 #ifndef DISPLAY_HEADER_FILE
 #define DISPLAY_HEADER_FILE
 
+#define DEFAULT_COLOR 0
+#define COMMENT_COLOR 1
+#define LITERAL_COLOR 2
+#define KEYWORD_COLOR 3
+#define HIGHLIGHTED_COLOR_OFFSET 4
+#define HIGHLIGHTED_DEFAULT_COLOR (DEFAULT_COLOR + HIGHLIGHTED_COLOR_OFFSET)
+#define HIGHLIGHTED_COMMENT_COLOR (COMMENT_COLOR + HIGHLIGHTED_COLOR_OFFSET)
+#define HIGHLIGHTED_LITERAL_COLOR (LITERAL_COLOR + HIGHLIGHTED_COLOR_OFFSET)
+#define HIGHLIGHTED_KEYWORD_COLOR (KEYWORD_COLOR + HIGHLIGHTED_COLOR_OFFSET)
+
 WINDOW *window;
 int32_t windowWidth;
 int32_t windowHeight;
 int32_t viewPortWidth;
 int32_t viewPortHeight;
-int8_t primaryColorPair;
-int8_t secondaryColorPair;
+int8_t colorSet[8];
 textLine_t *topTextLine;
 int64_t topTextLineRow;
 
+void setColorScheme(int32_t number);
 int64_t getTextLineRowCount(textLine_t *line);
 int64_t getTextLinePosY(textLine_t *line);
 int64_t getCursorPosY();

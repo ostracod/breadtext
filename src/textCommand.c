@@ -26,9 +26,9 @@ void insertTextCommandCharacter(int8_t character) {
     }
     eraseTextCommandCursor();
     textCommandBuffer[index] = character;
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvaddch(windowHeight - 1, index + 1, character);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     index += 1;
     textCommandBuffer[index] = 0;
     displayTextCommandCursor();
@@ -42,9 +42,9 @@ void deleteTextCommandCharacter() {
     eraseTextCommandCursor();
     index -= 1;
     textCommandBuffer[index] = 0;
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvaddch(windowHeight - 1, index + 1, ' ');
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     displayTextCommandCursor();
 }
 
@@ -294,8 +294,8 @@ void executeTextCommand() {
 void enterBeginningOfCommand(int8_t *text) {
     setActivityMode(TEXT_COMMAND_MODE);
     strcpy((char *)textCommandBuffer, (char *)text);
-    attron(COLOR_PAIR(secondaryColorPair));
+    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 1, "%s", (char *)textCommandBuffer);
-    attroff(COLOR_PAIR(secondaryColorPair));
+    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     displayTextCommandCursor();
 }

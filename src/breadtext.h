@@ -6,7 +6,13 @@
 #define BREADTEXT_HEADER_FILE
 
 #define BLACK_ON_WHITE 1
-#define WHITE_ON_BLACK 2
+#define RED_ON_WHITE 2
+#define GREEN_ON_WHITE 3
+#define CYAN_ON_WHITE 4
+#define WHITE_ON_BLACK 5
+#define RED_ON_BLACK 6
+#define GREEN_ON_BLACK 7
+#define CYAN_ON_BLACK 8
 
 #define COMMAND_MODE 1
 #define TEXT_ENTRY_MODE 2

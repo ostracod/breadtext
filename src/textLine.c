@@ -14,6 +14,7 @@ textLine_t *createEmptyTextLine() {
     output->textAllocation.text = NULL;
     output->textAllocation.length = 0;
     output->textAllocation.allocationSize = 0;
+    output->textAllocation.syntaxHighlighting = NULL;
     output->depth = 1;
     output->lineCount = 1;
     return output;

@@ -846,14 +846,7 @@ int32_t promptSingleCharacter() {
 int8_t setConfigurationVariable(int8_t *name, int64_t value) {
     int8_t output = false;
     if (strcmp((char *)name, "colorScheme") == 0) {
-        if (value == 0) {
-            primaryColorPair = BLACK_ON_WHITE;
-            secondaryColorPair = WHITE_ON_BLACK;
-        }
-        if (value == 1) {
-            primaryColorPair = WHITE_ON_BLACK;
-            secondaryColorPair = BLACK_ON_WHITE;
-        }
+        setColorScheme(value);
         output = true;
     }
     if (strcmp((char *)name, "indentationWidth") == 0) {
@@ -1132,8 +1125,7 @@ int main(int argc, const char *argv[]) {
     isShowingNotification = false;
     notificationTextLength = 0;
     isHighlighting = false;
-    primaryColorPair = BLACK_ON_WHITE;
-    secondaryColorPair = WHITE_ON_BLACK;
+    setColorScheme(0);
     int8_t index = 0;
     while (index < MARK_AMOUNT) {
         markIsSetList[index] = false;
@@ -1159,9 +1151,15 @@ int main(int argc, const char *argv[]) {
     ESCDELAY = 50;
     start_color();
     init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
+    init_pair(RED_ON_WHITE, COLOR_RED, COLOR_WHITE);
+    init_pair(GREEN_ON_WHITE, COLOR_GREEN, COLOR_WHITE);
+    init_pair(CYAN_ON_WHITE, COLOR_CYAN, COLOR_WHITE);
     init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
-    handleResize();
+    init_pair(RED_ON_BLACK, COLOR_RED, COLOR_BLACK);
+    init_pair(GREEN_ON_BLACK, COLOR_GREEN, COLOR_BLACK);
+    init_pair(CYAN_ON_BLACK, COLOR_CYAN, COLOR_BLACK);
     updateSyntaxDefinition();
+    handleResize();
     
     if (isPerformingFuzzTest) {
         startFuzzTest();

@@ -6,6 +6,7 @@ typedef struct textAllocation {
     int8_t *text;
     int64_t length;
     int64_t allocationSize;
+    int8_t *syntaxHighlighting;
 } textAllocation_t;
 
 void setTextAllocationSize(textAllocation_t *allocation, int64_t size);
