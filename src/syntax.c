@@ -47,6 +47,76 @@ int8_t syntaxFileMatchesExtension(int8_t *fileName, int8_t *extension) {
     return false;
 }
 
+int32_t getKeywordAmount(int8_t *line) {
+    int32_t output = 0;
+    while (true) {
+        if (*line == 0) {
+            break;
+        }
+        output += 1;
+        line = findWhitespace(line);
+        if (*line == 0) {
+            break;
+        }
+        line = skipWhitespace(line);
+    }
+    return output;
+}
+
+void sortKeywordList() {
+    // Selection sort.
+    // I know it's not the fastest. It doesn't matter in this context.
+    int32_t index1 = 0;
+    while (index1 < keywordListLength) {
+        int32_t tempCandidateIndex = index1;
+        int8_t *tempCandidate = keywordList[tempCandidateIndex];
+        int32_t index2 = index1 + 1;
+        while (index2 < keywordListLength) {
+            int8_t *tempKeyword = keywordList[index2];
+            if (strcmp((char *)tempKeyword, (char *)tempCandidate) < 0) {
+                tempCandidate = tempKeyword;
+                tempCandidateIndex = index2;
+            }
+            index2 += 1;
+        }
+        keywordList[tempCandidateIndex] = keywordList[index1];
+        keywordList[index1] = tempCandidate;
+        index1 += 1;
+    }
+}
+
+void processSyntaxFileDirective(int8_t *line1, int8_t *line2) {
+    if (strcmp((char *)line1, "COMMENT") == 0) {
+        commentPrefix = malloc(strlen((char *)line2) + 1);
+        strcpy((char *)commentPrefix, (char *)line2);
+    }
+    if (strcmp((char *)line1, "KEYWORDS") == 0) {
+        keywordListLength = getKeywordAmount(line2);
+        keywordList = malloc(sizeof(int8_t *) * keywordListLength);
+        int8_t *tempText = line2;
+        int32_t index = 0;
+        while (index < keywordListLength) {
+            if (*tempText == 0) {
+                break;
+            }
+            int8_t *tempKeyword = tempText;
+            tempText = findWhitespace(tempText);
+            if (*tempText != 0) {
+                *tempText = 0;
+                tempText += 1;
+                if (*tempText != 0) {
+                    tempText = skipWhitespace(tempText);
+                }
+            }
+            int8_t *tempKeyword2 = malloc(strlen((char *)tempKeyword) + 1);
+            strcpy((char *)tempKeyword2, (char *)tempKeyword);
+            keywordList[index] = tempKeyword2;
+            index += 1;
+        }
+        sortKeywordList();
+    }
+}
+
 void updateSyntaxDefinition() {
     removeAllSyntax();
     if (!shouldHighlightSyntax) {
@@ -77,7 +147,45 @@ void updateSyntaxDefinition() {
             }
         }
     }
+    int32_t tempLength1 = strlen((char *)syntaxDirectoryPath);
+    int32_t tempLength2 = strlen((char *)tempFileName);
     closedir(tempDirectory);
-    // TODO: Process tempFileName.
-    
+    int8_t *tempFilePath = malloc(tempLength1 + 1 + tempLength2 + 1);
+    copyData(tempFilePath, syntaxDirectoryPath, tempLength1);
+    tempFilePath[tempLength1] = '/';
+    copyData(tempFilePath + tempLength1 + 1, tempFileName, tempLength2);
+    tempFilePath[tempLength1 + 1 + tempLength2] = 0;
+    FILE *tempFile = fopen((char *)tempFilePath, "r");
+    if (tempFile != NULL) {
+        while (true) {
+            int8_t tempShouldBreak = true;
+            int8_t *tempText1 = NULL;
+            size_t tempSize1 = 0;
+            int64_t tempCount1 = getline((char **)&tempText1, &tempSize1, tempFile);
+            if (tempCount1 >= 0) {
+                int8_t *tempNewline1 = (int8_t *)strchr((char *)tempText1, '\n');
+                if (tempNewline1 != NULL) {
+                    *tempNewline1 = 0;
+                }
+                int8_t *tempText2 = NULL;
+                size_t tempSize2 = 0;
+                int64_t tempCount2 = getline((char **)&tempText2, &tempSize2, tempFile);
+                if (tempCount2 >= 0) {
+                    int8_t *tempNewline2 = (int8_t *)strchr((char *)tempText2, '\n');
+                    if (tempNewline2 != NULL) {
+                        *tempNewline2 = 0;
+                    }
+                    processSyntaxFileDirective(tempText1, tempText2);
+                    tempShouldBreak = false;
+                    free(tempText2);
+                }
+                free(tempText1);
+            }
+            if (tempShouldBreak) {
+                break;
+            }
+        }
+        fclose(tempFile);
+    }
+    free(tempFilePath);
 }
