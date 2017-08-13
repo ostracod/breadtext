@@ -148,18 +148,23 @@ void updateSyntaxDefinition() {
         redrawEverything();
         return;
     }
+    int8_t *tempExtension = getFileExtension(filePath);
+    if (tempExtension == NULL) {
+        redrawEverything();
+        return;
+    }
     DIR *tempDirectory = opendir((char *)syntaxDirectoryPath);
     if (tempDirectory == NULL) {
         redrawEverything();
         return;
     }
-    int8_t *tempExtension = getFileExtension(filePath);
     struct dirent *ent;
     int8_t *tempFileName;
     while (true) {
         ent = readdir(tempDirectory);
         if (ent == NULL) {
             redrawEverything();
+            closedir(tempDirectory);
             return;
         }
         tempFileName = (int8_t *)ent->d_name;
