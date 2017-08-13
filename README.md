@@ -5,7 +5,7 @@
 
 A terminal-based text editor by Jack Eisenmann
 
-<img src="screenshot.png" alt="BreadText screenshot" width="469" />
+<img src="screenshot.png" alt="BreadText screenshot" width="538" />
 
 If you find any bugs, please report them on GitHub.
 
