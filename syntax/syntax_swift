@@ -1,0 +1,4 @@
+COMMENT
+//
+KEYWORDS
+associativity break case catch class continue convenience default deinit didSet do else enum extension fallthrough false final for func get guard if in infix init inout internal lazy let mutating nil operator override postfix precedence prefix private public repeat required return self set static struct subscript super switch throws true try var weak where while willSet Array Bool Dictionary Error Int Set String Tuple UnicodeScalar
