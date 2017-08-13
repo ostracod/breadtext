@@ -1,12 +1,11 @@
 
 # BreadText
 
-![BreadText logo](logo.png)
-<img src="logo.png" alt="BreadText logo" style="width: 110px;" />
+<img src="logo.png" alt="BreadText logo" width="110" />
 
 A terminal-based text editor by Jack Eisenmann
 
-<img src="screenshot.png" alt="BreadText screenshot" style="width: 469px;" />
+<img src="screenshot.png" alt="BreadText screenshot" width="469" />
 
 If you find any bugs, please report them on GitHub.
 
