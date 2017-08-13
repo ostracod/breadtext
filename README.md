@@ -2,8 +2,11 @@
 # BreadText
 
 ![BreadText logo](logo.png)
+<img src="logo.png" alt="BreadText logo" style="width: 110px;" />
 
 A terminal-based text editor by Jack Eisenmann
+
+<img src="screenshot.png" alt="BreadText screenshot" style="width: 469px;" />
 
 If you find any bugs, please report them on GitHub.
 
@@ -39,7 +42,7 @@ Hint: You may want to adjust the brightness levels of ANSI colors in your termin
 
 To view controls within BreadText, enter `/help`.
 
-![BreadText controls](commands.gif)
+<img src="commands.gif" alt="BreadText controls" />
 
 ### Save and Quit
 
