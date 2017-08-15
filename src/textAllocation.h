@@ -9,6 +9,7 @@ typedef struct textAllocation {
     int8_t *syntaxHighlighting;
 } textAllocation_t;
 
+void eraseSyntaxHighlighting(textAllocation_t *allocation);
 void setTextAllocationSize(textAllocation_t *allocation, int64_t size);
 void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, int8_t *text, int64_t amount);
 void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, int64_t amount);

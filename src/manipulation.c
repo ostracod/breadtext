@@ -108,7 +108,7 @@ void uppercaseSelection() {
     int64_t tempLastIndex = getTextPosIndex(&tempLastTextPos);
     recordTextLineDeleted(tempLine);
     while (true) {
-        tempLine->textAllocation.syntaxHighlighting = NULL;
+        eraseSyntaxHighlighting(&(tempLine->textAllocation));
         int64_t tempLength = tempLine->textAllocation.length;
         if (index <= tempLength) {
             if (index < tempLength) {
@@ -158,7 +158,7 @@ void lowercaseSelection() {
     int64_t tempLastIndex = getTextPosIndex(&tempLastTextPos);
     recordTextLineDeleted(tempLine);
     while (true) {
-        tempLine->textAllocation.syntaxHighlighting = NULL;
+        eraseSyntaxHighlighting(&(tempLine->textAllocation));
         int64_t tempLength = tempLine->textAllocation.length;
         if (index <= tempLength) {
             if (index < tempLength) {

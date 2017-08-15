@@ -223,12 +223,9 @@ void updateSyntaxDefinition() {
 }
 
 void generateSyntaxHighlighting(textAllocation_t *allocation) {
-    if (allocation->syntaxHighlighting != NULL) {
-        free(allocation->syntaxHighlighting);
-    }
+    eraseSyntaxHighlighting(allocation);
     if (!shouldHighlightSyntax || !hasFoundSyntaxFile
             || allocation->length <= 0 || allocation->length > 1000) {
-        allocation->syntaxHighlighting = NULL;
         return;
     }
     int8_t *tempHighlighting = malloc(allocation->length);
