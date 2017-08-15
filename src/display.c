@@ -276,7 +276,9 @@ textPos_t *getLastHighlightTextPos() {
 
 // Returns the next Y position.
 int64_t displayTextLine(int64_t posY, textLine_t *line) {
-    generateSyntaxHighlighting(&(line->textAllocation));
+    if (line->textAllocation.syntaxHighlighting == NULL) {
+        generateSyntaxHighlighting(&(line->textAllocation));
+    }
     int64_t tempRowCount = getTextLineRowCount(line);
     if (posY + tempRowCount <= 0 || posY >= viewPortHeight) {
         return posY + tempRowCount;
