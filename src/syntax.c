@@ -258,8 +258,14 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
         } else {
             tempLastCharacter = 0;
         }
+        int8_t tempNextCharacter;
+        if (index < allocation->length) {
+            tempNextCharacter = allocation->text[index + 1];
+        } else {
+            tempNextCharacter = 0;
+        }
         if ((tempCharacter >= '0' && tempCharacter <= '9')
-                || (tempCharacter == '.' && !isWordCharacter(tempLastCharacter))) {
+                || (tempCharacter == '.' && tempNextCharacter >= '0' && tempNextCharacter <= '9')) {
             tempHighlighting[index] = LITERAL_COLOR;
             index += 1;
             while (index < allocation->length) {
