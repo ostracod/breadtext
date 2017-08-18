@@ -137,6 +137,8 @@ To view controls within BreadText, enter `/help`.
 `/reverseFind (pattern)`  
 `/findWord (word)`  
 `/reverseFindWord (word)`  
+`/regex (regex)`
+`/reverseRegex (regex)`
 `/replace (pattern) (text)`  
 `/set (config variable) (value)`  
 `/getPath`  

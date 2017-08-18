@@ -29,7 +29,10 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     tempTextPos.row = 0;
     tempTextPos.column = 0;
     while (true) {
-        tempTextPos = findNextTermTextPos(&tempTextPos, &tempIsMissing);
+        textPos_t tempStartTextPos;
+        textPos_t tempEndTextPos;
+        findNextTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
+        tempTextPos = tempStartTextPos;
         if (tempIsMissing) {
             break;
         }

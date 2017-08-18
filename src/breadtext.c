@@ -1125,6 +1125,9 @@ int main(int argc, const char *argv[]) {
     isShowingNotification = false;
     notificationTextLength = 0;
     isHighlighting = false;
+    searchTerm[0] = 0;
+    searchTermLength = 0;
+    searchTermIsRegex = false;
     setColorScheme(0);
     int8_t index = 0;
     while (index < MARK_AMOUNT) {

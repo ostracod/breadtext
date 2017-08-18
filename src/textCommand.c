@@ -143,6 +143,7 @@ void executeTextCommand() {
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
         int8_t tempResult = gotoNextTermHelper();
         cursorSnapColumn = cursorTextPos.column;
@@ -161,6 +162,7 @@ void executeTextCommand() {
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
         int8_t tempResult = gotoPreviousTermHelper();
         cursorSnapColumn = cursorTextPos.column;
@@ -179,6 +181,7 @@ void executeTextCommand() {
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
         int8_t tempResult = gotoNextWordHelper();
         cursorSnapColumn = cursorTextPos.column;
@@ -197,6 +200,7 @@ void executeTextCommand() {
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
         int8_t tempResult = gotoPreviousWordHelper();
         cursorSnapColumn = cursorTextPos.column;
@@ -215,6 +219,7 @@ void executeTextCommand() {
         }
         strcpy((char *)searchTerm, (char *)(tempTermList[1]));
         searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = false;
         setActivityMode(COMMAND_MODE);
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
