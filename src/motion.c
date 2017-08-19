@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <regex.h>
 #include "utilities.h"
 #include "textAllocation.h"
 #include "textLine.h"
@@ -287,40 +288,74 @@ void moveCursorToEndOfFile() {
 void findNextTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
-    while (index <= tempLength - searchTermLength) {
-        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+    if (searchTermIsRegex) {
+        int64_t tempLength2 = tempLength - index;
+        int8_t tempBuffer[tempLength2 + 1];
+        copyData(tempBuffer, pos->line->textAllocation.text + index, tempLength2);
+        tempBuffer[tempLength2] = 0;
+        regmatch_t tempMatchList[searchRegexForward.re_nsub];
+        int32_t tempResult = regexec(&searchRegexForward, (char *)tempBuffer, searchRegexForward.re_nsub, tempMatchList, 0);
+        if (tempResult == 0) {
             startPos->line = pos->line;
-            setTextPosIndex(startPos, index);
+            setTextPosIndex(startPos, index + tempMatchList[0].rm_so);
             endPos->line = pos->line;
-            setTextPosIndex(endPos, index + searchTermLength);
+            setTextPosIndex(endPos, index + tempMatchList[0].rm_eo);
             *isMissing = false;
-            return;
+        } else {
+            *isMissing = true;
         }
-        index += 1;
+    } else {
+        while (index <= tempLength - searchTermLength) {
+            if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+                startPos->line = pos->line;
+                setTextPosIndex(startPos, index);
+                endPos->line = pos->line;
+                setTextPosIndex(endPos, index + searchTermLength);
+                *isMissing = false;
+                return;
+            }
+            index += 1;
+        }
+        *isMissing = true;
     }
-    *isMissing = true;
-    return;
 }
 
 void findPreviousTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
-    if (index > tempLength - searchTermLength) {
-        index = tempLength - searchTermLength;
-    }
-    while (index >= 0) {
-        if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+    if (searchTermIsRegex) {
+        int64_t tempLength2 = index;
+        int8_t tempBuffer[tempLength2 + 1];
+        copyData(tempBuffer, pos->line->textAllocation.text, tempLength2);
+        tempBuffer[tempLength2] = 0;
+        regmatch_t tempMatchList[searchRegexBackward.re_nsub + 1];
+        int32_t tempResult = regexec(&searchRegexBackward, (char *)tempBuffer, searchRegexBackward.re_nsub + 1, tempMatchList, 0);
+        if (tempResult == 0) {
             startPos->line = pos->line;
-            setTextPosIndex(startPos, index);
+            setTextPosIndex(startPos, tempMatchList[1].rm_so);
             endPos->line = pos->line;
-            setTextPosIndex(endPos, index + searchTermLength);
+            setTextPosIndex(endPos, tempMatchList[1].rm_eo);
             *isMissing = false;
-            return;
+        } else {
+            *isMissing = true;
         }
-        index -= 1;
+    } else {
+        if (index > tempLength - searchTermLength) {
+            index = tempLength - searchTermLength;
+        }
+        while (index >= 0) {
+            if (equalDataWithCaseSensitivity(searchTerm, pos->line->textAllocation.text + index, searchTermLength)) {
+                startPos->line = pos->line;
+                setTextPosIndex(startPos, index);
+                endPos->line = pos->line;
+                setTextPosIndex(endPos, index + searchTermLength);
+                *isMissing = false;
+                return;
+            }
+            index -= 1;
+        }
+        *isMissing = true;
     }
-    *isMissing = true;
-    return;
 }
 
 int8_t wordAtTextPosHasLength(textPos_t *pos, int64_t length) {
@@ -486,7 +521,23 @@ int8_t gotoNextTermHelper() {
             return false;
         }
     }
-    moveCursor(&tempStartTextPos);
+    if (searchTermIsRegex) {
+        setActivityMode(COMMAND_MODE);
+        eraseCursor();
+        int64_t tempStartIndex = getTextPosIndex(&tempStartTextPos);
+        int64_t tempEndIndex = getTextPosIndex(&tempEndTextPos);
+        if (tempEndIndex > tempStartIndex) {
+            tempEndIndex -= 1;
+        }
+        cursorTextPos.line = tempStartTextPos.line;
+        setTextPosIndex(&cursorTextPos, tempStartIndex);
+        highlightTextPos.line = tempEndTextPos.line;
+        setTextPosIndex(&highlightTextPos, tempEndIndex);
+        scrollCursorOntoScreen();
+        setActivityMode(HIGHLIGHT_STATIC_MODE);
+    } else {
+        moveCursor(&tempStartTextPos);
+    }
     return true;
 }
 
@@ -518,7 +569,23 @@ int8_t gotoPreviousTermHelper() {
             }
         }
     }
-    moveCursor(&tempStartTextPos);
+    if (searchTermIsRegex) {
+        setActivityMode(COMMAND_MODE);
+        eraseCursor();
+        int64_t tempStartIndex = getTextPosIndex(&tempStartTextPos);
+        int64_t tempEndIndex = getTextPosIndex(&tempEndTextPos);
+        if (tempEndIndex > tempStartIndex) {
+            tempEndIndex -= 1;
+        }
+        cursorTextPos.line = tempStartTextPos.line;
+        setTextPosIndex(&cursorTextPos, tempStartIndex);
+        highlightTextPos.line = tempEndTextPos.line;
+        setTextPosIndex(&highlightTextPos, tempEndIndex);
+        scrollCursorOntoScreen();
+        setActivityMode(HIGHLIGHT_STATIC_MODE);
+    } else {
+        moveCursor(&tempStartTextPos);
+    }
     return true;
 }
 

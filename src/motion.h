@@ -1,4 +1,5 @@
 
+#include <regex.h>
 #include "breadtext.h"
 
 #ifndef CURSOR_MOTION_HEADER_FILE
@@ -8,6 +9,9 @@
 
 int8_t searchTerm[1000];
 int64_t searchTermLength;
+regex_t searchRegexForward;
+regex_t searchRegexBackward;
+int8_t searchRegexIsEmpty;
 int8_t searchTermIsRegex;
 textLine_t *markList[MARK_AMOUNT];
 int8_t markIsSetList[MARK_AMOUNT];

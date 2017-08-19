@@ -859,6 +859,7 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
     }
     if (strcmp((char *)name, "isCaseSensitive") == 0) {
         isCaseSensitive = value;
+        compileRegexes();
         output = true;
     }
     if (strcmp((char *)name, "shouldUseSystemClipboard") == 0) {
@@ -1127,6 +1128,7 @@ int main(int argc, const char *argv[]) {
     isHighlighting = false;
     searchTerm[0] = 0;
     searchTermLength = 0;
+    searchRegexIsEmpty = true;
     searchTermIsRegex = false;
     setColorScheme(0);
     int8_t index = 0;

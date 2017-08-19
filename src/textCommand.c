@@ -19,6 +19,58 @@
 #include "textCommand.h"
 #include "breadtext.h"
 
+int8_t compileRegexesHelper() {
+    if (!searchTermIsRegex) {
+        return false;
+    }
+    if (!searchRegexIsEmpty) {
+        regfree(&searchRegexForward);
+        regfree(&searchRegexBackward);
+        searchRegexIsEmpty = true;
+    }
+    int32_t tempForwardTermLength = searchTermLength + 2;
+    int8_t tempForwardTerm[tempForwardTermLength + 1];
+    int32_t tempBackwardTermLength = searchTermLength + 5;
+    int8_t tempBackwardTerm[tempBackwardTermLength + 1];
+    tempForwardTerm[0] = '(';
+    copyData(tempForwardTerm + 1, searchTerm, searchTermLength);
+    tempForwardTerm[tempForwardTermLength - 1] = ')';
+    tempForwardTerm[tempForwardTermLength] = 0;
+    tempBackwardTerm[0] = '^';
+    tempBackwardTerm[1] = '.';
+    tempBackwardTerm[2] = '*';
+    tempBackwardTerm[3] = '(';
+    copyData(tempBackwardTerm + 4, searchTerm, searchTermLength);
+    tempBackwardTerm[tempBackwardTermLength - 1] = ')';
+    tempBackwardTerm[tempBackwardTermLength] = 0;
+    int32_t tempFlags = REG_EXTENDED;
+    if (!isCaseSensitive) {
+        tempFlags |= REG_ICASE;
+    }
+    int32_t tempResult;
+    tempResult = regcomp(&searchRegexForward, (char *)tempForwardTerm, tempFlags);
+    if (tempResult != 0) {
+        return false;
+    }
+    regcomp(&searchRegexBackward, (char *)tempBackwardTerm, tempFlags);
+    if (tempResult != 0) {
+        regfree(&searchRegexForward);
+        return false;
+    }
+    searchRegexIsEmpty = false;
+    return true;
+}
+
+int8_t compileRegexes() {
+    int8_t tempResult = compileRegexesHelper();
+    if (!tempResult) {
+        searchTerm[0] = 0;
+        searchTermLength = 0;
+        searchTermIsRegex = false;
+    }
+    return tempResult;
+}
+
 void insertTextCommandCharacter(int8_t character) {
     int8_t index = strlen((char *)textCommandBuffer);
     if (index >= sizeof(textCommandBuffer) - 1) {
@@ -207,6 +259,54 @@ void executeTextCommand() {
         historyFrameIsConsecutive = false;
         if (!tempResult) {
             notifyUser((int8_t *)"Could not find word.");
+            return;
+        }
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "regex") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = true;
+        int8_t tempResult = compileRegexes();
+        setActivityMode(PREVIOUS_MODE);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Invalid regex.");
+            return;
+        }
+        tempResult = gotoNextTermHelper();
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find term.");
+            return;
+        }
+        return;
+    }
+    if (strcmp((char *)(tempTermList[0]), "reverseRegex") == 0) {
+        if (tempTermListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        searchTermLength = strlen((char *)searchTerm);
+        searchTermIsRegex = true;
+        int8_t tempResult = compileRegexes();
+        setActivityMode(PREVIOUS_MODE);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Invalid regex.");
+            return;
+        }
+        tempResult = gotoPreviousTermHelper();
+        cursorSnapColumn = cursorTextPos.column;
+        historyFrameIsConsecutive = false;
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find term.");
             return;
         }
         return;
