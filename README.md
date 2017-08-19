@@ -145,6 +145,7 @@ To view controls within BreadText, enter `/help`.
 `/set (config variable) (value)`  
 `/getPath`  
 `/setPath (path)`  
+`/version`  
 `/help`
 
 ### Configuration Variables
