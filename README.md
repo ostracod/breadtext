@@ -1,6 +1,8 @@
 
 # BreadText
 
+**Verion 1.0.0**
+
 <img src="logo.png" alt="BreadText logo" width="110" />
 
 A terminal-based text editor by Jack Eisenmann

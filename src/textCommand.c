@@ -382,6 +382,11 @@ void executeTextCommand() {
         notifyUser((int8_t *)"Changed file path.");
         return;
     }
+    if (strcmp((char *)(tempTermList[0]), "version") == 0) {
+        setActivityMode(PREVIOUS_MODE);
+        notifyUser(applicationVersion);
+        return;
+    }
     if (strcmp((char *)(tempTermList[0]), "crane") == 0) {
         craneSecret();
         setActivityMode(PREVIOUS_MODE);

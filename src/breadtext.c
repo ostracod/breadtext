@@ -1027,6 +1027,8 @@ void setShouldUseSystemClipboard(int8_t value) {
 
 int main(int argc, const char *argv[]) {
     
+    strcpy((char *)applicationVersion, "1.0.0");
+    
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);
     srand((unsigned)(timeValue.tv_sec * 1000 + timeValue.tv_usec / 1000));
@@ -1043,7 +1045,11 @@ int main(int argc, const char *argv[]) {
     }
     
     if (argc != 2) {
-        printf("Usage: breadtext [file path]\n");
+        printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
+        return 0;
+    }
+    if (strcmp(argv[1], "--version") == 0) {
+        printf("%s\n", applicationVersion);
         return 0;
     }
     isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);

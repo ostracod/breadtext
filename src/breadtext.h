@@ -47,6 +47,7 @@ int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
 int8_t isPerformingFuzzTest;
 int8_t shouldHighlightSyntax;
+int8_t applicationVersion[50];
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);
