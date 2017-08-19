@@ -324,7 +324,10 @@ void findPreviousTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     if (searchTermIsRegex) {
-        int64_t tempLength2 = index;
+        int64_t tempLength2 = index + 1;
+        if (tempLength2 > tempLength) {
+            tempLength2 = tempLength;
+        }
         int8_t tempBuffer[tempLength2 + 1];
         copyData(tempBuffer, pos->line->textAllocation.text, tempLength2);
         tempBuffer[tempLength2] = 0;
