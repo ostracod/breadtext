@@ -6,6 +6,7 @@
 #include <time.h>
 #include <wordexp.h>
 #include <unistd.h>
+#include "breadtext.h"
 #include "utilities.h"
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount) {
@@ -136,14 +137,13 @@ int8_t *mallocRealpath(int8_t *path) {
 }
 
 void systemCopyClipboardFile() {
-    if (applicationPlatform == PLATFORM_MAC) {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "cat \"%s\" | pbcopy > /dev/null 2>&1", (char *)clipboardFilePath);
-        system((char *)tempCommand);
-    }
-    if (applicationPlatform == PLATFORM_LINUX) {
+    if (applicationPlatform == PLATFORM_LINUX || shouldUseXclip) {
         int8_t tempCommand[5000];
         sprintf((char *)tempCommand, "xclip -selection clipboard \"%s\" > /dev/null 2>&1", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    } else {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "cat \"%s\" | pbcopy > /dev/null 2>&1", (char *)clipboardFilePath);
         system((char *)tempCommand);
     }
 }
@@ -155,14 +155,13 @@ void systemPasteClipboardFile() {
     if (access((char *)clipboardFilePath, F_OK) == -1) {
         return;
     }
-    if (applicationPlatform == PLATFORM_MAC) {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "pbpaste > \"%s\" 2> /dev/null", (char *)clipboardFilePath);
-        system((char *)tempCommand);
-    }
-    if (applicationPlatform == PLATFORM_LINUX) {
+    if (applicationPlatform == PLATFORM_LINUX || shouldUseXclip) {
         int8_t tempCommand[5000];
         sprintf((char *)tempCommand, "xclip -selection clipboard -o > \"%s\" 2> /dev/null", (char *)clipboardFilePath);
+        system((char *)tempCommand);
+    } else {
+        int8_t tempCommand[5000];
+        sprintf((char *)tempCommand, "pbpaste > \"%s\" 2> /dev/null", (char *)clipboardFilePath);
         system((char *)tempCommand);
     }
 }

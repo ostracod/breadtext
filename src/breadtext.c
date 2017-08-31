@@ -871,6 +871,10 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
         updateSyntaxDefinition();
         output = true;
     }
+    if (strcmp((char *)name, "shouldUseXclip") == 0) {
+        shouldUseXclip = value;
+        output = true;
+    }
     return output;
 }
 
@@ -1152,6 +1156,7 @@ int main(int argc, const char *argv[]) {
     shouldHighlightSyntax = true;
     commentPrefix = NULL;
     keywordList = NULL;
+    shouldUseXclip = (applicationPlatform == PLATFORM_LINUX);
     
     processRcFile();
     
