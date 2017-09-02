@@ -1029,43 +1029,23 @@ void setShouldUseSystemClipboard(int8_t value) {
     }
 }
 
-int main(int argc, const char *argv[]) {
-    
-    strcpy((char *)applicationVersion, "1.0.0");
-    
-    struct timeval timeValue;
-    gettimeofday(&timeValue, NULL);
-    srand((unsigned)(timeValue.tv_sec * 1000 + timeValue.tv_usec / 1000));
-    
-    #ifdef __APPLE__
-        applicationPlatform = PLATFORM_MAC;
-    #else
-        applicationPlatform = PLATFORM_LINUX;
-    #endif
-    
-    if (SHOULD_RUN_TESTS) {
-        runTests();
-        return 0;
+void cleanUpApplication() {
+    while (rootTextLine != NULL) {
+        deleteTextLine(rootTextLine);
     }
-    
-    if (argc != 2) {
-        printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
-        return 0;
+    int32_t index = 0;
+    while (index < historyFrameListLength) {
+        cleanUpHistoryFrame(historyFrameList + index);
+        index += 1;
     }
-    if (strcmp(argv[1], "--version") == 0) {
-        printf("%s\n", applicationVersion);
-        return 0;
+    index = 0;
+    while (index < keywordListLength) {
+        free(keywordList + index);
+        index += 1;
     }
-    isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
-    if (isPerformingFuzzTest) {
-        filePath = mallocRealpath((int8_t *)"./bupkis.txt");
-    } else {
-        filePath = mallocRealpath((int8_t *)(argv[1]));
-    }
-    clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
-    rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
-    syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
-    
+}
+
+int8_t initializeApplication() {
     FILE *tempFile;
     if (isPerformingFuzzTest) {
         tempFile = NULL;
@@ -1075,7 +1055,7 @@ int main(int argc, const char *argv[]) {
     if (tempFile == NULL) {
         if (errno == EACCES) {
             printf("Permission denied.\n");
-            return 0;
+            return false;
         }
         fileLastModifiedTime = TIME_NEVER;
         rootTextLine = createEmptyTextLine();
@@ -1160,12 +1140,6 @@ int main(int argc, const char *argv[]) {
     
     processRcFile();
     
-    window = initscr();
-    noecho();
-    curs_set(0);
-    keypad(window, true);
-    ESCDELAY = 50;
-    start_color();
     init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
     init_pair(RED_ON_WHITE, COLOR_RED, COLOR_WHITE);
     init_pair(GREEN_ON_WHITE, COLOR_GREEN, COLOR_WHITE);
@@ -1174,8 +1148,66 @@ int main(int argc, const char *argv[]) {
     init_pair(RED_ON_BLACK, COLOR_RED, COLOR_BLACK);
     init_pair(GREEN_ON_BLACK, COLOR_GREEN, COLOR_BLACK);
     init_pair(CYAN_ON_BLACK, COLOR_CYAN, COLOR_BLACK);
+    
     updateSyntaxDefinition();
+    
     handleResize();
+    
+    return true;
+}
+
+void resetApplication() {
+    cleanUpApplication();
+    initializeApplication();
+}
+
+int main(int argc, const char *argv[]) {
+    
+    strcpy((char *)applicationVersion, "1.0.0");
+    
+    struct timeval timeValue;
+    gettimeofday(&timeValue, NULL);
+    srand((unsigned)(timeValue.tv_sec * 1000 + timeValue.tv_usec / 1000));
+    
+    #ifdef __APPLE__
+        applicationPlatform = PLATFORM_MAC;
+    #else
+        applicationPlatform = PLATFORM_LINUX;
+    #endif
+    
+    if (SHOULD_RUN_TESTS) {
+        runTests();
+        return 0;
+    }
+    
+    if (argc != 2) {
+        printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
+        return 0;
+    }
+    if (strcmp(argv[1], "--version") == 0) {
+        printf("%s\n", applicationVersion);
+        return 0;
+    }
+    isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
+    if (isPerformingFuzzTest) {
+        filePath = mallocRealpath((int8_t *)"./bupkis.txt");
+    } else {
+        filePath = mallocRealpath((int8_t *)(argv[1]));
+    }
+    clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
+    rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
+    syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
+    
+    window = initscr();
+    noecho();
+    curs_set(0);
+    keypad(window, true);
+    ESCDELAY = 50;
+    start_color();
+    int8_t tempResult = initializeApplication();
+    if (!tempResult) {
+        return 0;
+    }
     
     if (isPerformingFuzzTest) {
         startFuzzTest();

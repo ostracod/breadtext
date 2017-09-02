@@ -66,6 +66,7 @@ int32_t getNextKey();
 int32_t promptSingleCharacter();
 void handleResize();
 int8_t handleKey(int32_t key);
+void resetApplication();
 
 // BREADTEXT_HEADER_FILE
 #endif
