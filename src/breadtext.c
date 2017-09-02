@@ -793,6 +793,13 @@ int32_t getNextKey() {
         if (isPerformingFuzzTest) {
             fuzzKey_t *tempFuzzKey = getNextFuzzKey();
             output = tempFuzzKey->key;
+        } else if (isPerformingSystematicTest) {
+            if (systematicTestKey >= 0) {
+                output = systematicTestKey;
+                systematicTestKey = -1;
+            } else {
+                return -1;
+            }
         } else {
             output = getch();
         }
@@ -1220,11 +1227,18 @@ int main(int argc, const char *argv[]) {
     start_color();
     int8_t tempResult = initializeApplication();
     if (!tempResult) {
+        endwin();
         return 0;
     }
     
     if (isPerformingFuzzTest) {
         startFuzzTest();
+    }
+    
+    if (isPerformingSystematicTest) {
+        int8_t tempResult = runSystematicTest();
+        endwin();
+        return tempResult;
     }
     
     while (true) {

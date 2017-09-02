@@ -35,3 +35,19 @@ int32_t convertNameToKey(int8_t *name) {
     return -1;
 }
 
+void simulateKeyPress(int32_t key) {
+    systematicTestKey = key;
+    while (true) {
+        int32_t tempKey = getNextKey();
+        if (tempKey < 0) {
+            break;
+        }
+        handleKey(tempKey);
+    }
+}
+
+int8_t runSystematicTest() {
+    
+    return 0;
+}
+
