@@ -25,6 +25,7 @@ void systemPasteClipboardFile();
 void addToHexadecimalText(int8_t *text, int64_t offset);
 void sleepMilliseconds(int32_t milliseconds);
 int8_t *getFileExtension(int8_t *path);
+void parseSpaceSeperatedTerms(int8_t **termList, int32_t *termListLength, int8_t *text);
 
 // UTILITIES_HEADER_FILE
 #endif

@@ -102,55 +102,8 @@ void deleteTextCommandCharacter() {
 
 void executeTextCommand() {
     int8_t *tempTermList[20];
-    int8_t tempTermIndex = 0;
-    int8_t tempIsInQuotes = false;
-    int8_t *tempText1 = textCommandBuffer;
-    int8_t *tempText2 = textCommandBuffer;
-    int8_t tempIsStartOfTerm = true;
-    while (true) {
-        int8_t tempCharacter = *tempText1;
-        tempText1 += 1;
-        if (tempCharacter == 0) {
-            *tempText2 = 0;
-            tempText2 += 1;
-            break;
-        }
-        int8_t tempIsWhitespace = isWhitespace(tempCharacter);
-        if (tempCharacter == '\\') {
-            int8_t tempCharacter = *tempText1;
-            tempText1 += 1;
-            *tempText2 = tempCharacter;
-            tempText2 += 1;
-        } else if (tempIsStartOfTerm && !tempIsWhitespace) {
-            if (tempCharacter == '"') {
-                tempTermList[tempTermIndex] = tempText2;
-                tempTermIndex += 1;
-                tempIsInQuotes = true;
-            } else {
-                tempTermList[tempTermIndex] = tempText2;
-                *tempText2 = tempCharacter;
-                tempText2 += 1;
-                tempTermIndex += 1;
-            }
-            tempIsStartOfTerm = false;
-        } else {
-            if (tempCharacter == '"') {
-                *tempText2 = 0;
-                tempText2 += 1;
-                tempIsInQuotes = false;
-                tempIsStartOfTerm = true;
-            } else if (!tempIsWhitespace || tempIsInQuotes) {
-                *tempText2 = tempCharacter;
-                tempText2 += 1;
-            } else {
-                *tempText2 = 0;
-                tempText2 += 1;
-                tempText1 = skipWhitespace(tempText1);
-                tempIsStartOfTerm = true;
-            }
-        }
-    }
-    int8_t tempTermListLength = tempTermIndex;
+    int32_t tempTermListLength;
+    parseSpaceSeperatedTerms(tempTermList, &tempTermListLength, textCommandBuffer);
     /*
     endwin();
     int64_t index = 0;

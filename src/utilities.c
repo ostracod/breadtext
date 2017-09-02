@@ -222,3 +222,56 @@ int8_t *getFileExtension(int8_t *path) {
     }
     return NULL;
 }
+
+void parseSpaceSeperatedTerms(int8_t **termList, int32_t *termListLength, int8_t *text) {
+    int8_t tempTermIndex = 0;
+    int8_t tempIsInQuotes = false;
+    int8_t *tempText1 = text;
+    int8_t *tempText2 = text;
+    int8_t tempIsStartOfTerm = true;
+    while (true) {
+        int8_t tempCharacter = *tempText1;
+        tempText1 += 1;
+        if (tempCharacter == 0) {
+            *tempText2 = 0;
+            tempText2 += 1;
+            break;
+        }
+        int8_t tempIsWhitespace = isWhitespace(tempCharacter);
+        if (tempCharacter == '\\') {
+            int8_t tempCharacter = *tempText1;
+            tempText1 += 1;
+            *tempText2 = tempCharacter;
+            tempText2 += 1;
+        } else if (tempIsStartOfTerm && !tempIsWhitespace) {
+            if (tempCharacter == '"') {
+                termList[tempTermIndex] = tempText2;
+                tempTermIndex += 1;
+                tempIsInQuotes = true;
+            } else {
+                termList[tempTermIndex] = tempText2;
+                *tempText2 = tempCharacter;
+                tempText2 += 1;
+                tempTermIndex += 1;
+            }
+            tempIsStartOfTerm = false;
+        } else {
+            if (tempCharacter == '"') {
+                *tempText2 = 0;
+                tempText2 += 1;
+                tempIsInQuotes = false;
+                tempIsStartOfTerm = true;
+            } else if (!tempIsWhitespace || tempIsInQuotes) {
+                *tempText2 = tempCharacter;
+                tempText2 += 1;
+            } else {
+                *tempText2 = 0;
+                tempText2 += 1;
+                tempText1 = skipWhitespace(tempText1);
+                tempIsStartOfTerm = true;
+            }
+        }
+    }
+    *termListLength = tempTermIndex;
+}
+
