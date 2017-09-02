@@ -1147,7 +1147,9 @@ int8_t initializeApplication() {
     keywordList = NULL;
     shouldUseXclip = (applicationPlatform == PLATFORM_LINUX);
     
-    processRcFile();
+    if (!isPerformingFuzzTest && !isPerformingSystematicTest) {
+        processRcFile();
+    }
     
     init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
     init_pair(RED_ON_WHITE, COLOR_RED, COLOR_WHITE);
