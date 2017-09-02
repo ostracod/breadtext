@@ -1,0 +1,5 @@
+RUNNING TEST Type characters
+====================================
+TEST COUNT: 1
+FAILED ASSERTIONS: 0 / 3
+ALL TESTS PASSED
