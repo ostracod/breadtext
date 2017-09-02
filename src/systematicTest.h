@@ -8,6 +8,7 @@ typedef struct namedKey {
 } namedKey_t;
 
 int8_t *systematicTestDefinitionPath;
+int8_t *systematicTestResultPath;
 int32_t systematicTestKey;
 
 int32_t convertNameToKey(int8_t *name);

@@ -44,10 +44,47 @@ void simulateKeyPress(int32_t key) {
         }
         handleKey(tempKey);
     }
+    sleepMilliseconds(1);
+}
+
+int8_t processSystematicTestCommand(int8_t *command) {
+    // TODO: Parse and perform the command.
+    return true;
 }
 
 int8_t runSystematicTest() {
-    
-    return 0;
+    int8_t output = true;
+    FILE *tempFile = fopen((char *)systematicTestDefinitionPath, "r");
+    if (tempFile == NULL) {
+        // TODO: Report missing file.
+        return false;
+    }
+    while (true) {
+        int8_t *tempText = NULL;
+        size_t tempSize = 0;
+        int64_t tempCount = getline((char **)&tempText, &tempSize, tempFile);
+        if (tempCount < 0) {
+            break;
+        }
+        int64_t tempLength = strlen((char *)tempText);
+        while (tempLength > 0) {
+            int64_t index = tempLength - 1;
+            if (tempText[index] == '\n') {
+                tempText[index] = 0;
+                tempLength = index;
+            } else {
+                break;
+            }
+        }
+        if (tempLength > 0) {
+            int8_t tempResult = processSystematicTestCommand(tempText);
+            if (!tempResult) {
+                output = false;
+            }
+        }
+        free(tempText);
+    }
+    fclose(tempFile);
+    return output;
 }
 

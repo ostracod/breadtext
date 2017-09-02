@@ -907,6 +907,7 @@ void processRcFile() {
         }
         free(tempText);
     }
+    fclose(tempFile);
 }
 
 void storeInitialFileContents() {
@@ -1195,6 +1196,7 @@ int main(int argc, const char *argv[]) {
         if (strcmp(argv[1], "--test") == 0) {
             isPerformingSystematicTest = true;
             systematicTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
+            systematicTestResultPath = mallocRealpath((int8_t *)"./systematicTestResult.txt");
             tempArgumentsAreValid = true;
         }
     }
@@ -1238,7 +1240,11 @@ int main(int argc, const char *argv[]) {
     if (isPerformingSystematicTest) {
         int8_t tempResult = runSystematicTest();
         endwin();
-        return tempResult;
+        if (tempResult) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
     
     while (true) {

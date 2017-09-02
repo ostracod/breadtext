@@ -1,0 +1,8 @@
+
+TEST "Type characters"
+PRESS_KEY t a b c
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc"
+ASSERT_POS 1 3
+
+
