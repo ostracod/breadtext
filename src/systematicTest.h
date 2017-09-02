@@ -7,6 +7,8 @@ typedef struct namedKey {
     int8_t *name;
 } namedKey_t;
 
+int8_t *systematicTestDefinitionPath;
+
 int32_t convertNameToKey(int8_t *name);
 
 // SYSTEMATIC_TEST_HEADER_FILE

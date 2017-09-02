@@ -2,7 +2,7 @@
 #ifndef TEXT_LINE_TEST_HEADER_FILE
 #define TEXT_LINE_TEST_HEADER_FILE
 
-void runTests();
+void runTextLineTest();
 
 // TEXT_LINE_TEST_HEADER_FILE
 #endif

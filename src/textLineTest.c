@@ -135,7 +135,7 @@ int8_t runFuzzTest() {
     return true;
 }
 
-void runTests() {
+void runTextLineTest() {
     srand((unsigned)time(NULL));
     int32_t tempCount;
     tempCount = 0;

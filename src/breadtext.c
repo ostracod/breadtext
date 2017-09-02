@@ -1176,21 +1176,34 @@ int main(int argc, const char *argv[]) {
         applicationPlatform = PLATFORM_LINUX;
     #endif
     
-    if (SHOULD_RUN_TESTS) {
-        runTests();
+    if (SHOULD_RUN_TEXT_LINE_TEST) {
+        runTextLineTest();
         return 0;
     }
     
-    if (argc != 2) {
+    int8_t tempArgumentsAreValid = false;
+    isPerformingFuzzTest = false;
+    isPerformingSystematicTest = false;
+    if (argc == 3) {
+        if (strcmp(argv[1], "--test") == 0) {
+            isPerformingSystematicTest = true;
+            systematicTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
+            tempArgumentsAreValid = true;
+        }
+    }
+    if (argc == 2) {
+        if (strcmp(argv[1], "--version") == 0) {
+            printf("%s\n", applicationVersion);
+            return 0;
+        }
+        isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
+        tempArgumentsAreValid = true;
+    }
+    if (!tempArgumentsAreValid) {
         printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
         return 0;
     }
-    if (strcmp(argv[1], "--version") == 0) {
-        printf("%s\n", applicationVersion);
-        return 0;
-    }
-    isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
-    if (isPerformingFuzzTest) {
+    if (isPerformingFuzzTest || isPerformingSystematicTest) {
         filePath = mallocRealpath((int8_t *)"./bupkis.txt");
     } else {
         filePath = mallocRealpath((int8_t *)(argv[1]));

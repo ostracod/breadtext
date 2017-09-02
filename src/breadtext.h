@@ -25,7 +25,7 @@
 
 #define TIME_NEVER -1
 
-#define SHOULD_RUN_TESTS false
+#define SHOULD_RUN_TEXT_LINE_TEST false
 #define IS_IN_DEBUG_MODE false
 
 textPos_t cursorTextPos;
@@ -46,6 +46,7 @@ int8_t *rcFilePath;
 int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
 int8_t isPerformingFuzzTest;
+int8_t isPerformingSystematicTest;
 int8_t shouldHighlightSyntax;
 int8_t applicationVersion[50];
 int8_t shouldUseXclip;
