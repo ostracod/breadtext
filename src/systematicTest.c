@@ -171,6 +171,27 @@ int8_t processSystematicTestCommand(int8_t *command) {
         }
         return true;
     }
+    if (strcmp((char *)(tempTermList[0]), "ASSERT_HIGHLIGHT_POS") == 0) {
+        if (tempTermListLength != 3) {
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        int64_t tempLineNumber1;
+        int64_t index1;
+        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber1);
+        sscanf((char *)(tempTermList[2]), "%lld", &index1);
+        int64_t tempLineNumber2 = getTextLineNumber(highlightTextPos.line);
+        int64_t index2 = getTextPosIndex(&highlightTextPos);
+        assertionCount += 1;
+        if (tempLineNumber1 != tempLineNumber2 || index1 != index2) {
+            failedAssertionCount += 1;
+            fprintf(systematicTestResultFile, "HIGHLIGHT POS ASSERTION FAILURE\nExpected: %lld %lld\nFound: %lld %lld\n", tempLineNumber1, index1, tempLineNumber2, index2);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        return true;
+    }
     if (strcmp((char *)(tempTermList[0]), "ADD_LINE") == 0) {
         if (tempTermListLength != 2) {
             fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
