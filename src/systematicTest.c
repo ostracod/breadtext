@@ -136,24 +136,23 @@ int8_t processSystematicTestCommand(int8_t *command) {
             fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE\nMissing line number %lld\n", tempLineNumber);
             fflush(systematicTestResultFile);
             return false;
+        }
+        int8_t tempHasFailed = false;
+        if (strlen((char *)(tempTermList[2])) != tempLine->textAllocation.length) {
+            tempHasFailed = true;
         } else {
-            int8_t tempHasFailed = false;
-            if (strlen((char *)(tempTermList[2])) != tempLine->textAllocation.length) {
+            if (!equalData(tempTermList[2], tempLine->textAllocation.text, tempLine->textAllocation.length)) {
                 tempHasFailed = true;
-            } else {
-                if (!equalData(tempTermList[2], tempLine->textAllocation.text, tempLine->textAllocation.length)) {
-                    tempHasFailed = true;
-                }
             }
-            if (tempHasFailed) {
-                failedAssertionCount += 1;
-                int8_t tempText[tempLine->textAllocation.length + 1];
-                copyData(tempText, tempLine->textAllocation.text, tempLine->textAllocation.length + 1);
-                tempText[tempLine->textAllocation.length] = 0;
-                fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %lld)\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
-                fflush(systematicTestResultFile);
-                return false;
-            }
+        }
+        if (tempHasFailed) {
+            failedAssertionCount += 1;
+            int8_t tempText[tempLine->textAllocation.length + 1];
+            copyData(tempText, tempLine->textAllocation.text, tempLine->textAllocation.length + 1);
+            tempText[tempLine->textAllocation.length] = 0;
+            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %lld)\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
+            fflush(systematicTestResultFile);
+            return false;
         }
         return true;
     }
@@ -232,7 +231,18 @@ int8_t processSystematicTestCommand(int8_t *command) {
         int64_t index;
         sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber);
         sscanf((char *)(tempTermList[2]), "%lld", &index);
-        cursorTextPos.line = getTextLineByNumber(tempLineNumber);
+        textLine_t *tempLine = getTextLineByNumber(tempLineNumber);
+        if (tempLine == NULL) {
+            fprintf(systematicTestResultFile, "ERROR: Missing line number %lld.\n", tempLineNumber);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        if (index > tempLine->textAllocation.length) {
+            fprintf(systematicTestResultFile, "ERROR: Line number %lld is too short.\n", tempLineNumber);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        cursorTextPos.line = tempLine;
         setTextPosIndex(&cursorTextPos, index);
         redrawEverything();
         return true;
