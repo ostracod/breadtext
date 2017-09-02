@@ -8,3 +8,4 @@ test.py
 *.o
 failure.txt
 failures
+systematicTestResult.txt
