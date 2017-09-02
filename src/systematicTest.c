@@ -132,22 +132,28 @@ int8_t processSystematicTestCommand(int8_t *command) {
         sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber);
         textLine_t *tempLine = getTextLineByNumber(tempLineNumber);
         assertionCount += 1;
-        int8_t tempHasFailed = false;
-        if (strlen((char *)(tempTermList[2])) != tempLine->textAllocation.length) {
-            tempHasFailed = true;
-        } else {
-            if (!equalData(tempTermList[2], tempLine->textAllocation.text, tempLine->textAllocation.length)) {
-                tempHasFailed = true;
-            }
-        }
-        if (tempHasFailed) {
-            failedAssertionCount += 1;
-            int8_t tempText[tempLine->textAllocation.length + 1];
-            copyData(tempText, tempLine->textAllocation.text, tempLine->textAllocation.length + 1);
-            tempText[tempLine->textAllocation.length] = 0;
-            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %lld)\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
+        if (tempLine == NULL) {
+            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE\nMissing line number %lld\n", tempLineNumber);
             fflush(systematicTestResultFile);
             return false;
+        } else {
+            int8_t tempHasFailed = false;
+            if (strlen((char *)(tempTermList[2])) != tempLine->textAllocation.length) {
+                tempHasFailed = true;
+            } else {
+                if (!equalData(tempTermList[2], tempLine->textAllocation.text, tempLine->textAllocation.length)) {
+                    tempHasFailed = true;
+                }
+            }
+            if (tempHasFailed) {
+                failedAssertionCount += 1;
+                int8_t tempText[tempLine->textAllocation.length + 1];
+                copyData(tempText, tempLine->textAllocation.text, tempLine->textAllocation.length + 1);
+                tempText[tempLine->textAllocation.length] = 0;
+                fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %lld)\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
+                fflush(systematicTestResultFile);
+                return false;
+            }
         }
         return true;
     }

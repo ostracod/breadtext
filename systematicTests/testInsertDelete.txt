@@ -13,3 +13,14 @@ ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcghidef"
 ASSERT_POS 1 6
 
+TEST "Type characters at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY t j k l
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "jkldef"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 3
