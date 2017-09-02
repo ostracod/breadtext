@@ -1,0 +1,9 @@
+
+TEST "Goto line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+TEXT_COMMAND "gotoLine 2"
+ASSERT_POS 2 0
+
+

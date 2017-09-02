@@ -8,6 +8,7 @@
 #include "breadtext.h"
 #include "textLine.h"
 #include "textAllocation.h"
+#include "textCommand.h"
 #include "display.h"
 #include "systematicTest.h"
 
@@ -228,6 +229,16 @@ int8_t processSystematicTestCommand(int8_t *command) {
         cursorTextPos.line = getTextLineByNumber(tempLineNumber);
         setTextPosIndex(&cursorTextPos, index);
         redrawEverything();
+        return true;
+    }
+    if (strcmp((char *)(tempTermList[0]), "TEXT_COMMAND") == 0) {
+        if (tempTermListLength != 2) {
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        strcpy((char *)textCommandBuffer, (char *)(tempTermList[1]));
+        executeTextCommand();
         return true;
     }
     fprintf(systematicTestResultFile, "ERROR: Invalid command.\n%s\n", tempTermList[0]);
