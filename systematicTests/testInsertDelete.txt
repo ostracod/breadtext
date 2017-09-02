@@ -1,17 +1,66 @@
 
+TEST "Enter text entry mode"
+PRESS_KEY ` t a
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a"
+ASSERT_POS 1 1
+
+TEST "Exit text entry mode"
+PRESS_KEY t a ESC `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a"
+ASSERT_POS 1 1
+
+TEST "Comma escape"
+PRESS_KEY t a , , `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a"
+ASSERT_POS 1 1
+
+TEST "No comma escape 1"
+PRESS_KEY t a , a , a
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a,a,a"
+ASSERT_POS 1 5
+
+TEST "No comma escape 2"
+ADD_LINE ""
+ADD_LINE ""
+PRESS_KEY t a , DOWN , a
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "a,"
+ASSERT_LINE 2 ",a"
+ASSERT_POS 2 2
+
 TEST "Type characters in empty buffer"
 PRESS_KEY t a b c
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc"
 ASSERT_POS 1 3
 
-TEST "Type characters in middle of line"
-ADD_LINE "abcdef"
-SET_POS 1 3
+TEST "Type characters in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
 PRESS_KEY t g h i
-ASSERT_LINE_COUNT 1
-ASSERT_LINE 1 "abcghidef"
-ASSERT_POS 1 6
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "ghi"
+ASSERT_LINE 3 "def"
+ASSERT_POS 2 3
+
+TEST "Type characters in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY t j k l
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dejklf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 5
 
 TEST "Type characters at beginning of line"
 ADD_LINE "abc"
@@ -24,3 +73,206 @@ ASSERT_LINE 1 "abc"
 ASSERT_LINE 2 "jkldef"
 ASSERT_LINE 3 "ghi"
 ASSERT_POS 2 3
+
+TEST "Type characters at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY t j k l
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defjkl"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 6
+
+TEST "Type characters at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY t j k l
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "jklabc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 3
+
+TEST "Type characters at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY t j k l
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_POS 3 6
+
+TEST "Space"
+PRESS_KEY SPACE
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 " "
+ASSERT_POS 1 1
+
+TEST "Backspace in empty buffer"
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 ""
+ASSERT_POS 1 0
+
+TEST "Backspace in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_POS 1 3
+
+TEST "Backspace in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "df"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Backspace at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghi"
+ASSERT_POS 1 3
+
+TEST "Backspace at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "de"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 2
+
+TEST "Backspace at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 0
+
+TEST "Backspace at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "gh"
+ASSERT_POS 3 2
+
+TEST "Newline in empty buffer"
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 ""
+ASSERT_POS 2 0
+
+TEST "Newline in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 ""
+ASSERT_LINE 4 "def"
+ASSERT_POS 3 0
+
+TEST "Newline in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "de"
+ASSERT_LINE 3 "f"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 0
+
+TEST "Newline at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 0
+
+TEST "Newline at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 ""
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 0
+
+TEST "Newline at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 "abc"
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 0
+
+TEST "Newline at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_LINE 4 ""
+ASSERT_POS 4 0
