@@ -1,0 +1,296 @@
+
+TEST "Left in empty buffer"
+PRESS_KEY LEFT
+ASSERT_POS 1 0
+
+TEST "Left in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY LEFT
+ASSERT_POS 1 3
+
+TEST "Left in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY LEFT
+ASSERT_POS 2 1
+
+TEST "Left at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY LEFT
+ASSERT_POS 1 3
+
+TEST "Left at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY LEFT
+ASSERT_POS 2 2
+
+TEST "Left at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY LEFT
+ASSERT_POS 1 0
+
+TEST "Left at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY LEFT
+ASSERT_POS 3 2
+
+TEST "Right in empty buffer"
+PRESS_KEY RIGHT
+ASSERT_POS 1 0
+
+TEST "Right in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY RIGHT
+ASSERT_POS 3 0
+
+TEST "Right in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY RIGHT
+ASSERT_POS 2 3
+
+TEST "Right at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY RIGHT
+ASSERT_POS 2 1
+
+TEST "Right at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY RIGHT
+ASSERT_POS 3 0
+
+TEST "Right at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY RIGHT
+ASSERT_POS 1 1
+
+TEST "Right at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY RIGHT
+ASSERT_POS 3 3
+
+TEST "Up in empty buffer"
+PRESS_KEY UP
+ASSERT_POS 1 0
+
+TEST "Up in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY UP
+ASSERT_POS 1 0
+
+TEST "Up in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY UP
+ASSERT_POS 1 2
+
+TEST "Up at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY UP
+ASSERT_POS 1 0
+
+TEST "Up at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY UP
+ASSERT_POS 1 3
+
+TEST "Up at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY UP
+ASSERT_POS 1 0
+
+TEST "Up at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY UP
+ASSERT_POS 2 3
+
+TEST "Down in empty buffer"
+PRESS_KEY DOWN
+ASSERT_POS 1 0
+
+TEST "Down in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY DOWN
+ASSERT_POS 3 0
+
+TEST "Down in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY DOWN
+ASSERT_POS 3 2
+
+TEST "Down at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY DOWN
+ASSERT_POS 3 0
+
+TEST "Down at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY DOWN
+ASSERT_POS 3 3
+
+TEST "Down at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY DOWN
+ASSERT_POS 2 0
+
+TEST "Down at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY DOWN
+ASSERT_POS 3 3
+
+TEST "Column snap"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 1 0
+PRESS_KEY RIGHT DOWN DOWN DOWN
+ASSERT_POS 3 1
+
+TEST "Alternative left"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY j
+ASSERT_POS 2 0
+
+TEST "Alternative right"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY l
+ASSERT_POS 2 2
+
+TEST "Alternative up"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY i
+ASSERT_POS 1 1
+
+TEST "Alternative down"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY k
+ASSERT_POS 3 1
+
+TEST "Super left"
+ADD_LINE "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+SET_POS 1 11
+PRESS_KEY J
+ASSERT_POS 1 1
+
+TEST "Super right"
+ADD_LINE "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+SET_POS 1 11
+PRESS_KEY L
+ASSERT_POS 1 21
+
+TEST "Super up"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 12 0
+PRESS_KEY I
+ASSERT_POS 2 0
+
+TEST "Super down"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 1 0
+PRESS_KEY K
+ASSERT_POS 11 0
+
+
