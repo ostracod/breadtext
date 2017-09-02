@@ -1,5 +1,6 @@
-RUNNING TEST Type characters
+RUNNING TEST Type characters in empty buffer
+RUNNING TEST Type characters in middle of line
 ====================================
-TEST COUNT: 1
-FAILED ASSERTIONS: 0 / 3
+TEST COUNT: 2
+FAILED ASSERTIONS: 0 / 6
 ALL TESTS PASSED

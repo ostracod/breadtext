@@ -1,8 +1,15 @@
 
-TEST "Type characters"
+TEST "Type characters in empty buffer"
 PRESS_KEY t a b c
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc"
 ASSERT_POS 1 3
 
+TEST "Type characters in middle of line"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghidef"
+ASSERT_POS 1 6
 

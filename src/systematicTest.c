@@ -28,6 +28,7 @@ FILE *systematicTestResultFile;
 int32_t failedAssertionCount;
 int32_t assertionCount;
 int32_t testCount;
+int32_t initialDocumentIsEmpty;
 
 int32_t convertNameToKey(int8_t *name) {
     int index = 0;
@@ -65,11 +66,12 @@ int8_t processSystematicTestCommand(int8_t *command) {
     }
     if (strcmp((char *)(tempTermList[0]), "TEST") == 0) {
         if (tempTermListLength != 2) {
-            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", command);
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
             fflush(systematicTestResultFile);
             return false;
         }
         resetApplication();
+        initialDocumentIsEmpty = true;
         fprintf(systematicTestResultFile, "RUNNING TEST %s\n", tempTermList[1]);
         fflush(systematicTestResultFile);
         testCount += 1;
@@ -77,7 +79,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
     }
     if (strcmp((char *)(tempTermList[0]), "PRESS_KEY") == 0) {
         if (tempTermListLength < 2) {
-            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", command);
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -102,7 +104,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
     }
     if (strcmp((char *)(tempTermList[0]), "ASSERT_LINE_COUNT") == 0) {
         if (tempTermListLength != 2) {
-            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", command);
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -121,7 +123,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
     }
     if (strcmp((char *)(tempTermList[0]), "ASSERT_LINE") == 0) {
         if (tempTermListLength != 3) {
-            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", command);
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -150,7 +152,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
     }
     if (strcmp((char *)(tempTermList[0]), "ASSERT_POS") == 0) {
         if (tempTermListLength != 3) {
-            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", command);
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -167,6 +169,44 @@ int8_t processSystematicTestCommand(int8_t *command) {
             fflush(systematicTestResultFile);
             return false;
         }
+        return true;
+    }
+    if (strcmp((char *)(tempTermList[0]), "ADD_LINE") == 0) {
+        if (tempTermListLength != 2) {
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        textLine_t *tempLine1 = createEmptyTextLine();
+        insertTextIntoTextAllocation(&(tempLine1->textAllocation), 0, tempTermList[1], strlen((char *)(tempTermList[1])));
+        if (initialDocumentIsEmpty) {
+            textLine_t *tempLine2 = rootTextLine;
+            insertTextLineRight(tempLine2, tempLine1);
+            cursorTextPos.line = tempLine1;
+            setTextPosIndex(&cursorTextPos, 0);
+            handleTextLineDeleted(tempLine2);
+            deleteTextLine(tempLine2);
+            initialDocumentIsEmpty = false;
+        } else {
+            textLine_t *tempLine2 = getRightmostTextLine(rootTextLine);
+            insertTextLineRight(tempLine2, tempLine1);
+        }
+        redrawEverything();
+        return true;
+    }
+    if (strcmp((char *)(tempTermList[0]), "SET_POS") == 0) {
+        if (tempTermListLength != 3) {
+            fprintf(systematicTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+            fflush(systematicTestResultFile);
+            return false;
+        }
+        int64_t tempLineNumber;
+        int64_t index;
+        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber);
+        sscanf((char *)(tempTermList[2]), "%lld", &index);
+        cursorTextPos.line = getTextLineByNumber(tempLineNumber);
+        setTextPosIndex(&cursorTextPos, index);
+        redrawEverything();
         return true;
     }
     fprintf(systematicTestResultFile, "ERROR: Invalid command.\n%s\n", tempTermList[0]);
