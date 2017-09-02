@@ -192,6 +192,94 @@ ASSERT_LINE 2 "def"
 ASSERT_LINE 3 "gh"
 ASSERT_POS 3 2
 
+TEST "Delete in empty buffer"
+PRESS_KEY d
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 ""
+ASSERT_POS 1 0
+
+TEST "Delete in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY d
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_POS 2 0
+
+TEST "Delete in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "df"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Delete at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "ef"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 0
+
+TEST "Delete at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY d
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defghi"
+ASSERT_POS 2 3
+
+TEST "Delete at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "bc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 0
+
+TEST "Delete at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 3 3
+
+TEST "Change"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY D x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dxf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 2
+
 TEST "Newline in empty buffer"
 PRESS_KEY NEWLINE
 ASSERT_LINE_COUNT 2
@@ -335,3 +423,134 @@ ASSERT_LINE 2 "def"
 ASSERT_LINE 3 "ghi"
 ASSERT_POS 1 0
 
+TEST "Insert character after cursor in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY ' x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "xdef"
+ASSERT_POS 2 0
+
+TEST "Insert character after cursor in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY ' x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dexf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert character after cursor at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY ' x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dxef"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 0
+
+TEST "Insert character after cursor at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY ' x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "xghi"
+ASSERT_POS 2 3
+
+TEST "Insert character after cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY ' x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "axbc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 0
+
+TEST "Insert character before cursor in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "x"
+ASSERT_LINE 3 "def"
+ASSERT_POS 2 1
+
+TEST "Insert character before cursor in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dexf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 3
+
+TEST "Insert character before cursor at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "xdef"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert character before cursor at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defx"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 4
+
+TEST "Insert character before cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "xabc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 1
+
+TEST "Insert character before cursor at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY "\"" x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghix"
+ASSERT_POS 3 4
