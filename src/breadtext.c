@@ -24,6 +24,7 @@
 #include "textCommand.h"
 #include "fuzz.h"
 #include "syntax.h"
+#include "systematicTest.h"
 #include "breadtext.h"
 
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
