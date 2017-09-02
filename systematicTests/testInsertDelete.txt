@@ -365,6 +365,19 @@ ASSERT_LINE 3 "ghi"
 ASSERT_LINE 4 ""
 ASSERT_POS 4 0
 
+TEST "Newline with indentation in middle of line"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 6
+PRESS_KEY NEWLINE
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    de"
+ASSERT_LINE 3 "    f"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 4
+
 TEST "Replace in empty line"
 ADD_LINE "abc"
 ADD_LINE ""
@@ -554,3 +567,296 @@ ASSERT_LINE 1 "abc"
 ASSERT_LINE 2 "def"
 ASSERT_LINE 3 "ghix"
 ASSERT_POS 3 4
+
+TEST "Insert line after cursor in empty buffer"
+PRESS_KEY "\\"
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 ""
+ASSERT_POS 1 0
+
+TEST "Insert line after cursor in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY "\\"
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 ""
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert line after cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 1
+PRESS_KEY "\\"
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 1 1
+
+TEST "Insert line after cursor at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 1
+PRESS_KEY "\\"
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_LINE 4 ""
+ASSERT_POS 3 1
+
+TEST "Insert line after cursor with indentation in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY "\\"
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    def"
+ASSERT_LINE 3 "    "
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert line before cursor in empty buffer"
+PRESS_KEY |
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 ""
+ASSERT_POS 2 0
+
+TEST "Insert line before cursor in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY |
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 1
+
+TEST "Insert line before cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 1
+PRESS_KEY |
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 "abc"
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert line before cursor at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 1
+PRESS_KEY |
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 ""
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 4 1
+
+TEST "Insert line before cursor with indentation in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY |
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    "
+ASSERT_LINE 3 "    def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 1
+
+TEST "Insert and edit line after cursor in empty buffer"
+PRESS_KEY o x
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 ""
+ASSERT_LINE 2 "x"
+ASSERT_POS 2 1
+
+TEST "Insert and edit line after cursor in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY o x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "x"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 1
+
+TEST "Insert and edit line after cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 1
+PRESS_KEY o x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "x"
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert and edit line after cursor at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 1
+PRESS_KEY o x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_LINE 4 "x"
+ASSERT_POS 4 1
+
+TEST "Insert and edit line after cursor with indentation in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY o x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    def"
+ASSERT_LINE 3 "    x"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 5
+
+TEST "Insert and edit line before cursor in empty buffer"
+PRESS_KEY O x
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "x"
+ASSERT_LINE 2 ""
+ASSERT_POS 1 1
+
+TEST "Insert and edit line before cursor in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY O x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "x"
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 1
+
+TEST "Insert and edit line before cursor at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 1
+PRESS_KEY O x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "x"
+ASSERT_LINE 2 "abc"
+ASSERT_LINE 3 "def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 1 1
+
+TEST "Insert and edit line before cursor at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 1
+PRESS_KEY O x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "x"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 3 1
+
+TEST "Insert and edit line before cursor with indentation in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY O x
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    x"
+ASSERT_LINE 3 "    def"
+ASSERT_LINE 4 "ghi"
+ASSERT_POS 2 5
+
+TEST "Change line in empty buffer"
+PRESS_KEY C x
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "x"
+ASSERT_POS 1 1
+
+TEST "Change line in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "x"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Change line at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 1
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "x"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 1
+
+TEST "Change line at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 1
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "x"
+ASSERT_POS 3 1
+
+TEST "Change line with indentation in middle of buffer"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    x"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 5
+
+
+
