@@ -794,9 +794,9 @@ int32_t getNextKey() {
             fuzzKey_t *tempFuzzKey = getNextFuzzKey();
             output = tempFuzzKey->key;
         } else if (isPerformingSystematicTest) {
-            if (systematicTestKey >= 0) {
-                output = systematicTestKey;
-                systematicTestKey = -1;
+            if (systematicTestKeyListIndex < systematicTestKeyListLength) {
+                output = systematicTestKeyList[systematicTestKeyListIndex];
+                systematicTestKeyListIndex += 1;
             } else {
                 return -1;
             }

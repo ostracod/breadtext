@@ -276,3 +276,62 @@ ASSERT_LINE 2 "def"
 ASSERT_LINE 3 "ghi"
 ASSERT_LINE 4 ""
 ASSERT_POS 4 0
+
+TEST "Replace in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY . x
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "xdef"
+ASSERT_POS 2 0
+
+TEST "Replace in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY . x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "dxf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 1
+
+TEST "Replace at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY . x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "xef"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 0
+
+TEST "Replace at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY . x
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defxghi"
+ASSERT_POS 2 3
+
+TEST "Replace at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY . x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "xbc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 0
+
