@@ -484,3 +484,99 @@ ADD_LINE "ghi"
 SET_POS 2 0
 PRESS_KEY =
 ASSERT_POS 2 0
+
+TEST "Go to character exclusive same line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY g f
+ASSERT_POS 2 1
+
+TEST "Go to character exclusive different line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY g h
+ASSERT_POS 3 0
+
+TEST "Go to character exclusive missing"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY g x
+ASSERT_POS 2 0
+
+TEST "Go to character inclusive same line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY G f
+ASSERT_POS 2 2
+
+TEST "Go to character inclusive different line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY G h
+ASSERT_POS 3 1
+
+TEST "Go to character inclusive missing"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY G x
+ASSERT_POS 2 0
+
+TEST "Reverse go to character exclusive same line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY r d
+ASSERT_POS 2 1
+
+TEST "Reverse go to character exclusive different line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY r b
+ASSERT_POS 1 2
+
+TEST "Reverse go to character exclusive missing"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY r x
+ASSERT_POS 2 2
+
+TEST "Reverse go to character inclusive same line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY R d
+ASSERT_POS 2 0
+
+TEST "Reverse go to character inclusive different line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY R b
+ASSERT_POS 1 1
+
+TEST "Reverse go to character inclusive missing"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 2
+PRESS_KEY R x
+ASSERT_POS 2 2
