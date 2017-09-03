@@ -1,0 +1,119 @@
+
+TEST "Type characters history"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghidef"
+
+TEST "Type characters and move history"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h RIGHT i j ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghdef"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+
+TEST "Delete characters history"
+ADD_LINE "abcdefghi"
+SET_POS 1 6
+PRESS_KEY BACKSPACE BACKSPACE BACKSPACE u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefghi"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghi"
+
+TEST "Delete characters and move history"
+ADD_LINE "abcdefghi"
+SET_POS 1 6
+PRESS_KEY BACKSPACE BACKSPACE LEFT BACKSPACE BACKSPACE u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdghi"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefghi"
+
+TEST "Insert new line history"
+ADD_LINE "abc"
+ADD_LINE "def"
+SET_POS 1 3
+PRESS_KEY t NEWLINE ESC u
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+PRESS_KEY U
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "def"
+
+TEST "Delete line history"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY H d u
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+PRESS_KEY U
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "ghi"
+
+TEST "Type comma history 1"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i , , u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghidef"
+
+TEST "Type comma history 2"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i , ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghi,def"
+
+TEST "Type comma history 3"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i , RIGHT j k l ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghi,def"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+
+TEST "Type comma history 4"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t , ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc,def"
+
+TEST "Type comma history 5"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY t g h i RIGHT , , u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghidef"
