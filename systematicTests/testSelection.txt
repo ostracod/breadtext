@@ -14,6 +14,14 @@ PRESS_KEY ESC d
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcdefhi"
 
+TEST "Escape character select alternative"
+ADD_LINE "abcdefghi"
+SET_POS 1 3
+PRESS_KEY h RIGHT RIGHT RIGHT
+PRESS_KEY , d
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefhi"
+
 TEST "Line select"
 ADD_LINE "abc"
 ADD_LINE "defg"
@@ -52,6 +60,17 @@ ASSERT_LINE 1 "abc"
 ASSERT_LINE 2 "efg"
 ASSERT_LINE 3 "hijkl"
 
+TEST "Line select escape alternative"
+ADD_LINE "abc"
+ADD_LINE "defg"
+ADD_LINE "hijkl"
+SET_POS 2 0
+PRESS_KEY H , d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "efg"
+ASSERT_LINE 3 "hijkl"
+
 TEST "Word select"
 ADD_LINE "abc def ghi"
 SET_POS 1 4
@@ -77,6 +96,13 @@ TEST "Escape word select"
 ADD_LINE "abc def ghi"
 SET_POS 1 4
 PRESS_KEY w ESC d
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc de ghi"
+
+TEST "Escape word select alternative"
+ADD_LINE "abc def ghi"
+SET_POS 1 4
+PRESS_KEY w , d
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc de ghi"
 

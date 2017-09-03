@@ -236,7 +236,7 @@ int8_t handleKey(int32_t key) {
         if (key == 'K' || key == 'Z') {
             scrollHelpMessageDown(10);
         }
-        if (key == 'q') {
+        if (key == 'q' || key == ',') {
             setActivityMode(COMMAND_MODE);
         }
     } else if (activityMode == TEXT_COMMAND_MODE) {
@@ -263,6 +263,11 @@ int8_t handleKey(int32_t key) {
             }
             if (key == KEY_DOWN) {
                 moveCursorDown(1);
+            }
+        }
+        if (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_STATIC_MODE || activityMode == HIGHLIGHT_LINE_MODE) {
+            if (key == ',') {
+                setActivityMode(COMMAND_MODE);
             }
         }
         if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {

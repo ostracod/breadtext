@@ -58,7 +58,8 @@ To view controls within BreadText, enter `/help`.
 `Shift + T` = Text-replace mode  
 `O` = Insert line before cursor and enter text-entry mode  
 `Shift + O` = Insert line after cursor and enter text-entry mode  
-`, + , (again)` or `Escape` = Command mode  
+`, + , (again)` or `Escape` = Exit text-entry mode and enter command mode  
+`,` or `Escape` = Exit highlight mode and enter command mode  
 `H` = Character highlight mode  
 `Shift + H` = Line highlight mode  
 `W` = Word highlight mode  
