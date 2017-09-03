@@ -293,4 +293,194 @@ SET_POS 1 0
 PRESS_KEY K
 ASSERT_POS 11 0
 
+TEST "Mark 1"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY !
+SET_POS 1 0
+PRESS_KEY 1
+ASSERT_POS 3 1
 
+TEST "Mark 2"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY @
+SET_POS 1 0
+PRESS_KEY 2
+ASSERT_POS 3 1
+
+TEST "Mark 3"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY #
+SET_POS 1 0
+PRESS_KEY 3
+ASSERT_POS 3 1
+
+TEST "Mark 4"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY $
+SET_POS 1 0
+PRESS_KEY 4
+ASSERT_POS 3 1
+
+TEST "Mark 5"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY %
+SET_POS 1 0
+PRESS_KEY 5
+ASSERT_POS 3 1
+
+TEST "Mark 6"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY ^
+SET_POS 1 0
+PRESS_KEY 6
+ASSERT_POS 3 1
+
+TEST "Mark 7"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY &
+SET_POS 1 0
+PRESS_KEY 7
+ASSERT_POS 3 1
+
+TEST "Mark 8"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 3 0
+PRESS_KEY *
+SET_POS 1 0
+PRESS_KEY 8
+ASSERT_POS 3 1
+
+TEST "Deleted mark"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+ADD_LINE "a"
+SET_POS 2 0
+PRESS_KEY ! H d
+SET_POS 4 0
+PRESS_KEY 1
+ASSERT_POS 2 1
+
+TEST "Go to beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY [
+ASSERT_POS 2 0
+
+TEST "Go to beginning of empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY [
+ASSERT_POS 2 0
+
+TEST "Go to end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY ]
+ASSERT_POS 2 3
+
+TEST "Go to end of empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY ]
+ASSERT_POS 2 0
+
+TEST "Go to beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY {
+ASSERT_POS 1 0
+
+TEST "Go to beginning of empty buffer"
+ADD_LINE ""
+SET_POS 1 0
+PRESS_KEY {
+ASSERT_POS 1 0
+
+TEST "Go to end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY }
+ASSERT_POS 3 0
+
+TEST "Go to end of empty buffer"
+ADD_LINE ""
+SET_POS 1 0
+PRESS_KEY }
+ASSERT_POS 1 0
+
+TEST "Go to beginning of indentation"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 5
+PRESS_KEY =
+ASSERT_POS 2 4
+
+TEST "Go to beginning of indentation without indentation"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY =
+ASSERT_POS 2 0
+
+TEST "Go to beginning of indentation in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY =
+ASSERT_POS 2 0
