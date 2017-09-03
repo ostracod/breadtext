@@ -19,7 +19,7 @@ PRESS_KEY u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcdef"
 
-TEST "Delete characters history"
+TEST "Backspace characters history"
 ADD_LINE "abcdefghi"
 SET_POS 1 6
 PRESS_KEY BACKSPACE BACKSPACE BACKSPACE u
@@ -29,12 +29,32 @@ PRESS_KEY U
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcghi"
 
-TEST "Delete characters and move history"
+TEST "Backspace characters and move history"
 ADD_LINE "abcdefghi"
 SET_POS 1 6
 PRESS_KEY BACKSPACE BACKSPACE LEFT BACKSPACE BACKSPACE u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcdghi"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefghi"
+
+TEST "Delete characters history"
+ADD_LINE "abcdefghi"
+SET_POS 1 3
+PRESS_KEY d d d u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefghi"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcghi"
+
+TEST "Delete characters and move history"
+ADD_LINE "abcdefghi"
+SET_POS 1 3
+PRESS_KEY d d RIGHT d d u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcfghi"
 PRESS_KEY u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcdefghi"
