@@ -1,4 +1,18 @@
 
+TEST "Enter command"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+PRESS_KEY / g o t o L i n e " " 2 NEWLINE
+ASSERT_POS 2 0
+
+TEST "Enter command with backspace"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+PRESS_KEY / g o t o x BACKSPACE L i n e " " 2 NEWLINE
+ASSERT_POS 2 0
+
 TEST "Goto line"
 ADD_LINE "abc"
 ADD_LINE "def"
@@ -6,4 +20,173 @@ ADD_LINE "ghi"
 TEXT_COMMAND "gotoLine 2"
 ASSERT_POS 2 0
 
+TEST "Regex on same line"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "regex j[0-9]"
+ASSERT_POS 2 3
+ASSERT_HIGHLIGHT_POS 2 4
+
+TEST "Regex on different line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mno5qr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mno5qr"
+SET_POS 2 0
+TEXT_COMMAND "regex o[0-9]"
+ASSERT_POS 3 2
+ASSERT_HIGHLIGHT_POS 3 3
+
+TEST "Regex at start of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "m5opqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "m5opqr"
+SET_POS 2 0
+TEXT_COMMAND "regex m[0-9]"
+ASSERT_POS 3 0
+ASSERT_HIGHLIGHT_POS 3 1
+
+TEST "Regex at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopq5"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopq5"
+SET_POS 2 0
+TEXT_COMMAND "regex q[0-9]"
+ASSERT_POS 3 4
+ASSERT_HIGHLIGHT_POS 3 5
+
+TEST "Regex with loop"
+ADD_LINE "abc5ef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abc5ef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 6 0
+TEXT_COMMAND "regex c[0-9]"
+ASSERT_POS 1 2
+ASSERT_HIGHLIGHT_POS 1 3
+
+TEST "Regex missing"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 6 0
+TEXT_COMMAND "regex x[0-9]"
+ASSERT_POS 6 0
+
+TEST "Reverse regex on same line"
+ADD_LINE "abcdef"
+ADD_LINE "gh5jkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "gh5jkl"
+ADD_LINE "mnopqr"
+SET_POS 2 5
+TEXT_COMMAND "reverseRegex h[0-9]"
+ASSERT_POS 2 1
+ASSERT_HIGHLIGHT_POS 2 2
+
+TEST "Reverse regex on different line"
+ADD_LINE "abc5ef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abc5ef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 5
+TEXT_COMMAND "reverseRegex c[0-9]"
+ASSERT_POS 1 2
+ASSERT_HIGHLIGHT_POS 1 3
+
+TEST "Reverse regex at start of line"
+ADD_LINE "a5cdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "a5cdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 5
+TEXT_COMMAND "reverseRegex a[0-9]"
+ASSERT_POS 1 0
+ASSERT_HIGHLIGHT_POS 1 1
+
+TEST "Reverse regex at end of line"
+ADD_LINE "abcde5"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcde5"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "reverseRegex e[0-9]"
+ASSERT_POS 1 4
+ASSERT_HIGHLIGHT_POS 1 5
+
+TEST "Reverse regex with loop"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mno5qr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mno5qr"
+SET_POS 2 5
+TEXT_COMMAND "reverseRegex o[0-9]"
+ASSERT_POS 6 2
+ASSERT_HIGHLIGHT_POS 6 3
+
+TEST "Reverse regex missing"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 5
+TEXT_COMMAND "reverseRegex x[0-9]"
+ASSERT_POS 2 5
+
+TEST "Find next instance"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "regex j[0-9]"
+SET_POS 2 0
+PRESS_KEY n
+ASSERT_POS 2 3
+ASSERT_HIGHLIGHT_POS 2 4
+
+TEST "Find previous instance"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghij5l"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "regex j[0-9]"
+SET_POS 2 0
+PRESS_KEY N
+ASSERT_POS 5 3
+ASSERT_HIGHLIGHT_POS 5 4
 
