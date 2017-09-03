@@ -256,6 +256,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
             fflush(systematicTestResultFile);
             return false;
         }
+        setActivityMode(TEXT_COMMAND_MODE);
         strcpy((char *)textCommandBuffer, (char *)(tempTermList[1]));
         executeTextCommand();
         return true;

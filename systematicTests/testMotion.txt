@@ -580,3 +580,13 @@ ADD_LINE "ghi"
 SET_POS 2 2
 PRESS_KEY R x
 ASSERT_POS 2 2
+
+TEST "Find on same line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find jk"
+ASSERT_POS 2 3
+
+
