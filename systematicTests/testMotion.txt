@@ -585,8 +585,134 @@ TEST "Find on same line"
 ADD_LINE "abcdef"
 ADD_LINE "ghijkl"
 ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
 SET_POS 2 0
 TEXT_COMMAND "find jk"
 ASSERT_POS 2 3
 
+TEST "Find on different line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find op"
+ASSERT_POS 3 2
 
+TEST "Find at start of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find mn"
+ASSERT_POS 3 0
+
+TEST "Find at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find qr"
+ASSERT_POS 3 4
+
+TEST "Find with loop"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 6 0
+TEXT_COMMAND "find cd"
+ASSERT_POS 1 2
+
+TEST "Reverse find on same line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 5
+TEXT_COMMAND "reverseFind hi"
+ASSERT_POS 2 1
+
+TEST "Reverse find on different line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 5
+TEXT_COMMAND "reverseFind cd"
+ASSERT_POS 1 2
+
+TEST "Reverse find at start of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 5
+TEXT_COMMAND "reverseFind ab"
+ASSERT_POS 1 0
+
+TEST "Reverse find at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 5
+TEXT_COMMAND "reverseFind ef"
+ASSERT_POS 1 4
+
+TEST "Reverse find with loop"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 5
+TEXT_COMMAND "reverseFind op"
+ASSERT_POS 6 2
+
+TEST "Find next instance"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find jk"
+SET_POS 2 0
+PRESS_KEY n
+ASSERT_POS 2 3
+
+TEST "Find previous instance"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 0
+TEXT_COMMAND "find jk"
+SET_POS 2 0
+PRESS_KEY N
+ASSERT_POS 5 3
