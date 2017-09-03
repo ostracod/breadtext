@@ -1,0 +1,635 @@
+
+TEST "System copy character"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY Y c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "System copy selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY Y h RIGHT RIGHT c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "hij"
+
+TEST "System copy multi-line selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 5
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "kl"
+ASSERT_LINE 5 "mn"
+
+TEST "System cut character"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY Y x
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "System cut selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY Y h RIGHT RIGHT x
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "hij"
+
+TEST "System cut multi-line selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT x
+SET_POS 3 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijopqr"
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mn"
+
+TEST "System cut and change"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY Y X x ESC
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gxijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "System paste after cursor in empty buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY H } d
+PRESS_KEY p
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mn"
+
+TEST "System paste after cursor in empty line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY v d
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mnmnopqr"
+
+TEST "System paste after cursor in middle of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 3
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste after cursor at beginning of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gkl"
+ASSERT_LINE 3 "mnhijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste after cursor at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 6
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mnmnopqr"
+
+TEST "System paste after cursor at beginning of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "akl"
+ASSERT_LINE 2 "mnbcdef"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste after cursor at end of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 3 6
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqrkl"
+ASSERT_LINE 4 "mn"
+
+TEST "System paste before cursor in empty buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY H } d
+PRESS_KEY P
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mn"
+
+TEST "System paste before cursor in empty line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY v d
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "kl"
+ASSERT_LINE 3 "mn"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste before cursor in middle of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 3
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghikl"
+ASSERT_LINE 3 "mnjkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste before cursor at beginning of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "kl"
+ASSERT_LINE 3 "mnghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste before cursor at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 6
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijklkl"
+ASSERT_LINE 3 "mn"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste before cursor at beginning of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mnabcdef"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "System paste before cursor at end of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 3 6
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqrkl"
+ASSERT_LINE 4 "mn"
+
+TEST "System paste over selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY Y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 2
+PRESS_KEY h RIGHT RIGHT
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abkl"
+ASSERT_LINE 2 "mnf"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal copy character"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY y c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "Internal copy selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY y h RIGHT RIGHT c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "hij"
+
+TEST "Internal copy multi-line selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 5
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "kl"
+ASSERT_LINE 5 "mn"
+
+TEST "Internal cut character"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY y x
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "Internal cut selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY y h RIGHT RIGHT x
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "hij"
+
+TEST "Internal cut multi-line selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT x
+SET_POS 3 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijopqr"
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mn"
+
+TEST "Internal cut and change"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE ""
+SET_POS 2 1
+PRESS_KEY y X x ESC
+SET_POS 4 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gxijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "h"
+
+TEST "Internal paste after cursor in empty buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY H } d
+PRESS_KEY p
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mn"
+
+TEST "Internal paste after cursor in empty line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY v d
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mnmnopqr"
+
+TEST "Internal paste after cursor in middle of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 3
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste after cursor at beginning of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "gkl"
+ASSERT_LINE 3 "mnhijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste after cursor at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 6
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "kl"
+ASSERT_LINE 4 "mnmnopqr"
+
+TEST "Internal paste after cursor at beginning of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "akl"
+ASSERT_LINE 2 "mnbcdef"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste after cursor at end of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 3 6
+PRESS_KEY p
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqrkl"
+ASSERT_LINE 4 "mn"
+
+TEST "Internal paste before cursor in empty buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY H } d
+PRESS_KEY P
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mn"
+
+TEST "Internal paste before cursor in empty line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY v d
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "kl"
+ASSERT_LINE 3 "mn"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste before cursor in middle of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 3
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghikl"
+ASSERT_LINE 3 "mnjkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste before cursor at beginning of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "kl"
+ASSERT_LINE 3 "mnghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste before cursor at end of line"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 2 6
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijklkl"
+ASSERT_LINE 3 "mn"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste before cursor at beginning of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "kl"
+ASSERT_LINE 2 "mnabcdef"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
+TEST "Internal paste before cursor at end of buffer"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 3 6
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqrkl"
+ASSERT_LINE 4 "mn"
+
+TEST "Internal paste over selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 4
+PRESS_KEY y h RIGHT RIGHT RIGHT RIGHT c
+SET_POS 1 2
+PRESS_KEY h RIGHT RIGHT
+PRESS_KEY P
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abkl"
+ASSERT_LINE 2 "mnf"
+ASSERT_LINE 3 "ghijkl"
+ASSERT_LINE 4 "mnopqr"
+
