@@ -843,6 +843,22 @@ SET_POS 2 3
 PRESS_KEY f
 ASSERT_POS 2 15
 
+TEST "Find next instance of word at start of line"
+ADD_LINE "ba ab ba"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ba"
+SET_POS 1 0
+PRESS_KEY f
+ASSERT_POS 1 6
+
+TEST "Find next instance of word at end of line"
+ADD_LINE "ba ab ba"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ba"
+SET_POS 1 6
+PRESS_KEY f
+ASSERT_POS 3 0
+
 TEST "Find previous instance of word"
 ADD_LINE "ba ab ca"
 ADD_LINE "aa ab aa abc a ab aa"
@@ -851,3 +867,18 @@ SET_POS 2 15
 PRESS_KEY F
 ASSERT_POS 2 3
 
+TEST "Find previous instance of word at start of line"
+ADD_LINE "ba ab ba"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ba"
+SET_POS 3 0
+PRESS_KEY F
+ASSERT_POS 1 6
+
+TEST "Find previous instance of word at end of line"
+ADD_LINE "ba ab ba"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ba"
+SET_POS 3 6
+PRESS_KEY F
+ASSERT_POS 3 0

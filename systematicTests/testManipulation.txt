@@ -1,0 +1,114 @@
+
+TEST "Add semicolon"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY ;
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def;"
+ASSERT_LINE 3 "ghi"
+
+TEST "Remove semicolon"
+ADD_LINE "abc"
+ADD_LINE "def;"
+ADD_LINE "ghi"
+SET_POS 2 4
+PRESS_KEY ;
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 3
+
+TEST "Toggle semicolon in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY ;
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ";"
+ASSERT_LINE 3 "ghi"
+PRESS_KEY ;
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "ghi"
+
+TEST "Add comment"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "//def"
+ASSERT_LINE 3 "ghi"
+
+TEST "Remove comment"
+ADD_LINE "abc"
+ADD_LINE "//def"
+ADD_LINE "ghi"
+SET_POS 2 5
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 3
+
+TEST "Add comment with indentation"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    //def"
+ASSERT_LINE 3 "ghi"
+
+TEST "Remove comment with indentation"
+ADD_LINE "abc"
+ADD_LINE "    //def"
+ADD_LINE "ghi"
+SET_POS 2 5
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "    def"
+ASSERT_LINE 3 "ghi"
+
+TEST "Toggle comment in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "//"
+ASSERT_LINE 3 "ghi"
+PRESS_KEY :
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 ""
+ASSERT_LINE 3 "ghi"
+
+TEST "Uppercase character"
+ADD_LINE "a"
+SET_POS 1 0
+PRESS_KEY B
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "A"
+
+TEST "Lowercase character"
+ADD_LINE "A"
+SET_POS 1 0
+PRESS_KEY b
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a"
