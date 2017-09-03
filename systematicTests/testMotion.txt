@@ -636,6 +636,17 @@ SET_POS 6 0
 TEXT_COMMAND "find cd"
 ASSERT_POS 1 2
 
+TEST "Find missing"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 6 0
+TEXT_COMMAND "find xx"
+ASSERT_POS 6 0
+
 TEST "Reverse find on same line"
 ADD_LINE "abcdef"
 ADD_LINE "ghijkl"
@@ -691,6 +702,17 @@ SET_POS 2 5
 TEXT_COMMAND "reverseFind op"
 ASSERT_POS 6 2
 
+TEST "Reverse find missing"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 2 5
+TEXT_COMMAND "reverseFind xx"
+ASSERT_POS 2 5
+
 TEST "Find next instance"
 ADD_LINE "abcdef"
 ADD_LINE "ghijkl"
@@ -716,3 +738,116 @@ TEXT_COMMAND "find jk"
 SET_POS 2 0
 PRESS_KEY N
 ASSERT_POS 5 3
+
+TEST "Find word on same line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 5
+TEXT_COMMAND "findWord ab"
+ASSERT_POS 2 15
+
+TEST "Find word on different line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 17
+TEXT_COMMAND "findWord ab"
+ASSERT_POS 3 3
+
+TEST "Find word at start of line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 17
+TEXT_COMMAND "findWord ba"
+ASSERT_POS 3 0
+
+TEST "Find word at end of line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 17
+TEXT_COMMAND "findWord ca"
+ASSERT_POS 3 6
+
+TEST "Find word with loop"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 3 6
+TEXT_COMMAND "findWord ab"
+ASSERT_POS 1 3
+
+TEST "Find word missing"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 17
+TEXT_COMMAND "findWord xx"
+ASSERT_POS 2 17
+
+TEST "Reverse find word on same line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 14
+TEXT_COMMAND "reverseFindWord ab"
+ASSERT_POS 2 3
+
+TEST "Reverse find word on different line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 0
+TEXT_COMMAND "reverseFindWord ab"
+ASSERT_POS 1 3
+
+TEST "Reverse find word at start of line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 0
+TEXT_COMMAND "reverseFindWord ba"
+ASSERT_POS 1 0
+
+TEST "Reverse find word at end of line"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 0
+TEXT_COMMAND "reverseFindWord ca"
+ASSERT_POS 1 6
+
+TEST "Reverse find word with loop"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 1 0
+TEXT_COMMAND "reverseFindWord ab"
+ASSERT_POS 3 3
+
+TEST "Reverse find word missing"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 0
+TEXT_COMMAND "reverseFindWord xx"
+ASSERT_POS 2 0
+
+TEST "Find next instance of word"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 3
+PRESS_KEY f
+ASSERT_POS 2 15
+
+TEST "Find previous instance of word"
+ADD_LINE "ba ab ca"
+ADD_LINE "aa ab aa abc a ab aa"
+ADD_LINE "ba ab ca"
+SET_POS 2 15
+PRESS_KEY F
+ASSERT_POS 2 3
+
