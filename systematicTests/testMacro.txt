@@ -1,0 +1,39 @@
+
+TEST "Macro"
+ADD_LINE "0"
+SET_POS 1 0
+PRESS_KEY M w c ] NEWLINE P = + M
+PRESS_KEY m m m
+ASSERT_LINE_COUNT 5
+ASSERT_LINE 1 "0"
+ASSERT_LINE 2 "1"
+ASSERT_LINE 3 "2"
+ASSERT_LINE 4 "3"
+ASSERT_LINE 5 "4"
+
+TEST "Macro containing M 1"
+SET_POS 1 0
+PRESS_KEY M t a b c M d e f NEWLINE ESC M
+PRESS_KEY m m m
+ASSERT_LINE_COUNT 5
+ASSERT_LINE 1 "abcMdef"
+ASSERT_LINE 2 "abcMdef"
+ASSERT_LINE 3 "abcMdef"
+ASSERT_LINE 4 "abcMdef"
+ASSERT_LINE 5 ""
+
+TEST "Macro containing M 2"
+SET_POS 1 0
+PRESS_KEY M "\"" a "\"" M "\"" b M
+PRESS_KEY m m m
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aMbaMbaMbaMb"
+
+TEST "Macro naughty business"
+SET_POS 1 0
+PRESS_KEY M "\"" a m "\"" b M
+PRESS_KEY m m m
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abababab"
+
+
