@@ -161,4 +161,126 @@ PRESS_KEY v
 ASSERT_POS 2 6
 ASSERT_HIGHLIGHT_POS 2 4
 
+TEST "Delete selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY h RIGHT RIGHT RIGHT RIGHT
+PRESS_KEY d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijopqr"
+ASSERT_LINE 3 "stuvwx"
+
+TEST "Delete selection alternative"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY h RIGHT RIGHT RIGHT RIGHT
+PRESS_KEY BACKSPACE
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijopqr"
+ASSERT_LINE 3 "stuvwx"
+
+TEST "Change lines"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY H DOWN
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "x"
+ASSERT_LINE 3 "stuvwx"
+
+TEST "Change lines with indentation"
+ADD_LINE "abcdef"
+ADD_LINE "    ghijkl"
+ADD_LINE "    mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY H DOWN
+PRESS_KEY C x
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "    x"
+ASSERT_LINE 3 "stuvwx"
+
+TEST "Indent selection forward"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY H DOWN
+PRESS_KEY >
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "    ghijkl"
+ASSERT_LINE 3 "    mnopqr"
+ASSERT_LINE 4 "stuvwx"
+
+TEST "Indent selection backward"
+ADD_LINE "abcdef"
+ADD_LINE "    ghijkl"
+ADD_LINE "    mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY H DOWN
+PRESS_KEY <
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijkl"
+ASSERT_LINE 3 "mnopqr"
+ASSERT_LINE 4 "stuvwx"
+
+TEST "Toggle selection comment"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY H DOWN
+PRESS_KEY :
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "//ghijkl"
+ASSERT_LINE 3 "//mnopqr"
+ASSERT_LINE 4 "stuvwx"
+
+TEST "Uppercase selection"
+ADD_LINE "abcdef"
+ADD_LINE "ghijkl"
+ADD_LINE "mnopqr"
+ADD_LINE "stuvwx"
+SET_POS 2 4
+PRESS_KEY h RIGHT RIGHT RIGHT RIGHT
+PRESS_KEY B
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghijKL"
+ASSERT_LINE 3 "MNopqr"
+ASSERT_LINE 4 "stuvwx"
+
+TEST "Lowercase selection"
+ADD_LINE "ABCDEF"
+ADD_LINE "GHIJKL"
+ADD_LINE "MNOPQR"
+ADD_LINE "STUVWX"
+SET_POS 2 4
+PRESS_KEY h RIGHT RIGHT RIGHT RIGHT
+PRESS_KEY b
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "ABCDEF"
+ASSERT_LINE 2 "GHIJkl"
+ASSERT_LINE 3 "mnOPQR"
+ASSERT_LINE 4 "STUVWX"
+
 
