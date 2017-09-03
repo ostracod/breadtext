@@ -5,3 +5,160 @@ SET_POS 1 3
 PRESS_KEY h RIGHT RIGHT RIGHT
 ASSERT_POS 1 6
 ASSERT_HIGHLIGHT_POS 1 3
+
+TEST "Escape character select"
+ADD_LINE "abcdefghi"
+SET_POS 1 3
+PRESS_KEY h RIGHT RIGHT RIGHT
+PRESS_KEY ESC d
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefhi"
+
+TEST "Line select"
+ADD_LINE "abc"
+ADD_LINE "defg"
+ADD_LINE "hijkl"
+SET_POS 2 0
+PRESS_KEY H
+ASSERT_POS 2 0
+ASSERT_HIGHLIGHT_POS 2 4
+
+TEST "Line select and move down"
+ADD_LINE "abc"
+ADD_LINE "defg"
+ADD_LINE "hijkl"
+SET_POS 2 0
+PRESS_KEY H DOWN
+ASSERT_POS 3 5
+ASSERT_HIGHLIGHT_POS 2 0
+
+TEST "Line select and move up"
+ADD_LINE "abc"
+ADD_LINE "defg"
+ADD_LINE "hijkl"
+SET_POS 2 0
+PRESS_KEY H UP
+ASSERT_POS 1 0
+ASSERT_HIGHLIGHT_POS 2 4
+
+TEST "Line select escape"
+ADD_LINE "abc"
+ADD_LINE "defg"
+ADD_LINE "hijkl"
+SET_POS 2 0
+PRESS_KEY H ESC d
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "efg"
+ASSERT_LINE 3 "hijkl"
+
+TEST "Word select"
+ADD_LINE "abc def ghi"
+SET_POS 1 4
+PRESS_KEY w
+ASSERT_POS 1 6
+ASSERT_HIGHLIGHT_POS 1 4
+
+TEST "Word select at beginning of line"
+ADD_LINE "abc def ghi"
+SET_POS 1 0
+PRESS_KEY w
+ASSERT_POS 1 2
+ASSERT_HIGHLIGHT_POS 1 0
+
+TEST "Word select at end of line"
+ADD_LINE "abc def ghi"
+SET_POS 1 8
+PRESS_KEY w
+ASSERT_POS 1 10
+ASSERT_HIGHLIGHT_POS 1 8
+
+TEST "Escape word select"
+ADD_LINE "abc def ghi"
+SET_POS 1 4
+PRESS_KEY w ESC d
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc de ghi"
+
+TEST "Magic word select"
+ADD_LINE "a;c d+f g,i"
+SET_POS 1 4
+PRESS_KEY W SPACE
+ASSERT_POS 1 6
+ASSERT_HIGHLIGHT_POS 1 4
+
+TEST "Magic word select at beginning of line"
+ADD_LINE "a;c d+f g,i"
+SET_POS 1 0
+PRESS_KEY W SPACE
+ASSERT_POS 1 2
+ASSERT_HIGHLIGHT_POS 1 0
+
+TEST "Magic word select at end of line"
+ADD_LINE "a;c d+f g,i"
+SET_POS 1 8
+PRESS_KEY W SPACE
+ASSERT_POS 1 10
+ASSERT_HIGHLIGHT_POS 1 8
+
+TEST "Select until beginning of line exclusive"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY 9
+ASSERT_POS 1 0
+ASSERT_HIGHLIGHT_POS 1 2
+
+TEST "Select until beginning of line exclusive with indentation"
+ADD_LINE "    abcdef"
+SET_POS 1 7
+PRESS_KEY 9
+ASSERT_POS 1 4
+ASSERT_HIGHLIGHT_POS 1 6
+
+TEST "Select until beginning of line inclusive"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY (
+ASSERT_POS 1 0
+ASSERT_HIGHLIGHT_POS 1 3
+
+TEST "Select until beginning of line exclusive with inclusive"
+ADD_LINE "    abcdef"
+SET_POS 1 7
+PRESS_KEY (
+ASSERT_POS 1 4
+ASSERT_HIGHLIGHT_POS 1 7
+
+TEST "Select until end of line exclusive"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY 0
+ASSERT_POS 1 5
+ASSERT_HIGHLIGHT_POS 1 4
+
+TEST "Select until end of line inclusive"
+ADD_LINE "abcdef"
+SET_POS 1 3
+PRESS_KEY )
+ASSERT_POS 1 5
+ASSERT_HIGHLIGHT_POS 1 3
+
+TEST "Select line contents"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY v
+ASSERT_POS 2 2
+ASSERT_HIGHLIGHT_POS 2 0
+
+TEST "Select line contents with indentation"
+ADD_LINE "abc"
+ADD_LINE "    def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY v
+ASSERT_POS 2 6
+ASSERT_HIGHLIGHT_POS 2 4
+
+
