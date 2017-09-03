@@ -240,6 +240,9 @@ void parseSpaceSeperatedTerms(int8_t **termList, int32_t *termListLength, int8_t
         int8_t tempIsWhitespace = isWhitespace(tempCharacter);
         if (tempCharacter == '\\') {
             int8_t tempCharacter = *tempText1;
+            if (tempCharacter == 't') {
+                tempCharacter = '\t';
+            }
             tempText1 += 1;
             *tempText2 = tempCharacter;
             tempText2 += 1;

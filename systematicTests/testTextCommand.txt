@@ -190,3 +190,34 @@ PRESS_KEY N
 ASSERT_POS 5 3
 ASSERT_HIGHLIGHT_POS 5 4
 
+TEST "Replace"
+ADD_LINE "abc def ghi"
+ADD_LINE "def abc ghi"
+ADD_LINE "abc ghi def"
+TEXT_COMMAND "replace def bread"
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc bread ghi"
+ASSERT_LINE 2 "bread abc ghi"
+ASSERT_LINE 3 "abc ghi bread"
+
+TEST "Replace missing"
+ADD_LINE "abc def ghi"
+ADD_LINE "def abc ghi"
+ADD_LINE "abc ghi def"
+TEXT_COMMAND "replace bupkis bread"
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc def ghi"
+ASSERT_LINE 2 "def abc ghi"
+ASSERT_LINE 3 "abc ghi def"
+
+TEST "Configure shouldUseHardTabs"
+ADD_LINE "abc"
+SET_POS 1 0
+TEXT_COMMAND "set shouldUseHardTabs 1"
+PRESS_KEY TAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "\tabc"
+
+
+
+
