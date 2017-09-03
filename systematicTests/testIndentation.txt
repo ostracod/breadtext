@@ -1,0 +1,58 @@
+
+TEST "Indent forward"
+ADD_LINE "abc"
+SET_POS 1 0
+PRESS_KEY TAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "    abc"
+ASSERT_POS 1 4
+
+TEST "Indent forward with indentation"
+ADD_LINE "    abc"
+SET_POS 1 0
+PRESS_KEY TAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "        abc"
+
+TEST "Indent forward in empty line"
+ADD_LINE ""
+SET_POS 1 0
+PRESS_KEY TAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "    "
+
+TEST "Indent forward alternative"
+ADD_LINE "abc"
+SET_POS 1 0
+PRESS_KEY >
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "    abc"
+
+TEST "Indent backward"
+ADD_LINE "    abc"
+SET_POS 1 4
+PRESS_KEY BTAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc"
+ASSERT_POS 1 0
+
+TEST "Indent backward with indentation"
+ADD_LINE "        abc"
+SET_POS 1 0
+PRESS_KEY BTAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "    abc"
+
+TEST "Indent backward in empty line"
+ADD_LINE ""
+SET_POS 1 0
+PRESS_KEY BTAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 ""
+
+TEST "Indent backward alternative"
+ADD_LINE "    abc"
+SET_POS 1 0
+PRESS_KEY <
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc"
