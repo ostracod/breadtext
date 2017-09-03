@@ -112,3 +112,183 @@ SET_POS 1 0
 PRESS_KEY b
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "a"
+
+TEST "Increment number"
+ADD_LINE "abc 5 def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 6 def"
+
+TEST "Increment number with carry"
+ADD_LINE "abc 99 def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 100 def"
+
+TEST "Increment floating point number"
+ADD_LINE "abc 5.0 def"
+SET_POS 1 6
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 6.0 def"
+
+TEST "Increment floating point number with carry"
+ADD_LINE "abc 99.0 def"
+SET_POS 1 7
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 100.0 def"
+
+TEST "Increment hexadecimal number"
+ADD_LINE "abc 0x0B def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0x0C def"
+
+TEST "Increment hexadecimal number with carry"
+ADD_LINE "abc 0xFF def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0x00 def"
+
+TEST "Increment number at start of line"
+ADD_LINE "5 abc"
+SET_POS 1 0
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "6 abc"
+
+TEST "Increment number at end of line"
+ADD_LINE "abc 5"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 6"
+
+TEST "Increment bad number"
+ADD_LINE "abc bupkis def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc bupkis def"
+
+TEST "Decrement number"
+ADD_LINE "abc 5 def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 4 def"
+
+TEST "Decrement number with borrow"
+ADD_LINE "abc 100 def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 99 def"
+
+TEST "Decrement floating point number"
+ADD_LINE "abc 5.0 def"
+SET_POS 1 6
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 4.0 def"
+
+TEST "Decrement floating point number with borrow"
+ADD_LINE "abc 100.0 def"
+SET_POS 1 7
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 99.0 def"
+
+TEST "Decrement hexadecimal number"
+ADD_LINE "abc 0x0B def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0x0A def"
+
+TEST "Decrement hexadecimal number with borrow"
+ADD_LINE "abc 0x00 def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0xFF def"
+
+TEST "Decrement number at start of line"
+ADD_LINE "5 abc"
+SET_POS 1 0
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "4 abc"
+
+TEST "Decrement number at end of line"
+ADD_LINE "abc 5"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 4"
+
+TEST "Decrement bad number"
+ADD_LINE "abc bupkis def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc bupkis def"
+
+TEST "Toggle true to false"
+ADD_LINE "abc true def"
+ADD_LINE "abc True def"
+ADD_LINE "abc TRUE def"
+ADD_LINE "abc bupkis def"
+SET_POS 1 4
+PRESS_KEY _
+SET_POS 2 4
+PRESS_KEY _
+SET_POS 3 4
+PRESS_KEY _
+SET_POS 4 4
+PRESS_KEY _
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc false def"
+ASSERT_LINE 2 "abc False def"
+ASSERT_LINE 3 "abc FALSE def"
+ASSERT_LINE 4 "abc bupkis def"
+
+TEST "Toggle false to true"
+ADD_LINE "abc false def"
+ADD_LINE "abc False def"
+ADD_LINE "abc FALSE def"
+ADD_LINE "abc bupkis def"
+SET_POS 1 4
+PRESS_KEY _
+SET_POS 2 4
+PRESS_KEY _
+SET_POS 3 4
+PRESS_KEY _
+SET_POS 4 4
+PRESS_KEY _
+ASSERT_LINE_COUNT 4
+ASSERT_LINE 1 "abc true def"
+ASSERT_LINE 2 "abc True def"
+ASSERT_LINE 3 "abc TRUE def"
+ASSERT_LINE 4 "abc bupkis def"
+
+TEST "Toggle boolean at beginning of line"
+ADD_LINE "false abc"
+SET_POS 1 1
+PRESS_KEY _
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "true abc"
+
+TEST "Toggle boolean at end of line"
+ADD_LINE "abc false"
+SET_POS 1 4
+PRESS_KEY _
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc true"
+
+
