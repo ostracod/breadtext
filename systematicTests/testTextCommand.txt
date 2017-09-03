@@ -218,6 +218,41 @@ PRESS_KEY TAB
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "\tabc"
 
+TEST "Configure indentationWidth"
+ADD_LINE "abc"
+SET_POS 1 0
+TEXT_COMMAND "set indentationWidth 2"
+PRESS_KEY TAB
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "  abc"
 
+TEST "Configure isCaseSensitive"
+ADD_LINE "aa ab AB aa"
+SET_POS 1 0
+TEXT_COMMAND "find AB"
+ASSERT_POS 1 6
+SET_POS 1 0
+TEXT_COMMAND "set isCaseSensitive 0"
+TEXT_COMMAND "find AB"
+ASSERT_POS 1 3
 
+TEST "Configure shouldUseSystemClipboard"
+ADD_LINE "abcdef"
+ADD_LINE ""
+ADD_LINE ""
+SET_POS 1 0
+PRESS_KEY h RIGHT RIGHT c
+TEXT_COMMAND "set shouldUseSystemClipboard 0"
+SET_POS 1 3
+PRESS_KEY h RIGHT RIGHT c
+TEXT_COMMAND "set shouldUseSystemClipboard 1"
+SET_POS 2 0
+PRESS_KEY P
+TEXT_COMMAND "set shouldUseSystemClipboard 0"
+SET_POS 3 0
+PRESS_KEY P
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "abc"
+ASSERT_LINE 3 "def"
 
