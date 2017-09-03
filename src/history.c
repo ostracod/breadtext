@@ -108,6 +108,7 @@ void performHistoryFrame(historyFrame_t *frame) {
         index += 1;
     }
     cursorTextPos = convertHistoryTextPosToTextPos(&(frame->nextCursorTextPos));
+    cursorSnapColumn = cursorTextPos.column;
     setActivityMode(COMMAND_MODE);
     int8_t tempResult = scrollCursorOntoScreen();
     if (tempResult) {
@@ -126,6 +127,7 @@ void undoHistoryFrame(historyFrame_t *frame) {
         index -= 1;
     }
     cursorTextPos = convertHistoryTextPosToTextPos(&(frame->previousCursorTextPos));
+    cursorSnapColumn = cursorTextPos.column;
     setActivityMode(COMMAND_MODE);
     int8_t tempResult = scrollCursorOntoScreen();
     if (tempResult) {
