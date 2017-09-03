@@ -77,7 +77,8 @@ void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame) {
 
 void setActivityMode(int8_t mode) {
     eraseActivityModeOrNotification();
-    if (activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE) {
+    if ((activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE)
+            || (activityMode == TEXT_REPLACE_MODE && mode != TEXT_REPLACE_MODE)) {
         if (isStartOfNonconsecutiveEscapeSequence) {
             addNonconsecutiveEscapeSequenceAction(true);
             textBufferIsDirty = true;
@@ -250,7 +251,7 @@ int8_t handleKey(int32_t key) {
             executeTextCommand();
         }
     } else {
-        if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
+        if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == TEXT_REPLACE_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
             if (key == KEY_LEFT) {
                 moveCursorLeft(1);
             }
@@ -312,7 +313,7 @@ int8_t handleKey(int32_t key) {
         }
         if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_STATIC_MODE) {
             if (key == '\n') {
-                insertNewlineBeforeCursor();
+                insertNewlineBeforeCursor(false);
             }
         }
         // Backspace.
@@ -337,10 +338,26 @@ int8_t handleKey(int32_t key) {
             } else {
                 isStartOfNonconsecutiveEscapeSequence = false;
             }
+        } else if (activityMode == TEXT_REPLACE_MODE) {
+            if (key == ',' && lastKey == ',') {
+                moveCursorLeftConsecutive();
+                if (isStartOfNonconsecutiveEscapeSequence) {
+                    replaceCharacterAtCursor(lastCharacterDeletedByTextReplaceMode, false);
+                } else {
+                    replaceCharacterAtCursor(lastCharacterDeletedByTextReplaceMode, true);
+                }
+                isStartOfNonconsecutiveEscapeSequence = false;
+                setActivityMode(COMMAND_MODE);
+                moveCursorLeft(1);
+            } else if (key >= 32 && key <= 126) {
+                insertTextReplaceModeCharacter((int8_t)key);
+            } else {
+                isStartOfNonconsecutiveEscapeSequence = false;
+            }
         } else {
             isStartOfNonconsecutiveEscapeSequence = false;
         }
-        if (activityMode != TEXT_ENTRY_MODE) {
+        if (activityMode != TEXT_ENTRY_MODE && activityMode != TEXT_REPLACE_MODE) {
             switch (key) {
                 case 'q':
                 {
@@ -364,6 +381,11 @@ int8_t handleKey(int32_t key) {
                 case 't':
                 {
                     setActivityMode(TEXT_ENTRY_MODE);
+                    break;
+                }
+                case 'T':
+                {
+                    setActivityMode(TEXT_REPLACE_MODE);
                     break;
                 }
                 case 's':
@@ -722,7 +744,7 @@ int8_t handleKey(int32_t key) {
         }
         if (activityMode == COMMAND_MODE) {
             if (key == ' ') {
-                insertCharacterBeforeCursor(key);
+                insertCharacterBeforeCursor(key, true);
             }
             if (key == '\'') {
                 promptAndInsertCharacterAfterCursor();

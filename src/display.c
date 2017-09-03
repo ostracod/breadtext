@@ -26,6 +26,7 @@ int8_t *helpText[] = {
     (int8_t *)"CHANGING MODES",
     (int8_t *)"",
     (int8_t *)"T = Text-entry mode",
+    (int8_t *)"Shift + T = Text-replace mode",
     (int8_t *)"O = Insert line before cursor and enter text-entry mode",
     (int8_t *)"Shift + O = Insert line after cursor and enter text-entry mode",
     (int8_t *)", + , (again) or Escape = Command mode",
@@ -449,6 +450,11 @@ void displayActivityMode() {
     }
     if (activityMode == TEXT_ENTRY_MODE) {
         int8_t tempMessage[] = "Text Entry Mode";
+        mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
+        activityModeTextLength = (int32_t)strlen((char *)tempMessage);
+    }
+    if (activityMode == TEXT_REPLACE_MODE) {
+        int8_t tempMessage[] = "Text Replace Mode";
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
         activityModeTextLength = (int32_t)strlen((char *)tempMessage);
     }

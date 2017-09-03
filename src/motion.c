@@ -203,6 +203,28 @@ void moveCursorDown(int32_t amount) {
     historyFrameIsConsecutive = false;
 }
 
+void moveCursorLeftConsecutive() {
+    textPos_t tempNextTextPos = cursorTextPos;
+    int64_t index = getTextPosIndex(&tempNextTextPos);
+    if (index <= 0) {
+        textLine_t *tempLine = getPreviousTextLine(tempNextTextPos.line);
+        if (tempLine == NULL) {
+            return;
+        }
+        tempNextTextPos.line = tempLine;
+        int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+        setTextPosIndex(&tempNextTextPos, tempLength);
+    } else {
+        setTextPosIndex(&tempNextTextPos, index - 1);
+    }
+    cursorTextPos = tempNextTextPos;
+    cursorSnapColumn = tempNextTextPos.column;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayCursor();
+    }
+}
+
 void adjustLineSelectionBoundaries(textPos_t *nextCursorPos) {
     if (textLineIsAfterTextLine(nextCursorPos->line, highlightTextPos.line)) {
         highlightTextPos.row = 0;

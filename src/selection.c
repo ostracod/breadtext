@@ -246,7 +246,7 @@ void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel) {
         index += tempCount;
         setTextPosIndex(&cursorTextPos, index);
         if (tempContainsNewline) {
-            insertNewlineBeforeCursorHelper(baseIndentationLevel);
+            insertNewlineBeforeCursorHelper(baseIndentationLevel, true);
             int64_t index = getIndentationWidth(baseIndentationLevel);
             setTextPosIndex(&cursorTextPos, index);
         }
@@ -370,7 +370,7 @@ void pasteAfterCursor() {
             if (tempLine == NULL) {
                 int64_t tempLength = cursorTextPos.line->textAllocation.length;
                 setTextPosIndex(&cursorTextPos, tempLength);
-                insertNewlineBeforeCursorHelper(0);
+                insertNewlineBeforeCursorHelper(0, true);
             } else {
                 cursorTextPos.line = tempLine;
                 cursorTextPos.row = 0;

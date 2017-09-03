@@ -37,19 +37,29 @@ void insertCharacterBeforeCursorHelper(int8_t character) {
     }
 }
 
-void insertCharacterBeforeCursor(int8_t character) {
+void insertCharacterBeforeCursor(int8_t character, int8_t isConsecutive) {
     lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
     isStartOfNonconsecutiveEscapeSequence = false;
-    historyFrameIsConsecutive = false;
+    if (!isConsecutive) {
+        historyFrameIsConsecutive = false;
+    }
     if (lastIsStartOfNonconsecutiveEscapeSequence) {
         addNonconsecutiveEscapeSequenceAction(true);
     }
-    addHistoryFrame();
-    recordTextLineDeleted(cursorTextPos.line);
-    insertCharacterBeforeCursorHelper(character);
-    recordTextLineInserted(cursorTextPos.line);
-    textBufferIsDirty = true;
+    if (historyFrameIsConsecutive) {
+        insertCharacterBeforeCursorHelper(character);
+        updateHistoryFrameInsertAction(cursorTextPos.line);
+    } else {
+        addHistoryFrame();
+        recordTextLineDeleted(cursorTextPos.line);
+        insertCharacterBeforeCursorHelper(character);
+        recordTextLineInserted(cursorTextPos.line);
+        if (isConsecutive) {
+            historyFrameIsConsecutive = true;
+        }
+    }
     finishCurrentHistoryFrame();
+    textBufferIsDirty = true;
 }
 
 void insertTextEntryModeCharacterBeforeCursor(int8_t character) {
@@ -175,7 +185,7 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
     }
 }
 
-void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
+void deleteCharacterAfterCursorHelper(int8_t shouldAddHistoryFrame, int8_t shouldRecordHistory) {
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     if (index >= tempLength) {
@@ -183,16 +193,22 @@ void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
         if (tempLine == NULL) {
             return;
         }
-        if (shouldAddHistoryFrame) {
+        if (shouldAddHistoryFrame && shouldRecordHistory) {
             addHistoryFrame();
         }
-        if (!textLineOnlyContainsWhitespace(tempLine)) {        
-            recordTextLineDeleted(cursorTextPos.line);
+        if (!textLineOnlyContainsWhitespace(tempLine)) {
+            if (shouldRecordHistory) {
+                recordTextLineDeleted(cursorTextPos.line);
+            }
             insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), tempLength, tempLine->textAllocation.text, tempLine->textAllocation.length);
-            recordTextLineInserted(cursorTextPos.line);
+            if (shouldRecordHistory) {
+                recordTextLineInserted(cursorTextPos.line);
+            }
         }
         handleTextLineDeleted(tempLine);
-        recordTextLineDeleted(tempLine);
+        if (shouldRecordHistory) {
+            recordTextLineDeleted(tempLine);
+        }
         deleteTextLine(tempLine);
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
         displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
@@ -202,17 +218,21 @@ void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
         if (!historyFrameIsConsecutive) {
-            if (shouldAddHistoryFrame) {
+            if (shouldAddHistoryFrame && shouldRecordHistory) {
                 addHistoryFrame();
             }
-            recordTextLineDeleted(cursorTextPos.line);
+            if (shouldRecordHistory) {
+                recordTextLineDeleted(cursorTextPos.line);
+            }
         }
         removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, 1);
-        if (historyFrameIsConsecutive) {
-            updateHistoryFrameInsertAction(cursorTextPos.line);
-        } else {
-            recordTextLineInserted(cursorTextPos.line);
-            historyFrameIsConsecutive = true;
+        if (shouldRecordHistory) {
+            if (historyFrameIsConsecutive) {
+                updateHistoryFrameInsertAction(cursorTextPos.line);
+            } else {
+                recordTextLineInserted(cursorTextPos.line);
+                historyFrameIsConsecutive = true;
+            }
         }
         int64_t tempNewRowCount = getTextLineRowCount(cursorTextPos.line);
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
@@ -223,13 +243,49 @@ void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
         }
         displayCursor();
     }
-    textBufferIsDirty = true;
-    if (shouldAddHistoryFrame) {
+    if (shouldRecordHistory) {
+        finishCurrentHistoryFrame();
+        textBufferIsDirty = true;
+    }
+}
+
+void deleteCharacterAfterCursor(int8_t shouldAddHistoryFrame) {
+    deleteCharacterAfterCursorHelper(shouldAddHistoryFrame, true);
+}
+
+void insertTextReplaceModeCharacter(int8_t character) {
+    lastIsStartOfNonconsecutiveEscapeSequence = isStartOfNonconsecutiveEscapeSequence;
+    isStartOfNonconsecutiveEscapeSequence = (character == ',' && !historyFrameIsConsecutive);
+    if (isStartOfNonconsecutiveEscapeSequence) {
+        if (firstNonconsecutiveEscapeSequenceAction.text != NULL) {
+            cleanUpHistoryAction(&firstNonconsecutiveEscapeSequenceAction);
+        }
+        firstNonconsecutiveEscapeSequenceAction = createHistoryActionFromTextLine(cursorTextPos.line, HISTORY_ACTION_DELETE);
+        nonconsecutiveEscapeSequencePreviousCursorTextPos = convertTextPosToHistoryTextPos(&cursorTextPos);
+    } else {
+        if (lastIsStartOfNonconsecutiveEscapeSequence) {
+            addNonconsecutiveEscapeSequenceAction(false);
+        } else if (!historyFrameIsConsecutive) {
+            addHistoryFrame();
+            recordTextLineDeleted(cursorTextPos.line);
+        }
+    }
+    lastCharacterDeletedByTextReplaceMode = getTextPosCharacter(&cursorTextPos);
+    deleteCharacterAfterCursorHelper(false, false);
+    insertCharacterBeforeCursorHelper(character);
+    if (!isStartOfNonconsecutiveEscapeSequence) {
+        if (historyFrameIsConsecutive) {
+            updateHistoryFrameInsertAction(cursorTextPos.line);
+        } else {
+            recordTextLineInserted(cursorTextPos.line);
+            historyFrameIsConsecutive = true;
+        }
+        textBufferIsDirty = true;
         finishCurrentHistoryFrame();
     }
 }
 
-void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
+void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel, int8_t shouldRecordHistory) {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
     int64_t index = getTextPosIndex(&cursorTextPos);
@@ -240,11 +296,17 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
         increaseTextLineIndentationLevelHelper(tempLine, false);
         tempCount += 1;
     }
-    recordTextLineDeleted(cursorTextPos.line);
+    if (shouldRecordHistory) {
+        recordTextLineDeleted(cursorTextPos.line);
+    }
     removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, tempAmount);
-    recordTextLineInserted(cursorTextPos.line);
+    if (shouldRecordHistory) {
+        recordTextLineInserted(cursorTextPos.line);
+    }
     insertTextLineRight(cursorTextPos.line, tempLine);
-    recordTextLineInserted(tempLine);
+    if (shouldRecordHistory) {
+        recordTextLineInserted(tempLine);
+    }
     cursorTextPos.line = tempLine;
     int64_t tempIndex = getTextLineIndentationEndIndex(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, tempIndex);
@@ -260,24 +322,49 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel) {
     }
     eraseLineNumber();
     displayLineNumber();
-    textBufferIsDirty = true;
+    if (shouldRecordHistory) {
+        textBufferIsDirty = true;
+    }
 }
 
-void insertNewlineBeforeCursor() {
+void insertNewlineBeforeCursor(int8_t shouldIgnoreIndentation) {
     if (isStartOfNonconsecutiveEscapeSequence) {
         addNonconsecutiveEscapeSequenceAction(true);
     }
     addHistoryFrame();
-    int32_t tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
-    insertNewlineBeforeCursorHelper(tempLevel);
+    int32_t tempLevel;
+    if (shouldIgnoreIndentation) {
+        tempLevel = 0;
+    } else {
+        tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    }
+    insertNewlineBeforeCursorHelper(tempLevel, true);
     finishCurrentHistoryFrame();
     historyFrameIsConsecutive = false;
+}
+
+void replaceCharacterAtCursor(int8_t character, int8_t shouldRecordHistory) {
+    if (shouldRecordHistory) {
+        deleteCharacterAfterCursor(true);
+        if (character == '\n') {
+            insertNewlineBeforeCursor(true);
+        } else {
+            insertCharacterBeforeCursor(character, true);
+        }
+    } else {
+        deleteCharacterAfterCursorHelper(false, false);
+        if (character == '\n') {
+            insertNewlineBeforeCursorHelper(0, false);
+        } else {
+            insertCharacterBeforeCursorHelper(character);
+        }
+    }
 }
 
 void promptAndInsertCharacterBeforeCursor() {
     int8_t tempCharacter = promptSingleCharacter();
     if (tempCharacter != 0) {
-        insertCharacterBeforeCursor(tempCharacter);
+        insertCharacterBeforeCursor(tempCharacter, false);
     }
 }
 
@@ -285,7 +372,7 @@ void promptAndInsertCharacterAfterCursor() {
     int8_t tempCharacter = promptSingleCharacter();
     if (tempCharacter != 0) {
         moveCursorRight(1);
-        insertCharacterBeforeCursor(tempCharacter);
+        insertCharacterBeforeCursor(tempCharacter, false);
         moveCursorLeft(2);
     }
 }
@@ -295,7 +382,7 @@ void promptAndReplaceCharacterUnderCursor() {
     if (tempCharacter != 0) {
         moveCursorRight(1);
         deleteCharacterBeforeCursor(true);
-        insertCharacterBeforeCursor(tempCharacter);
+        insertCharacterBeforeCursor(tempCharacter, false);
         moveCursorLeft(1);
     }
 }

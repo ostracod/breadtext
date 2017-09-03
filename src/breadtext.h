@@ -22,6 +22,7 @@
 #define TEXT_COMMAND_MODE 6
 #define HELP_MODE 7
 #define PREVIOUS_MODE 8
+#define TEXT_REPLACE_MODE 9
 
 #define TIME_NEVER -1
 
@@ -50,6 +51,7 @@ int8_t isPerformingSystematicTest;
 int8_t shouldHighlightSyntax;
 int8_t applicationVersion[50];
 int8_t shouldUseXclip;
+int8_t lastCharacterDeletedByTextReplaceMode;
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);

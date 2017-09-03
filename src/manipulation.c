@@ -85,7 +85,7 @@ void toggleSemicolonAtEndOfLine() {
         deleteCharacterBeforeCursor(true);
         tempShouldMoveCursorBack = !tempIsAtEndOfLine;
     } else {
-        insertCharacterBeforeCursor(';');
+        insertCharacterBeforeCursor(';', false);
         tempShouldMoveCursorBack = true;
     }
     if (tempShouldMoveCursorBack) {

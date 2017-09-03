@@ -11,11 +11,17 @@ ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "a"
 ASSERT_POS 1 1
 
-TEST "Comma escape"
+TEST "Comma escape 1"
 PRESS_KEY t a , , `
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "a"
 ASSERT_POS 1 1
+
+TEST "Comma escape 2"
+PRESS_KEY t , , `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 ""
+ASSERT_POS 1 0
 
 TEST "No comma escape 1"
 PRESS_KEY t a , a , a
@@ -115,6 +121,126 @@ PRESS_KEY SPACE
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 " "
 ASSERT_POS 1 1
+
+TEST "Enter text replace mode"
+ADD_LINE "def"
+PRESS_KEY ` T a
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aef"
+ASSERT_POS 1 1
+
+TEST "Exit text replace mode"
+ADD_LINE "def"
+PRESS_KEY T a ESC `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aef"
+ASSERT_POS 1 1
+
+TEST "Comma replace escape 1"
+ADD_LINE "def"
+PRESS_KEY T a , , `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aef"
+ASSERT_POS 1 1
+
+TEST "Comma replace escape 2"
+ADD_LINE "def"
+PRESS_KEY T , , `
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "def"
+ASSERT_POS 1 0
+
+TEST "No comma replace escape 1"
+ADD_LINE "defghi"
+PRESS_KEY T a , a , a
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a,a,ai"
+ASSERT_POS 1 5
+
+TEST "No comma replace escape 2"
+ADD_LINE "defghi"
+ADD_LINE "jklmno"
+PRESS_KEY T a , DOWN , a
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "a,fghi"
+ASSERT_LINE 2 "jk,ano"
+ASSERT_POS 2 4
+
+TEST "Replace characters in empty buffer"
+PRESS_KEY T a b
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "ab"
+ASSERT_POS 1 2
+
+TEST "Replace characters in empty line"
+ADD_LINE "abc"
+ADD_LINE ""
+ADD_LINE "def"
+SET_POS 2 0
+PRESS_KEY T g h
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "ghef"
+ASSERT_POS 2 2
+
+TEST "Replace characters in middle of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY T j k
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "djk"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 3
+
+TEST "Replace characters at beginning of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 0
+PRESS_KEY T j k
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "jkf"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 2 2
+
+TEST "Replace characters at end of line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 3
+PRESS_KEY T j k
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defjkhi"
+ASSERT_POS 2 5
+
+TEST "Replace characters at beginning of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 1 0
+PRESS_KEY T j k
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "jkc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghi"
+ASSERT_POS 1 2
+
+TEST "Replace characters at end of buffer"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 3 3
+PRESS_KEY T j k
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "def"
+ASSERT_LINE 3 "ghijk"
+ASSERT_POS 3 5
 
 TEST "Backspace in empty buffer"
 PRESS_KEY BACKSPACE

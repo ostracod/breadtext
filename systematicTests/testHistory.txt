@@ -19,6 +19,26 @@ PRESS_KEY u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcdef"
 
+TEST "Replace characters history"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T g h i ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aghief"
+
+TEST "Replace characters and move history"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T g h RIGHT i j ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aghdef"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+
 TEST "Backspace characters history"
 ADD_LINE "abcdefghi"
 SET_POS 1 6
@@ -137,6 +157,56 @@ ASSERT_LINE 1 "abcdef"
 PRESS_KEY U
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abcghidef"
+
+TEST "Replace comma history 1"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T g h i , , u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aghief"
+
+TEST "Replace comma history 2"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T g h i , ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aghi,f"
+
+TEST "Replace comma history 3"
+ADD_LINE "abcdefghi"
+SET_POS 1 1
+PRESS_KEY T j k l , RIGHT m n o ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "ajkl,fghi"
+PRESS_KEY u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdefghi"
+
+TEST "Replace comma history 4"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T , ESC u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "a,cdef"
+
+TEST "Replace comma history 5"
+ADD_LINE "abcdef"
+SET_POS 1 1
+PRESS_KEY T g h i RIGHT , , u
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abcdef"
+PRESS_KEY U
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "aghief"
 
 TEST "Delete selection history"
 ADD_LINE "abcdefghi"

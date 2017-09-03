@@ -22,6 +22,7 @@ void moveCursorLeft(int32_t amount);
 void moveCursorRight(int32_t amount);
 void moveCursorUp(int32_t amount);
 void moveCursorDown(int32_t amount);
+void moveCursorLeftConsecutive();
 void adjustLineSelectionBoundaries(textPos_t *nextCursorPos);
 void moveLineSelectionUp(int32_t amount);
 void moveLineSelectionDown(int32_t amount);
