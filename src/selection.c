@@ -399,6 +399,21 @@ void pasteAfterCursor() {
     historyFrameIsConsecutive = false;
 }
 
+void swapSelection() {
+    int8_t *tempText = allocateStringFromSelection();
+    deleteSelection();
+    pasteBeforeCursor();
+    int8_t tempResult = copyString(tempText);
+    free(tempText);
+    if (tempResult) {
+        if (shouldUseSystemClipboard) {
+            notifyUser((int8_t *)"Copied selection. (System)");
+        } else {
+            notifyUser((int8_t *)"Copied selection. (Internal)");
+        }
+    }
+}
+
 void highlightWord() {
     int64_t tempStartIndex = getTextPosIndex(&cursorTextPos);
     int64_t tempEndIndex = tempStartIndex;

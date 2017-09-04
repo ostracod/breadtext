@@ -78,6 +78,7 @@ int8_t *helpText[] = {
     (int8_t *)"X = Cut",
     (int8_t *)"Shift + X = Cut and enter text-entry mode",
     (int8_t *)"P = Paste after cursor",
+    (int8_t *)"* = Swap selection with clipboard",
     (int8_t *)"Shift + P = Paste before cursor",
     (int8_t *)"Y = Use internal clipboard",
     (int8_t *)"Shift + Y = Use system clipboard",

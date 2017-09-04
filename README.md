@@ -108,6 +108,7 @@ To view controls within BreadText, enter `/help`.
 `Shift + X` = Cut and enter text-entry mode  
 `P` = Paste after cursor  
 `Shift + P` = Paste before cursor  
+`*` = Swap selection with clipboard  
 `Y` = Use internal clipboard  
 `Shift + Y` = Use system clipboard
 

@@ -127,6 +127,20 @@ PRESS_KEY +
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc 100 def"
 
+TEST "Increment negative number"
+ADD_LINE "abc -5 def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc -4 def"
+
+TEST "Increment negative number to zero"
+ADD_LINE "abc -1 def"
+SET_POS 1 4
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0 def"
+
 TEST "Increment floating point number"
 ADD_LINE "abc 5.0 def"
 SET_POS 1 6
@@ -189,6 +203,20 @@ SET_POS 1 4
 PRESS_KEY -
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc 99 def"
+
+TEST "Decrement negative number"
+ADD_LINE "abc -5 def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc -6 def"
+
+TEST "Decrement zero to negative"
+ADD_LINE "abc 0 def"
+SET_POS 1 4
+PRESS_KEY -
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc -1 def"
 
 TEST "Decrement floating point number"
 ADD_LINE "abc 5.0 def"

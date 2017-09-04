@@ -672,7 +672,7 @@ int8_t handleKey(int32_t key) {
                 }
                 case '*':
                 {
-                    // TODO: Clipboard swap.
+                    swapSelection();
                     break;
                 }
                 case '1':
