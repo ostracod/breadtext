@@ -1062,8 +1062,7 @@ void goToMatchingCharacter() {
     if (index < 0) {
         tempLine = getPreviousTextLine(tempLine);
         index = -1;
-    }
-    if (index >= tempLine->textAllocation.length) {
+    } else if (index >= tempLine->textAllocation.length) {
         tempLine = getNextTextLine(tempLine);
         index = -1;
     }
