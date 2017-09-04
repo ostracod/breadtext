@@ -18,7 +18,7 @@
 int8_t *internalClipboard = NULL;
 int64_t internalClipboardSize;
 
-int8_t copySelectionHelper() {
+int8_t *allocateStringFromSelection() {
     textPos_t *tempFirstTextPos;
     textPos_t *tempLastTextPos;
     if (isHighlighting) {
@@ -28,20 +28,9 @@ int8_t copySelectionHelper() {
         tempFirstTextPos = &cursorTextPos;
         tempLastTextPos = &cursorTextPos;
     }
-    FILE *tempFile;
-    int64_t internalClipboardIndex = 0;
-    if (shouldUseSystemClipboard) {
-        tempFile = fopen((char *)clipboardFilePath, "w");
-        if (tempFile == NULL) {
-            notifyUser((int8_t *)"ERROR: Could not copy text.");
-            return false;
-        }
-    } else {
-        if (internalClipboard != NULL) {
-            free(internalClipboard);
-        }
-        internalClipboard = malloc(getCharacterCountInRange(tempFirstTextPos, tempLastTextPos) + 1);
-    }
+    int64_t tempLength = getCharacterCountInRange(tempFirstTextPos, tempLastTextPos);
+    int8_t *output = malloc(tempLength + 1);
+    int64_t index = 0;
     textLine_t *tempLine = tempFirstTextPos->line;
     while (true) {
         int64_t tempStartIndex;
@@ -64,33 +53,50 @@ int8_t copySelectionHelper() {
             tempShouldWriteNewline = false;
         }
         int64_t tempAmount = tempEndIndex - tempStartIndex;
-        if (shouldUseSystemClipboard) {
-            fwrite(tempLine->textAllocation.text + tempStartIndex, 1, tempAmount, tempFile);
-        } else {
-            copyData(internalClipboard + internalClipboardIndex, tempLine->textAllocation.text + tempStartIndex, tempAmount);
-            internalClipboardIndex += tempAmount;
-        }
+        copyData(output + index, tempLine->textAllocation.text + tempStartIndex, tempAmount);
+        index += tempAmount;
         if (tempShouldWriteNewline) {
-            if (shouldUseSystemClipboard) {
-                fwrite("\n", 1, 1, tempFile);
-            } else {
-                internalClipboard[internalClipboardIndex] = '\n';
-                internalClipboardIndex += 1;
-            }
+            output[index] = '\n';
+            index += 1;
         }
         if (tempLine == tempLastTextPos->line) {
             break;
         }
         tempLine = getNextTextLine(tempLine);
     }
+    output[tempLength] = 0;
+    return output;
+}
+
+int8_t copyString(int8_t *text) {
+    int64_t tempLength = strlen((char *)text);
     if (shouldUseSystemClipboard) {
+        FILE *tempFile;
+        tempFile = fopen((char *)clipboardFilePath, "w");
+        if (tempFile == NULL) {
+            notifyUser((int8_t *)"ERROR: Could not copy text.");
+            return false;
+        }
+        fwrite(text, 1, tempLength, tempFile);
         fclose(tempFile);
         systemCopyClipboardFile();
         remove((char *)clipboardFilePath);
     } else {
-        internalClipboardSize = internalClipboardIndex;
+        if (internalClipboard != NULL) {
+            free(internalClipboard);
+        }
+        internalClipboard = malloc(tempLength);
+        copyData(internalClipboard, text, tempLength);
+        internalClipboardSize = tempLength;
     }
     return true;
+}
+
+int8_t copySelectionHelper() {
+    int8_t *tempText = allocateStringFromSelection();
+    int8_t output = copyString(tempText);
+    free(tempText);
+    return output;
 }
 
 void copySelection() {
