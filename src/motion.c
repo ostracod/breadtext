@@ -912,3 +912,182 @@ void moveCursorToEndOfIndentation() {
     cursorSnapColumn = tempNextTextPos.column;
     historyFrameIsConsecutive = false;
 }
+
+// An index of -1 indicates a missing index.
+void findMatchingCharacterInLine(textLine_t *line, int64_t *index, int8_t direction, int32_t *depth, int8_t startCharacter, int8_t endCharacter) {
+    if (*index < 0) {
+        if (direction > 0) {
+            *index = 0;
+        } else {
+            *index = line->textAllocation.length - 1;
+        }
+    }
+    int8_t tempIsInString = false;
+    int8_t tempStringDelimiter;
+    while (*index >= 0 && *index < line->textAllocation.length) {
+        int8_t tempCharacter = line->textAllocation.text[*index];
+        if (tempIsInString) {
+            if (tempCharacter == tempStringDelimiter) {
+                if (*index > 0) {
+                    int8_t tempCharacter2 = line->textAllocation.text[*index - 1];
+                    if (tempCharacter2 != '\\') {
+                        tempIsInString = false;
+                    }
+                } else {
+                    tempIsInString = false;
+                }
+            }
+        } else {
+            if (tempCharacter == '"' || tempCharacter == '\'') {
+                tempIsInString = true;
+                tempStringDelimiter = tempCharacter;
+            }
+            if (tempCharacter == startCharacter) {
+                *depth += 1;
+            }
+            if (tempCharacter == endCharacter) {
+                *depth -= 1;
+                if (*depth <= 0) {
+                    break;
+                }
+            }
+        }
+        if (direction > 0) {
+            *index += 1;
+        } else {
+            *index -= 1;
+        }
+    }
+}
+
+void goToMatchingStringDelimiter() {
+    int64_t tempCursorIndex = getTextPosIndex(&cursorTextPos);
+    int8_t tempIsInString = false;
+    int8_t tempStringDelimiter;
+    int8_t tempIsEscaped = false;
+    int64_t tempLastDelimiterIndex;
+    int8_t tempHasFoundMatchingDelimiter = false;
+    int64_t tempMatchingDelimiterIndex;
+    int64_t index = 0;
+    while (index < cursorTextPos.line->textAllocation.length) {
+        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[index];
+        if (tempIsInString) {
+            if (tempIsEscaped) {
+                tempIsEscaped = false;
+            } else {
+                if (tempCharacter == '\\') {
+                    tempIsEscaped = true;
+                }
+                if (tempCharacter == tempStringDelimiter) {
+                    if (tempLastDelimiterIndex == tempCursorIndex) {
+                        tempHasFoundMatchingDelimiter = true;
+                        tempMatchingDelimiterIndex = index;
+                        break;
+                    }
+                    if (index == tempCursorIndex) {
+                        tempHasFoundMatchingDelimiter = true;
+                        tempMatchingDelimiterIndex = tempLastDelimiterIndex;
+                        break;
+                    }
+                    tempIsInString = false;
+                }
+            }
+        } else {
+            if (tempCharacter == '"' || tempCharacter == '\'') {
+                tempIsInString = true;
+                tempStringDelimiter = tempCharacter;
+                tempLastDelimiterIndex = index;
+            }
+        }
+        index += 1;
+    }
+    if (tempHasFoundMatchingDelimiter) {
+        textPos_t tempTextPos;
+        tempTextPos.line = cursorTextPos.line;
+        setTextPosIndex(&tempTextPos, tempMatchingDelimiterIndex);
+        moveCursor(&tempTextPos);
+    } else {
+        notifyUser((int8_t *)"Could not find matching character.");
+    }
+}
+
+void goToMatchingCharacter() {
+    int8_t tempStartCharacter = getTextPosCharacter(&cursorTextPos);
+    if (tempStartCharacter == '"' || tempStartCharacter == '\'') {
+        goToMatchingStringDelimiter();
+        return;
+    }
+    int8_t tempEndCharacter = 0;
+    int8_t tempDirection;
+    if (tempStartCharacter == '(') {
+        tempEndCharacter = ')';
+        tempDirection = 1;
+    }
+    if (tempStartCharacter == ')') {
+        tempEndCharacter = '(';
+        tempDirection = -1;
+    }
+    if (tempStartCharacter == '[') {
+        tempEndCharacter = ']';
+        tempDirection = 1;
+    }
+    if (tempStartCharacter == ']') {
+        tempEndCharacter = '[';
+        tempDirection = -1;
+    }
+    if (tempStartCharacter == '{') {
+        tempEndCharacter = '}';
+        tempDirection = 1;
+    }
+    if (tempStartCharacter == '}') {
+        tempEndCharacter = '{';
+        tempDirection = -1;
+    }
+    if (tempStartCharacter == '<') {
+        tempEndCharacter = '>';
+        tempDirection = 1;
+    }
+    if (tempStartCharacter == '>') {
+        tempEndCharacter = '<';
+        tempDirection = -1;
+    }
+    if (tempEndCharacter == 0) {
+        notifyUser((int8_t *)"Invalid character.");
+        return;        
+    }
+    int32_t tempDepth = 1;
+    int64_t index = getTextPosIndex(&cursorTextPos);
+    index += tempDirection;
+    textLine_t *tempLine = cursorTextPos.line;
+    if (index < 0) {
+        tempLine = getPreviousTextLine(tempLine);
+        index = -1;
+    }
+    if (index >= tempLine->textAllocation.length) {
+        tempLine = getNextTextLine(tempLine);
+        index = -1;
+    }
+    while (tempLine != NULL) {
+        findMatchingCharacterInLine(tempLine, &index, tempDirection, &tempDepth, tempStartCharacter, tempEndCharacter);
+        if (tempDepth <= 0) {
+            break;
+        }
+        if (tempDirection > 0) {
+            tempLine = getNextTextLine(tempLine);
+        } else {
+            tempLine = getPreviousTextLine(tempLine);
+        }
+        index = -1;
+    }
+    if (tempDepth <= 0) {
+        textPos_t tempTextPos;
+        tempTextPos.line = tempLine;
+        setTextPosIndex(&tempTextPos, index);
+        moveCursor(&tempTextPos);
+    } else {
+        notifyUser((int8_t *)"Could not find matching character.");
+    }
+}
+
+
+

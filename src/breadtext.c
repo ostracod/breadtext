@@ -665,6 +665,16 @@ int8_t handleKey(int32_t key) {
                     enterBeginningOfCommand((int8_t *)"gotoLine ");
                     break;
                 }
+                case '8':
+                {
+                    goToMatchingCharacter();
+                    break;
+                }
+                case '*':
+                {
+                    // TODO: Clipboard swap.
+                    break;
+                }
                 case '1':
                 {
                     gotoMark(1);
@@ -700,11 +710,6 @@ int8_t handleKey(int32_t key) {
                     gotoMark(7);
                     break;
                 }
-                case '8':
-                {
-                    gotoMark(8);
-                    break;
-                }
                 case '!':
                 {
                     setMark(1);
@@ -738,11 +743,6 @@ int8_t handleKey(int32_t key) {
                 case '&':
                 {
                     setMark(7);
-                    break;
-                }
-                case '*':
-                {
-                    setMark(8);
                     break;
                 }
             }

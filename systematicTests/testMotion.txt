@@ -377,18 +377,6 @@ SET_POS 1 0
 PRESS_KEY 7
 ASSERT_POS 3 1
 
-TEST "Mark 8"
-ADD_LINE "a"
-ADD_LINE "a"
-ADD_LINE "a"
-ADD_LINE "a"
-ADD_LINE "a"
-SET_POS 3 0
-PRESS_KEY *
-SET_POS 1 0
-PRESS_KEY 8
-ASSERT_POS 3 1
-
 TEST "Deleted mark"
 ADD_LINE "a"
 ADD_LINE "a"
@@ -882,3 +870,39 @@ ADD_LINE "ba ab ba"
 SET_POS 3 6
 PRESS_KEY F
 ASSERT_POS 3 0
+
+TEST "Jump to matching parenthesis"
+ADD_LINE "((((("
+ADD_LINE ")))))"
+SET_POS 1 1
+PRESS_KEY 8
+ASSERT_POS 2 3
+PRESS_KEY 8
+ASSERT_POS 1 1
+
+TEST "Jump to matching parenthesis with string"
+ADD_LINE "((((("
+ADD_LINE "aa\"a)a\\\"a)a\"aa'a)a\"aa)a'aa"
+ADD_LINE ")))))"
+SET_POS 1 1
+PRESS_KEY 8
+ASSERT_POS 3 3
+PRESS_KEY 8
+ASSERT_POS 1 1
+
+TEST "Jump to matching parenthesis missing"
+ADD_LINE "(((((((((("
+ADD_LINE ")))))"
+SET_POS 1 1
+PRESS_KEY 8
+ASSERT_POS 1 1
+
+TEST "Jump to matching quotation mark"
+ADD_LINE "aaa\"aaaa\"aaaa\"aaa'aaa'aaa\\\"aaa\"aaa\"aaa\""
+SET_POS 1 13
+PRESS_KEY 8
+ASSERT_POS 1 30
+PRESS_KEY 8
+ASSERT_POS 1 13
+
+

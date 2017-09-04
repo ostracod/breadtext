@@ -58,6 +58,7 @@ int8_t goToCharacterExclusive();
 int8_t goToCharacterInclusive();
 int8_t reverseGoToCharacterExclusive();
 int8_t reverseGoToCharacterInclusive();
+void goToMatchingCharacter();
 
 // CURSOR_MOTION_HEADER_FILE
 #endif

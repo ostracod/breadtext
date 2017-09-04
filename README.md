@@ -86,6 +86,7 @@ To view controls within BreadText, enter `/help`.
 `[]` = Scroll to beginning or end of line  
 `{}` = Scroll to beginning or end of file  
 `=` = Scroll to end of indentation  
+`8` = Jump to matching delimiter
 `G` = Go to character exclusive  
 `Shift + G` = Go to character inclusive  
 `R` = Reverse go to character exclusive  
@@ -94,8 +95,8 @@ To view controls within BreadText, enter `/help`.
 `Shift + N` = Find previous instance  
 `F` = Find next instance of word under cursor  
 `Shift + F` = Find previous instance of word under cursor  
-`1-8` = Go to mark  
-`Shift + 1-8` = Set mark
+`1-7` = Go to mark  
+`Shift + 1-7` = Set mark
 
 ### Highlight Actions
 
