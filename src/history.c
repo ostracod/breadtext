@@ -150,7 +150,7 @@ void cleanUpHistoryFrame(historyFrame_t *frame) {
     }
 }
 
-void addHistoryFrame() {
+void addExistingHistoryFrame(historyFrame_t *frame) {
     int32_t index = 0;
     while (index < historyFrameListIndex) {
         historyFrame_t *tempFrame = historyFrameList + index;
@@ -179,7 +179,12 @@ void addHistoryFrame() {
         }
     }
     historyFrameListIndex = 0;
-    historyFrameList[historyFrameListIndex] = createEmptyHistoryFrame();
+    historyFrameList[historyFrameListIndex] = *frame;
+}
+
+void addHistoryFrame() {
+    historyFrame_t tempFrame = createEmptyHistoryFrame();
+    addExistingHistoryFrame(&tempFrame);
 }
 
 historyAction_t createHistoryActionFromTextLine(textLine_t *line, int8_t actionType) {

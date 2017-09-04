@@ -63,16 +63,10 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     }
 }
 
-void addNonconsecutiveEscapeSequenceAction(int8_t shouldFinishFrame) {
-    addHistoryFrame();
-    historyFrame_t *tempFrame = historyFrameList + historyFrameListIndex;
-    tempFrame->previousCursorTextPos = nonconsecutiveEscapeSequencePreviousCursorTextPos;
-    addHistoryActionToHistoryFrame(tempFrame, &firstNonconsecutiveEscapeSequenceAction);
-    if (shouldFinishFrame) {
-        recordTextLineInserted(getTextLineByNumber(firstNonconsecutiveEscapeSequenceAction.lineNumber));
-        finishCurrentHistoryFrame();
-    }
-    firstNonconsecutiveEscapeSequenceAction.text = NULL;
+void addNonconsecutiveEscapeSequenceFrame() {
+    addExistingHistoryFrame(&nonconsecutiveEscapeSequenceFrame);
+    finishCurrentHistoryFrame();
+    nonconsecutiveEscapeSequenceFrameIsSet = false;
 }
 
 void setActivityMode(int8_t mode) {
@@ -80,7 +74,7 @@ void setActivityMode(int8_t mode) {
     if ((activityMode == TEXT_ENTRY_MODE && mode != TEXT_ENTRY_MODE)
             || (activityMode == TEXT_REPLACE_MODE && mode != TEXT_REPLACE_MODE)) {
         if (isStartOfNonconsecutiveEscapeSequence) {
-            addNonconsecutiveEscapeSequenceAction(true);
+            addNonconsecutiveEscapeSequenceFrame();
             textBufferIsDirty = true;
         }
     }
@@ -269,6 +263,10 @@ int8_t handleKey(int32_t key) {
             if (key == ',') {
                 setActivityMode(COMMAND_MODE);
             }
+        } else {
+            if (key == '\n') {
+                insertNewlineBeforeCursor(false);
+            }
         }
         if (activityMode == COMMAND_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
             if (key == 'j') {
@@ -315,11 +313,6 @@ int8_t handleKey(int32_t key) {
         }
         if (key == KEY_BTAB) {
             decreaseSelectionIndentationLevel();
-        }
-        if (activityMode != HIGHLIGHT_LINE_MODE && activityMode != HIGHLIGHT_STATIC_MODE) {
-            if (key == '\n') {
-                insertNewlineBeforeCursor(false);
-            }
         }
         // Backspace.
         if (key == 127 || key == 263) {
@@ -1173,6 +1166,7 @@ int8_t initializeApplication() {
     commentPrefix = NULL;
     keywordList = NULL;
     shouldUseXclip = (applicationPlatform == PLATFORM_LINUX);
+    nonconsecutiveEscapeSequenceFrameIsSet = false;
     
     if (!isPerformingFuzzTest && !isPerformingSystematicTest) {
         processRcFile();

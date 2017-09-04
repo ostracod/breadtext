@@ -6,8 +6,8 @@
 
 int8_t isStartOfNonconsecutiveEscapeSequence;
 int8_t lastIsStartOfNonconsecutiveEscapeSequence;
-historyAction_t firstNonconsecutiveEscapeSequenceAction;
-historyTextPos_t nonconsecutiveEscapeSequencePreviousCursorTextPos;
+historyFrame_t nonconsecutiveEscapeSequenceFrame;
+int8_t nonconsecutiveEscapeSequenceFrameIsSet;
 
 void insertCharacterBeforeCursor(int8_t character, int8_t isConsecutive);
 void insertTextEntryModeCharacterBeforeCursor(int8_t character);

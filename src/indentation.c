@@ -188,7 +188,7 @@ int64_t getIndentationWidth(int64_t level) {
 
 void increaseSelectionIndentationLevel() {
     if (isStartOfNonconsecutiveEscapeSequence) {
-        addNonconsecutiveEscapeSequenceAction(true);
+        addNonconsecutiveEscapeSequenceFrame();
     }
     addHistoryFrame();
     textPos_t *tempStartTextPos;
@@ -236,7 +236,7 @@ void increaseSelectionIndentationLevel() {
 
 void decreaseSelectionIndentationLevel() {
     if (isStartOfNonconsecutiveEscapeSequence) {
-        addNonconsecutiveEscapeSequenceAction(true);
+        addNonconsecutiveEscapeSequenceFrame();
     }
     addHistoryFrame();
     textPos_t *tempStartTextPos;

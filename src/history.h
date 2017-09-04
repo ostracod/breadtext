@@ -45,6 +45,7 @@ void addHistoryActionToHistoryFrame(historyFrame_t *frame, historyAction_t *acti
 void performHistoryFrame(historyFrame_t *frame);
 void undoHistoryFrame(historyFrame_t *frame);
 void cleanUpHistoryFrame(historyFrame_t *frame);
+void addExistingHistoryFrame(historyFrame_t *frame);
 void addHistoryFrame();
 historyAction_t createHistoryActionFromTextLine(textLine_t *line, int8_t actionType);
 void recordTextLine(textLine_t *line, int8_t actionType);

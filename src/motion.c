@@ -40,7 +40,7 @@ void moveCursor(textPos_t *pos) {
     }
     historyFrameIsConsecutive = false;
     if (isStartOfNonconsecutiveEscapeSequence) {
-        addNonconsecutiveEscapeSequenceAction(true);
+        addNonconsecutiveEscapeSequenceFrame();
     }
     textPos_t tempPreviousTextPos = cursorTextPos;
     textPos_t tempNextPos = *pos;
