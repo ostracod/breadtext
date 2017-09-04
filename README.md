@@ -86,7 +86,7 @@ To view controls within BreadText, enter `/help`.
 `[]` = Scroll to beginning or end of line  
 `{}` = Scroll to beginning or end of file  
 `=` = Scroll to end of indentation  
-`8` = Jump to matching delimiter
+`8` = Jump to matching delimiter  
 `G` = Go to character exclusive  
 `Shift + G` = Go to character inclusive  
 `R` = Reverse go to character exclusive  
