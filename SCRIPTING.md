@@ -3,7 +3,7 @@
 
 ## Set-up
 
-Place your BreadText script in `~/.breadtextrc.btsl`.
+Place your BreadText script in `~/.breadtextrc.btsl`. It will be evaluated whenever you start up BreadText.
 
 ## Syntax and Semantics
 
@@ -25,7 +25,7 @@ Null literal: `null`
 
 Number literal: `1.23`
 
-Boolean literal (actually numbers): `true`, `false`
+Boolean literals (actually numbers): `true`, `false`
 
 Character literal (actually a number): `'a'`
 
@@ -35,7 +35,7 @@ List literal: `[1, 2, 3]`
 
 Variable declaration and assignment: `myNumber = 5`
 
-Comment: `myNumber *= 3   # triple myNumber`
+Comment: `# comment`
 
 ## Operators
 
@@ -62,12 +62,14 @@ Function invocation: `myFunc(myValue1, myValue2, myValue3...)`
 
 ## Statements
 
-Expression statement:  
+Expression statement:
+
 ```
 <expression>
 ```
 
-If statement:  
+If statement:
+
 ```
 if <condition>
     <body>
@@ -78,41 +80,48 @@ else
 end
 ```
 
-While statement:  
+While statement:
+
 ```
 while <condition>
     <body>
 end
 ```
 
-Break statement:  
+Break statement:
+
 ```
 break
 ```
 
-Continue statement:  
+Continue statement:
+
 ```
 continue
 ```
 
-Function declaration statement:  
+Function declaration statement:
+
 ```
 func <name>(<name>, <name>, <name>...)
     <body>
 end
 ```
 
-Return with value statement:  
+Return with value statement:
+
 ```
 ret <value>
 ```
 
-Return without value statement:  
+Return without value statement:
+
 ```
 ret
 ```
 
-Import statement:  
+Import statement:
+
 ```
 import <path>
 ```
@@ -125,7 +134,7 @@ import <path>
 `isFunc(value)`  
 `copy(value)` - Shallow copy.  
 `str(number)`  
-`num(text)`  - Returns null if the text cannot be converted.
+`num(text)`  - Returns null if the text cannot be converted.  
 `floor(num)`  
 `len(list)`  
 `ins(sequence, index, item)` - Inserts a value into the list or string.  
