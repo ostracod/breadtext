@@ -171,3 +171,7 @@ colorScheme 0
 shouldUseHardTabs 0
 indentationWidth 4
 ```
+
+## BreadText Scripting Language.
+
+For scripting documentation, please consult [this page](./SCRIPTING.md).
