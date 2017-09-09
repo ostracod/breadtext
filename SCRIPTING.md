@@ -145,18 +145,18 @@ import <path>
 `pressKey(num)`  
 `getMode()`  
 `setMode(mode)`  
-`getSelection()` - Returns the string highlighted in the editor.  
+`getSelectionContents()`  
 `getLineCount()`  
-`getLine(index)` - Returns the contents of the given line.  
+`getLineContents(index)`  
 `getCursorCharIndex()` - Returns the selected character index within the cursor's line.  
 `getCursorLineIndex()` - Returns the cursor's line index within the entire buffer.  
 `setCursorPos(charIndex, lineIndex)`  
-`runCommand(commandName, argList)` - Returns an output value or null.  
+`runCommand(commandName, argList)` - Runs a command which the user could otherwise invoke by pressing the forward-slash key. Returns an output value or null.  
 `notifyUser(text)` - Shows a message in the status bar.  
 `promptKey()`  
 `promptCharacter()` - Returns null if the user pressed a non-character key.  
 `bindKey(num, callback)` - The callback function should return a boolean indicating whether to override the default action.  
-`bindCommand(name, callback)` - The callback function should accept a list of arguments. The callback function may return a value to be consumed by `runCommand`.
+`bindCommand(name, callback)` - Sets up a command which the user can invoke by pressing the forward-slash key. The callback function should accept a list of arguments. The callback function may return a value to be consumed by `runCommand`.
 
 ## Built-in Constants
 
@@ -214,7 +214,7 @@ end
 
 # Tell the user whether the highlighted number is prime.
 func checkSelectionPrimality()
-    text = getSelection()
+    text = getSelectionContents()
     notifyPrimality(text)
     # Return true to override the default key action.
     ret true
