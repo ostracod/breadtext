@@ -71,7 +71,7 @@ void printTextLineStructure(textLine_t *line) {
     }
 }
 
-int8_t runFuzzTest() {
+int8_t runTextLineFuzzTest() {
     textLine_t *tempLine = createEmptyTextLine();
     rootTextLine = tempLine;
     int32_t maximumLineCount = 100;
@@ -297,7 +297,7 @@ void runTextLineTest() {
         }
     }
     printf("Passed test 9.\n");
-    int8_t tempResult = runFuzzTest();
+    int8_t tempResult = runTextLineFuzzTest();
     if (tempResult) {
         printf("Passed test 10.\n");
     } else {

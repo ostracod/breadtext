@@ -54,10 +54,14 @@ void findPreviousTermUnderCursor();
 void moveTextUp(int32_t amount);
 void moveTextDown(int32_t amount);
 void moveCursorToVisibleText();
-int8_t goToCharacterExclusive();
-int8_t goToCharacterInclusive();
-int8_t reverseGoToCharacterExclusive();
-int8_t reverseGoToCharacterInclusive();
+void promptAndGoToCharacterExclusive();
+void promptAndGoToCharacterInclusive();
+void promptAndReverseGoToCharacterExclusive();
+void promptAndReverseGoToCharacterInclusive();
+int8_t goToCharacterExclusive(int8_t character);
+int8_t goToCharacterInclusive(int8_t character);
+int8_t reverseGoToCharacterExclusive(int8_t character);
+int8_t reverseGoToCharacterInclusive(int8_t character);
 void goToMatchingCharacter();
 
 // CURSOR_MOTION_HEADER_FILE

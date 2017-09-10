@@ -835,15 +835,31 @@ void moveCursorToVisibleText() {
     displayCursor();
 }
 
-int8_t goToCharacterInclusive() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter == 0) {
-        return false;
-    }
+void promptAndGoToCharacterExclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_GOTO_EXCLUSIVE;
+}
+
+void promptAndGoToCharacterInclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_GOTO_INCLUSIVE;
+}
+
+void promptAndReverseGoToCharacterExclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_REVERSE_GOTO_EXCLUSIVE;
+}
+
+void promptAndReverseGoToCharacterInclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_REVERSE_GOTO_INCLUSIVE;
+}
+
+int8_t goToCharacterInclusive(int8_t character) {
     textPos_t tempTextPos = cursorTextPos;
     while (true) {
         int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
-        if (tempCharacter2 == tempCharacter) {
+        if (tempCharacter2 == character) {
             moveCursor(&tempTextPos);
             cursorSnapColumn = cursorTextPos.column;
             historyFrameIsConsecutive = false;
@@ -857,8 +873,8 @@ int8_t goToCharacterInclusive() {
     }
 }
 
-int8_t goToCharacterExclusive() {
-    int8_t tempResult = goToCharacterInclusive();
+int8_t goToCharacterExclusive(int8_t character) {
+    int8_t tempResult = goToCharacterInclusive(character);
     if (!tempResult) {
         return false;
     }
@@ -866,15 +882,11 @@ int8_t goToCharacterExclusive() {
     return true;
 }
 
-int8_t reverseGoToCharacterInclusive() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter == 0) {
-        return false;
-    }
+int8_t reverseGoToCharacterInclusive(int8_t character) {
     textPos_t tempTextPos = cursorTextPos;
     while (true) {
         int8_t tempCharacter2 = getTextPosCharacter(&tempTextPos);
-        if (tempCharacter2 == tempCharacter) {
+        if (tempCharacter2 == character) {
             moveCursor(&tempTextPos);
             cursorSnapColumn = cursorTextPos.column;
             historyFrameIsConsecutive = false;
@@ -888,8 +900,8 @@ int8_t reverseGoToCharacterInclusive() {
     }
 }
 
-int8_t reverseGoToCharacterExclusive() {
-    int8_t tempResult = reverseGoToCharacterInclusive();
+int8_t reverseGoToCharacterExclusive(int8_t character) {
+    int8_t tempResult = reverseGoToCharacterInclusive(character);
     if (!tempResult) {
         return false;
     }

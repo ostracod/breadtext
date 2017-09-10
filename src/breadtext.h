@@ -24,6 +24,18 @@
 #define PREVIOUS_MODE 8
 #define TEXT_REPLACE_MODE 9
 
+#define SINGLE_CHARACTER_ACTION_NONE 0
+#define SINGLE_CHARACTER_ACTION_INSERT_BEFORE 1
+#define SINGLE_CHARACTER_ACTION_INSERT_AFTER 2
+#define SINGLE_CHARACTER_ACTION_REPLACE 3
+#define SINGLE_CHARACTER_ACTION_GOTO_INCLUSIVE 4
+#define SINGLE_CHARACTER_ACTION_GOTO_EXCLUSIVE 5
+#define SINGLE_CHARACTER_ACTION_REVERSE_GOTO_INCLUSIVE 6
+#define SINGLE_CHARACTER_ACTION_REVERSE_GOTO_EXCLUSIVE 7
+#define SINGLE_CHARACTER_ACTION_ENCLOSURE_INCLUSIVE 8
+#define SINGLE_CHARACTER_ACTION_ENCLOSURE_EXCLUSIVE 9
+#define SINGLE_CHARACTER_ACTION_HIGHLIGHT_WORD 10
+
 #define TIME_NEVER -1
 
 #define SHOULD_RUN_TEXT_LINE_TEST false
@@ -52,6 +64,8 @@ int8_t shouldHighlightSyntax;
 int8_t applicationVersion[50];
 int8_t shouldUseXclip;
 int8_t lastCharacterDeletedByTextReplaceMode;
+int8_t isConsumingSingleCharacter;
+int8_t singleCharacterAction;
 
 int8_t equalTextPos(textPos_t *pos1, textPos_t *pos2);
 int64_t getTextPosIndex(textPos_t *pos);
@@ -65,8 +79,7 @@ void clearInitialFileContents();
 int8_t checkInitialFileContents();
 int8_t checkTextBufferHygiene();
 void addNonconsecutiveEscapeSequenceFrame();
-int32_t getNextKey();
-int32_t promptSingleCharacter();
+void promptSingleCharacter();
 void handleResize();
 int8_t handleKey(int32_t key);
 void resetApplication();

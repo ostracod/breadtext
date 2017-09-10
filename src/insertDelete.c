@@ -402,29 +402,35 @@ void replaceCharacterAtCursor(int8_t character, int8_t shouldRecordHistory) {
 }
 
 void promptAndInsertCharacterBeforeCursor() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter != 0) {
-        insertCharacterBeforeCursor(tempCharacter, false);
-    }
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_INSERT_BEFORE;
 }
 
 void promptAndInsertCharacterAfterCursor() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter != 0) {
-        moveCursorRight(1);
-        insertCharacterBeforeCursor(tempCharacter, false);
-        moveCursorLeft(2);
-    }
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_INSERT_AFTER;
 }
 
 void promptAndReplaceCharacterUnderCursor() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter != 0) {
-        moveCursorRight(1);
-        deleteCharacterBeforeCursor(true);
-        insertCharacterBeforeCursor(tempCharacter, false);
-        moveCursorLeft(1);
-    }
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_REPLACE;
+}
+
+void insertCharacterBeforeCursorSimple(int8_t character) {
+    insertCharacterBeforeCursor(character, false);
+}
+
+void insertCharacterAfterCursorSimple(int8_t character) {
+    moveCursorRight(1);
+    insertCharacterBeforeCursor(character, false);
+    moveCursorLeft(2);
+}
+
+void replaceCharacterUnderCursorSimple(int8_t character) {
+    moveCursorRight(1);
+    deleteCharacterBeforeCursor(true);
+    insertCharacterBeforeCursor(character, false);
+    moveCursorLeft(1);
 }
 
 void insertLineBeforeCursor() {

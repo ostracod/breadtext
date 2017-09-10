@@ -472,12 +472,13 @@ int8_t getDelimiterRank(int8_t delimiter) {
     return 0;
 }
 
-void highlightWordByDelimiter() {
-    int8_t tempDelimiter = promptSingleCharacter();
-    if (tempDelimiter == 0) {
-        return;
-    }
-    int8_t tempRank = getDelimiterRank(tempDelimiter);
+void promptAndHighlightWordByDelimiter() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_HIGHLIGHT_WORD;
+}
+
+void highlightWordByDelimiter(int8_t character) {
+    int8_t tempRank = getDelimiterRank(character);
     if (tempRank == 0) {
         notifyUser((int8_t *)"Invalid delimiter.");
         return;
@@ -514,83 +515,89 @@ void highlightWordByDelimiter() {
     setActivityMode(HIGHLIGHT_STATIC_MODE);
 }
 
-int8_t highlightEnclosureHelper() {
-    int8_t tempCharacter = promptSingleCharacter();
-    if (tempCharacter != 0) {
-        int8_t tempStartCharacter = tempCharacter;
-        int8_t tempEndCharacter = tempCharacter;
-        if (tempCharacter == '(') {
-            tempEndCharacter = ')';
-        }
-        if (tempCharacter == ')') {
-            tempStartCharacter = '(';
-        }
-        if (tempCharacter == '[') {
-            tempEndCharacter = ']';
-        }
-        if (tempCharacter == ']') {
-            tempStartCharacter = '[';
-        }
-        if (tempCharacter == '{') {
-            tempEndCharacter = '}';
-        }
-        if (tempCharacter == '}') {
-            tempStartCharacter = '{';
-        }
-        if (tempCharacter == '<') {
-            tempEndCharacter = '>';
-        }
-        if (tempCharacter == '>') {
-            tempStartCharacter = '<';
-        }
-        int16_t tempDepth;
-        textPos_t tempStartPos = cursorTextPos;
-        tempDepth = 1;
-        while (true) {
-            int8_t tempCharacter = getTextPosCharacter(&tempStartPos);
-            if (tempCharacter == tempStartCharacter) {
-                tempDepth -= 1;
-                if (tempDepth <= 0) {
-                    break;
-                }
-            }
-            if (tempCharacter == tempEndCharacter && tempStartCharacter != tempEndCharacter) {
-                tempDepth += 1;
-            }
-            int8_t tempResult = moveTextPosBackward(&tempStartPos);
-            if (!tempResult) {
-                notifyUser((int8_t *)"Could not find start character.");
-                return false;
-            }
-        }
-        textPos_t tempEndPos = cursorTextPos;
-        tempDepth = 1;
-        while (true) {
-            int8_t tempCharacter = getTextPosCharacter(&tempEndPos);
-            if (tempCharacter == tempEndCharacter) {
-                tempDepth -= 1;
-                if (tempDepth <= 0) {
-                    break;
-                }
-            }
-            if (tempCharacter == tempStartCharacter && tempStartCharacter != tempEndCharacter) {
-                tempDepth += 1;
-            }
-            int8_t tempResult = moveTextPosForward(&tempEndPos);
-            if (!tempResult) {
-                notifyUser((int8_t *)"Could not find end character.");
-                return false;
-            }
-        }
-        highlightTextPos = tempStartPos;
-        cursorTextPos = tempEndPos;
-        return true;
+int8_t highlightEnclosureHelper(int8_t character) {
+    int8_t tempStartCharacter = character;
+    int8_t tempEndCharacter = character;
+    if (character == '(') {
+        tempEndCharacter = ')';
     }
-    return false;
+    if (character == ')') {
+        tempStartCharacter = '(';
+    }
+    if (character == '[') {
+        tempEndCharacter = ']';
+    }
+    if (character == ']') {
+        tempStartCharacter = '[';
+    }
+    if (character == '{') {
+        tempEndCharacter = '}';
+    }
+    if (character == '}') {
+        tempStartCharacter = '{';
+    }
+    if (character == '<') {
+        tempEndCharacter = '>';
+    }
+    if (character == '>') {
+        tempStartCharacter = '<';
+    }
+    int16_t tempDepth;
+    textPos_t tempStartPos = cursorTextPos;
+    tempDepth = 1;
+    while (true) {
+        int8_t tempCharacter = getTextPosCharacter(&tempStartPos);
+        if (tempCharacter == tempStartCharacter) {
+            tempDepth -= 1;
+            if (tempDepth <= 0) {
+                break;
+            }
+        }
+        if (tempCharacter == tempEndCharacter && tempStartCharacter != tempEndCharacter) {
+            tempDepth += 1;
+        }
+        int8_t tempResult = moveTextPosBackward(&tempStartPos);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find start character.");
+            return false;
+        }
+    }
+    textPos_t tempEndPos = cursorTextPos;
+    tempDepth = 1;
+    while (true) {
+        int8_t tempCharacter = getTextPosCharacter(&tempEndPos);
+        if (tempCharacter == tempEndCharacter) {
+            tempDepth -= 1;
+            if (tempDepth <= 0) {
+                break;
+            }
+        }
+        if (tempCharacter == tempStartCharacter && tempStartCharacter != tempEndCharacter) {
+            tempDepth += 1;
+        }
+        int8_t tempResult = moveTextPosForward(&tempEndPos);
+        if (!tempResult) {
+            notifyUser((int8_t *)"Could not find end character.");
+            return false;
+        }
+    }
+    highlightTextPos = tempStartPos;
+    cursorTextPos = tempEndPos;
+    return true;
 }
 
-void highlightEnclosureExclusive() {
-    int8_t tempResult = highlightEnclosureHelper();
+void promptCharacterAndHighlightEnclosureExclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_ENCLOSURE_EXCLUSIVE;
+}
+
+void promptCharacterAndHighlightEnclosureInclusive() {
+    promptSingleCharacter();
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_ENCLOSURE_INCLUSIVE;
+}
+
+void highlightEnclosureExclusive(int8_t character) {
+    int8_t tempResult = highlightEnclosureHelper(character);
     if (tempResult) {
         moveTextPosForward(&highlightTextPos);
         moveTextPosBackward(&cursorTextPos);
@@ -599,8 +606,8 @@ void highlightEnclosureExclusive() {
     }
 }
 
-void highlightEnclosureInclusive() {
-    int8_t tempResult = highlightEnclosureHelper();
+void highlightEnclosureInclusive(int8_t character) {
+    int8_t tempResult = highlightEnclosureHelper(character);
     if (tempResult) {
         scrollCursorOntoScreen();
         setActivityMode(HIGHLIGHT_STATIC_MODE);

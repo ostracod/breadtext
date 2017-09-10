@@ -9,9 +9,6 @@ typedef struct namedKey {
 
 int8_t *systematicTestDefinitionPath;
 int8_t *systematicTestResultPath;
-int32_t systematicTestKeyList[100];
-int32_t systematicTestKeyListLength;
-int32_t systematicTestKeyListIndex;
 
 int32_t convertNameToKey(int8_t *name);
 int8_t runSystematicTest();

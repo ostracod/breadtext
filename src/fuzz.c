@@ -222,7 +222,7 @@ fuzzKey_t *getNextFuzzKey() {
     return tempFuzzKey;
 }
 
-void startFuzzTest() {
+void runFuzzTest() {
     struct sigaction tempAction;
     memset(&tempAction, 0, sizeof(tempAction));
     tempAction.sa_handler = handleSegmentationFault;
@@ -231,6 +231,12 @@ void startFuzzTest() {
     putRandomTextIntoBuffer();
     redrawEverything();
     initialBufferContents = mallocBufferContents();
+    int64_t keyPressCount = 0;
+    while (keyPressCount < 20000) {
+        fuzzKey_t *tempFuzzKey = getNextFuzzKey();
+        handleKey(tempFuzzKey->key);
+        keyPressCount += 1;
+    }
 }
 
 void handleSegmentationFault(int signum) {

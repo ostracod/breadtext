@@ -43,18 +43,6 @@ int32_t convertNameToKey(int8_t *name) {
     return -1;
 }
 
-void simulateSystematicKeyPresses() {
-    while (true) {
-        int32_t tempKey = getNextKey();
-        if (tempKey < 0) {
-            break;
-        }
-        handleKey(tempKey);
-    }
-    refresh();
-    sleepMilliseconds(1);
-}
-
 int8_t processSystematicTestCommand(int8_t *command) {
     int8_t *tempTermList[50];
     int32_t tempTermListLength;
@@ -83,7 +71,6 @@ int8_t processSystematicTestCommand(int8_t *command) {
             fflush(systematicTestResultFile);
             return false;
         }
-        systematicTestKeyListLength = 0;
         int32_t index = 1;
         while (index < tempTermListLength) {
             int8_t *tempName = tempTermList[index];
@@ -98,12 +85,11 @@ int8_t processSystematicTestCommand(int8_t *command) {
                     return false;
                 }
             }
-            systematicTestKeyList[systematicTestKeyListLength] = tempKey;
-            systematicTestKeyListLength += 1;
+            handleKey(tempKey);
+            refresh();
+            sleepMilliseconds(1);
             index += 1;
         }
-        systematicTestKeyListIndex = 0;
-        simulateSystematicKeyPresses();
         return true;
     }
     if (strcmp((char *)(tempTermList[0]), "ASSERT_LINE_COUNT") == 0) {

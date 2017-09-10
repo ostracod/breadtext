@@ -35,7 +35,6 @@ int8_t isPlayingMacro = false;
 int32_t lastKey = 0;
 int8_t *initialFileContents = NULL;
 int64_t initialFileSize;
-int64_t keyPressCount = 0;
 
 void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     if (lineToBeDeleted == topTextLine) {
@@ -202,12 +201,58 @@ void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key) {
+    if (isRecordingMacro) {
+        if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
+            stopRecordingMacro();
+        } else {
+            macroKeyList[macroKeyListLength] = key;
+            macroKeyListLength += 1;
+        }
+    }
     if (isShowingNotification) {
         eraseNotification();
         displayActivityMode();
     }
     if (key == KEY_RESIZE) {
         handleResize();
+        return false;
+    }
+    if (isConsumingSingleCharacter) {
+        isConsumingSingleCharacter = false;
+        if (key < 32 || key > 126) {
+            return false;
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_INSERT_BEFORE) {
+            insertCharacterBeforeCursorSimple(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_INSERT_AFTER) {
+            insertCharacterAfterCursorSimple(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_REPLACE) {
+            replaceCharacterUnderCursorSimple(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_GOTO_INCLUSIVE) {
+            goToCharacterInclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_GOTO_EXCLUSIVE) {
+            goToCharacterExclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_REVERSE_GOTO_INCLUSIVE) {
+            reverseGoToCharacterInclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_REVERSE_GOTO_EXCLUSIVE) {
+            reverseGoToCharacterExclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_ENCLOSURE_INCLUSIVE) {
+            highlightEnclosureInclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_ENCLOSURE_EXCLUSIVE) {
+            highlightEnclosureExclusive(key);
+        }
+        if (singleCharacterAction == SINGLE_CHARACTER_ACTION_HIGHLIGHT_WORD) {
+            highlightWordByDelimiter(key);
+        }
+        return false;
     }
     // Escape.
     if (key == 27) {
@@ -439,17 +484,17 @@ int8_t handleKey(int32_t key) {
                 }
                 case 'W':
                 {
-                    highlightWordByDelimiter();
+                    promptAndHighlightWordByDelimiter();
                     break;
                 }
                 case 'e':
                 {
-                    highlightEnclosureExclusive();
+                    promptCharacterAndHighlightEnclosureExclusive();
                     break;
                 }
                 case 'E':
                 {
-                    highlightEnclosureInclusive();
+                    promptCharacterAndHighlightEnclosureInclusive();
                     break;
                 }
                 case 'c':
@@ -610,22 +655,22 @@ int8_t handleKey(int32_t key) {
                 }
                 case 'g':
                 {
-                    goToCharacterExclusive();
+                    promptAndGoToCharacterExclusive();
                     break;
                 }
                 case 'G':
                 {
-                    goToCharacterInclusive();
+                    promptAndGoToCharacterInclusive();
                     break;
                 }
                 case 'r':
                 {
-                    reverseGoToCharacterExclusive();
+                    promptAndReverseGoToCharacterExclusive();
                     break;
                 }
                 case 'R':
                 {
-                    reverseGoToCharacterInclusive();
+                    promptAndReverseGoToCharacterInclusive();
                     break;
                 }
                 case '`':
@@ -795,49 +840,6 @@ int8_t handleKey(int32_t key) {
     return false;
 }
 
-int32_t getNextKey() {
-    keyPressCount += 1;
-    if (isPerformingFuzzTest) {
-        if (keyPressCount > 20000) {
-            exit(0);
-        }
-    }
-    int32_t output;
-    if (macroIndex >= macroKeyListLength) {
-        isPlayingMacro = false;
-    }
-    if (isPlayingMacro) {
-        output = macroKeyList[macroIndex];
-        macroIndex += 1;
-    } else {
-        if (isPerformingFuzzTest) {
-            fuzzKey_t *tempFuzzKey = getNextFuzzKey();
-            output = tempFuzzKey->key;
-        } else if (isPerformingSystematicTest) {
-            if (systematicTestKeyListIndex < systematicTestKeyListLength) {
-                output = systematicTestKeyList[systematicTestKeyListIndex];
-                systematicTestKeyListIndex += 1;
-            } else {
-                return -1;
-            }
-        } else {
-            output = getch();
-        }
-        if (isRecordingMacro) {
-            if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
-                stopRecordingMacro();
-            } else {
-                macroKeyList[macroKeyListLength] = output;
-                macroKeyListLength += 1;
-            }
-        }
-    }
-    if (macroIndex >= macroKeyListLength) {
-        isPlayingMacro = false;
-    }
-    return output;
-}
-
 void startRecordingMacro() {
     macroKeyListLength = 0;
     isRecordingMacro = true;
@@ -858,17 +860,18 @@ void playMacro() {
     }
     isPlayingMacro = true;
     macroIndex = 0;
+    while (macroIndex < macroKeyListLength) {
+        int32_t tempKey = macroKeyList[macroIndex];
+        handleKey(tempKey);
+        macroIndex += 1;
+    }
+    isPlayingMacro = false;
 }
 
-int32_t promptSingleCharacter() {
+void promptSingleCharacter() {
     notifyUser((int8_t *)"Type a character.");
-    int32_t tempKey = getNextKey();
-    eraseActivityModeOrNotification();
-    displayActivityMode();
-    if (tempKey < 32 || tempKey > 126) {
-        return 0;
-    }
-    return tempKey;
+    isConsumingSingleCharacter = true;
+    singleCharacterAction = SINGLE_CHARACTER_ACTION_NONE;
 }
 
 int8_t setConfigurationVariable(int8_t *name, int64_t value) {
@@ -1167,6 +1170,7 @@ int8_t initializeApplication() {
     keywordList = NULL;
     shouldUseXclip = (applicationPlatform == PLATFORM_LINUX);
     nonconsecutiveEscapeSequenceFrameIsSet = false;
+    isConsumingSingleCharacter = false;
     
     if (!isPerformingFuzzTest && !isPerformingSystematicTest) {
         processRcFile();
@@ -1257,7 +1261,9 @@ int main(int argc, const char *argv[]) {
     }
     
     if (isPerformingFuzzTest) {
-        startFuzzTest();
+        runFuzzTest();
+        endwin();
+        return 0;
     }
     
     if (isPerformingSystematicTest) {
@@ -1278,9 +1284,9 @@ int main(int argc, const char *argv[]) {
             copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
         #endif
         
-        int32_t tempKey = getNextKey();
+        int32_t tempKey = getch();
         int8_t tempResult = handleKey(tempKey);
-        if (tempResult && !isPerformingFuzzTest) {
+        if (tempResult) {
             break;
         }
         
