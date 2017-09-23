@@ -24,3 +24,30 @@ int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
     fclose(tempFile);
     return true;
 }
+
+void seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {
+    while (scriptBodyLine->index < scriptBodyLine->scriptBody->length) {
+        int8_t tempCharacter = (scriptBodyLine->scriptBody->text)[scriptBodyLine->index];
+        scriptBodyLine->index += 1;
+        if (tempCharacter == '\n') {
+            break;
+        }
+    }
+    scriptBodyLine->number += 1;
+}
+
+int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos) {
+    return (scriptBodyPos->scriptBodyLine->scriptBody->text)[scriptBodyPos->index];
+}
+
+void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos) {
+    while (true) {
+        int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        scriptBodyPos->index += 1;
+    }
+}
+
+

@@ -20,6 +20,11 @@ typedef struct scriptBodyLine {
     int64_t number;
 } scriptBodyLine_t;
 
+typedef struct scriptBodyPos {
+    scriptBodyLine_t *scriptBodyLine;
+    int64_t index;
+} scriptBodyPos_t;
+
 typedef struct scriptValue {
     int8_t type;
     // For null, data is unused.
@@ -42,6 +47,9 @@ typedef struct scriptHeapValue {
 } scriptHeapValue_t;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
+void seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
+int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
+void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

@@ -15,21 +15,44 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
 }
 
-void seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {
-    while (scriptBodyLine->index < scriptBodyLine->scriptBody->length) {
-        int8_t tempCharacter = (scriptBodyLine->scriptBody->text)[scriptBodyLine->index];
-        scriptBodyLine->index += 1;
-        if (tempCharacter == '\n') {
-            break;
+int8_t isFirstIdentifierCharacter(int8_t character) {
+    return ((character >= 'a' && character <= 'z')
+            || (character >= 'A' && character <= 'Z')
+            || character == '_');
+}
+
+int8_t isIdentifierCharacter(int8_t character) {
+    return ((character >= 'a' && character <= 'z')
+            || (character >= 'A' && character <= 'Z')
+            || (character >= '0' && character <= '9')
+            || character == '_');
+}
+
+int8_t *findEndOfIdentifier(int8_t *text) {
+    while (true) {
+        int8_t tempCharacter = *text;
+        if (!isIdentifierCharacter(tempCharacter)) {
+            return text;
         }
+        text += 1;
     }
-    scriptBodyLine->number += 1;
+}
+
+int8_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
+    scriptBodyPosSkipWhitespace(scriptBodyPos);
+    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+    // TODO: Actually evaluate the expression.
+    
+    return true;
 }
 
 int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
-    // TODO: Actually evaluate expressions.
+    scriptBodyPos_t tempScriptBodyPos;
+    tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
+    tempScriptBodyPos.index = scriptBodyLine->index;
+    int8_t tempResult = evaluateExpression(&tempScriptBodyPos);
     seekNextScriptBodyLine(scriptBodyLine);
-    return true;
+    return tempResult;
 }
 
 int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
