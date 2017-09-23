@@ -6,6 +6,8 @@
 #include "utilities.h"
 #include "scriptValue.h"
 
+scriptHeapValue_t *firstScriptHeapValue = NULL;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
     FILE *tempFile = fopen((char *)path, "r");
     if (tempFile == NULL) {

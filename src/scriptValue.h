@@ -28,10 +28,14 @@ typedef struct scriptValue {
     int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
 } scriptValue_t;
 
+typedef struct scriptHeapValue scriptHeapValue_t;
+
 typedef struct scriptHeapValue {
     int8_t type;
     int8_t isMarked;
     int32_t lockDepth;
+    scriptHeapValue_t *previous;
+    scriptHeapValue_t *next;
     // For strings and lists, data points to a vector_t.
     // For functions, data points to a scriptBodyLine_t.
     void *data;
