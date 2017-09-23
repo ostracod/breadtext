@@ -56,6 +56,7 @@ int8_t textCommandBuffer[1000];
 int32_t helpScroll;
 int8_t *filePath;
 int8_t *rcFilePath;
+int8_t *rcScriptFilePath;
 int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
 int8_t isPerformingFuzzTest;

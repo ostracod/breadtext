@@ -37,7 +37,7 @@ typedef struct scriptHeapValue {
     void *data;
 } scriptHeapValue_t;
 
-scriptBody_t *loadScriptBody(int8_t *path);
+int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

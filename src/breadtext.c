@@ -1172,7 +1172,8 @@ int8_t initializeApplication() {
     nonconsecutiveEscapeSequenceFrameIsSet = false;
     isConsumingSingleCharacter = false;
     
-    if (!isPerformingFuzzTest && !isPerformingSystematicTest) {
+    int8_t tempIsTesting = (isPerformingFuzzTest || isPerformingSystematicTest);
+    if (!tempIsTesting) {
         processRcFile();
     }
     
@@ -1188,6 +1189,11 @@ int8_t initializeApplication() {
     updateSyntaxDefinition();
     
     handleResize();
+    
+    initializeScriptingEnvironment();
+    if (!tempIsTesting) {
+        importScript(rcScriptFilePath);
+    }
     
     return true;
 }
@@ -1246,6 +1252,7 @@ int main(int argc, const char *argv[]) {
     }
     clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
+    rcScriptFilePath = mallocRealpath((int8_t *)"~/.breadtextrc.btsl");
     syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
     
     window = initscr();

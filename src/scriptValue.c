@@ -6,20 +6,19 @@
 #include "utilities.h"
 #include "scriptValue.h"
 
-scriptBody_t *loadScriptBody(int8_t *path) {
+int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
     FILE *tempFile = fopen((char *)path, "r");
     if (tempFile == NULL) {
-        return NULL;
+        return false;
     }
-    scriptBody_t *output = malloc(sizeof(scriptBody_t));
-    output->path = malloc(strlen((char *)path) + 1);
-    strcpy((char *)(output->path), (char *)path);
+    destination->path = malloc(strlen((char *)path) + 1);
+    strcpy((char *)(destination->path), (char *)path);
     fseek(tempFile, 0, SEEK_END);
-    output->length = ftell(tempFile);
-    output->text = malloc(output->length + 1);
+    destination->length = ftell(tempFile);
+    destination->text = malloc(destination->length + 1);
     fseek(tempFile, 0, SEEK_SET);
-    fread(output->text, 1, output->length, tempFile);
-    (output->text)[output->length] = 0;
+    fread(destination->text, 1, destination->length, tempFile);
+    (destination->text)[destination->length] = 0;
     fclose(tempFile);
-    return output;
+    return true;
 }
