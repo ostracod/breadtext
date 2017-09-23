@@ -18,7 +18,7 @@ typedef struct scriptBodyLine {
     scriptBody_t *scriptBody;
     int64_t index;
     int64_t number;
-} scriptBodyPos_t;
+} scriptBodyLine_t;
 
 typedef struct scriptValue {
     int8_t type;
