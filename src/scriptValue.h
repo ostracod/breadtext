@@ -6,10 +6,35 @@
 #define SCRIPT_VALUE_TYPE_NUMBER 1
 #define SCRIPT_VALUE_TYPE_STRING 2
 #define SCRIPT_VALUE_TYPE_LIST 3
-#define SCRIPT_VALUE_TYPE_FUNCTION 4
+#define SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION 4
+#define SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION 5
 
-#define SCRIPT_FUNCTION_TYPE_BUILT_IN 1
-#define SCRIPT_FUNCTION_TYPE_CUSTOM 2
+#define IS_NUM 1
+#define IS_STR 2
+#define IS_LIST 3
+#define IS_FUNC 4
+#define COPY 5
+#define STR 6
+#define NUM 7
+#define FLOOR 8
+#define LEN 9
+#define INS 10
+#define REM 11
+#define PRESS_KEY 12
+#define GET_MODE 13
+#define SET_MODE 14
+#define GET_SELECTION_CONTENTS 15
+#define GET_LINE_COUNT 16
+#define GET_LINE_CONTENTS 17
+#define GET_CURSOR_CHAR_INDEX 18
+#define GET_CURSOR_LINE_INDEX 19
+#define SET_CURSOR_POS 20
+#define RUN_COMMAND 21
+#define NOTIFY_USER 22
+#define PROMPT_KEY 23
+#define PROMPT_CHARACTER 24
+#define BIND_KEY 25
+#define BIND_COMMAND 26
 
 typedef struct scriptBody {
     int8_t *path;
@@ -28,28 +53,22 @@ typedef struct scriptBodyPos {
     int64_t index;
 } scriptBodyPos_t;
 
-typedef struct builtInScriptFunction {
+typedef struct scriptBuiltInFunction {
     int8_t *name;
     int32_t number;
     int32_t argumentAmount;
-} builtInScriptFunction_t;
+} scriptBuiltInFunction_t;
 
 typedef struct customScriptFunction {
     scriptBodyLine_t scriptBodyLine;
 } customScriptFunction_t;
 
-typedef struct scriptFunction {
-    int8_t type;
-    // For built-in functions, data points to a builtInScriptFunction_t.
-    // For custom functions, data points to a customScriptFunction_t.
-    void *data;
-} scriptFunction_t;
-
 typedef struct scriptValue {
     int8_t type;
     // For null, data is unused.
     // For numbers, data is a double.
-    // For strings, lists, and functions, data points to a scriptHeapValue_t.
+    // For strings, lists, and custom functions, data points to a scriptHeapValue_t.
+    // For built-in functions, data points to a scriptBuiltInFunction_t.
     int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
 } scriptValue_t;
 
@@ -62,7 +81,7 @@ typedef struct scriptHeapValue {
     scriptHeapValue_t *previous;
     scriptHeapValue_t *next;
     // For strings and lists, data points to a vector_t.
-    // For functions, data points to a scriptFunction_t.
+    // For custom functions, data points to a scriptCustomFunction_t.
     void *data;
 } scriptHeapValue_t;
 
@@ -73,6 +92,9 @@ void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos);
 int8_t isFirstScriptIdentifierCharacter(int8_t character);
 int8_t isScriptIdentifierCharacter(int8_t character);
 void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos);
+int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
+int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
+scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

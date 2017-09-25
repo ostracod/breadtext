@@ -6,6 +6,35 @@
 #include "utilities.h"
 #include "scriptValue.h"
 
+scriptBuiltInFunction_t scriptBuiltInFunctionNameSet[] = {
+    {(int8_t *)"isNum", IS_NUM, 1},
+    {(int8_t *)"isStr", IS_STR, 1},
+    {(int8_t *)"isList", IS_LIST, 1},
+    {(int8_t *)"isFunc", IS_FUNC, 1},
+    {(int8_t *)"copy", COPY, 1},
+    {(int8_t *)"str", STR, 1},
+    {(int8_t *)"num", NUM, 1},
+    {(int8_t *)"floor", FLOOR, 1},
+    {(int8_t *)"len", LEN, 1},
+    {(int8_t *)"ins", INS, 3},
+    {(int8_t *)"rem", REM, 2},
+    {(int8_t *)"pressKey", PRESS_KEY, 1},
+    {(int8_t *)"getMode", GET_MODE, 0},
+    {(int8_t *)"setMode", SET_MODE, 1},
+    {(int8_t *)"getSelectionContents", GET_SELECTION_CONTENTS, 0},
+    {(int8_t *)"getLineCount", GET_LINE_COUNT, 0},
+    {(int8_t *)"getLineContents", GET_LINE_CONTENTS, 1},
+    {(int8_t *)"getCursorCharIndex", GET_CURSOR_CHAR_INDEX, 0},
+    {(int8_t *)"getCursorLineIndex", GET_CURSOR_LINE_INDEX, 0},
+    {(int8_t *)"setCursorPos", SET_CURSOR_POS, 2},
+    {(int8_t *)"runCommand", RUN_COMMAND, 2},
+    {(int8_t *)"notifyUser", NOTIFY_USER, 1},
+    {(int8_t *)"promptKey", PROMPT_KEY, 0},
+    {(int8_t *)"promptCharacter", PROMPT_CHARACTER, 0},
+    {(int8_t *)"bindKey", BIND_KEY, 2},
+    {(int8_t *)"bindCommand", BIND_COMMAND, 2}
+};
+
 scriptHeapValue_t *firstScriptHeapValue = NULL;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
@@ -73,3 +102,24 @@ void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos) {
     }
 }
 
+int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos) {
+    return endScriptBodyPos->index - startScriptBodyPos->index;
+}
+
+int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos) {
+    return scriptBodyPos->scriptBodyLine->scriptBody->text + scriptBodyPos->index;
+}
+
+scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length) {
+    int32_t index = 0;
+    while (index < sizeof(scriptBuiltInFunctionNameSet) / sizeof(*scriptBuiltInFunctionNameSet)) {
+        scriptBuiltInFunction_t *tempFunction = scriptBuiltInFunctionNameSet + index;
+        if (strlen((char *)(tempFunction->name)) == length) {
+            if (equalData(tempFunction->name, name, length)) {
+                return tempFunction;
+            }
+        }
+        index += 1;
+    }
+    return NULL;
+}
