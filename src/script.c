@@ -9,37 +9,62 @@
 #include "scriptValue.h"
 #include "script.h"
 
+#define DESTINATION_TYPE_NONE 0
+#define DESTINATION_TYPE_VALUE 1
+#define DESTINATION_TYPE_CHARACTER 2
+
+typedef struct expressionResult {
+    int8_t shouldContinue;
+    scriptValue_t value;
+    int8_t destinationType;
+    void *destination;
+} expressionResult_t;
+
 vector_t scriptBodyList;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
 }
 
-int8_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
-    scriptBodyPosSkipWhitespace(scriptBodyPos);
-    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-    if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
-        scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
-        scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
-        int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
-        int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
-        scriptBuiltInFunction_t *tempBuiltInFunction = findScriptBuiltInFunctionByName(tempText, tempLength);
-        if (tempBuiltInFunction != NULL) {
-            
+expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
+    expressionResult_t expressionResult;
+    expressionResult.shouldContinue = true;
+    expressionResult.destinationType = DESTINATION_TYPE_NONE;
+    expressionResult.destination = NULL;
+    while (true) {
+        scriptBodyPosSkipWhitespace(scriptBodyPos);
+        int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
+            scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+            int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
+            int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
+            scriptBuiltInFunction_t *tempBuiltInFunction = findScriptBuiltInFunctionByName(tempText, tempLength);
+            if (tempBuiltInFunction != NULL) {
+                expressionResult.value.type = SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION;
+                *(scriptBuiltInFunction_t **)&(expressionResult.value.data) = tempBuiltInFunction;
+                *scriptBodyPos = tempScriptBodyPos;
+                break;
+            }
         }
+        // TODO: Handle more types of expressions.
+        
+        // TODO: Error handling.
+        expressionResult.shouldContinue = false;
+        return expressionResult;
     }
-    // TODO: Handle more kinds of expressions.
+    // TODO: Handle binary operators.
     
-    return true;
+    return expressionResult;
 }
 
 int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
-    int8_t tempResult = evaluateExpression(&tempScriptBodyPos);
+    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos);
     seekNextScriptBodyLine(scriptBodyLine);
-    return tempResult;
+    return tempResult.shouldContinue;
 }
 
 int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
