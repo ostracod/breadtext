@@ -50,4 +50,26 @@ void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos) {
     }
 }
 
+int8_t isFirstScriptIdentifierCharacter(int8_t character) {
+    return ((character >= 'a' && character <= 'z')
+            || (character >= 'A' && character <= 'Z')
+            || character == '_');
+}
+
+int8_t isScriptIdentifierCharacter(int8_t character) {
+    return ((character >= 'a' && character <= 'z')
+            || (character >= 'A' && character <= 'Z')
+            || (character >= '0' && character <= '9')
+            || character == '_');
+}
+
+void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos) {
+    while (true) {
+        int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (!isScriptIdentifierCharacter(tempCharacter)) {
+            break;
+        }
+        scriptBodyPos->index += 1;
+    }
+}
 
