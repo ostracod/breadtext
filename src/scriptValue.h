@@ -97,6 +97,7 @@ void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos);
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
+scriptHeapValue_t *createScriptHeapValue();
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

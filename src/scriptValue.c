@@ -138,3 +138,11 @@ scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t l
     }
     return NULL;
 }
+
+scriptHeapValue_t *createScriptHeapValue() {
+    scriptHeapValue_t *output = malloc(sizeof(scriptHeapValue_t));
+    // TODO: Manage garbage collection of the heap value.
+    
+    return output;
+}
+

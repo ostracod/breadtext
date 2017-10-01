@@ -63,6 +63,44 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
                 break;
             }
         }
+        if (tempFirstCharacter == '"') {
+            vector_t *tempText = malloc(sizeof(vector_t));
+            createEmptyVector(tempText, 1);
+            scriptBodyPos->index += 1;
+            int8_t tempIsEscaped = false;
+            while (true) {
+                int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+                if (tempCharacter == '\n' || tempCharacter == 0) {
+                    // TODO: Error handling.
+                    
+                }
+                if (tempIsEscaped) {
+                    if (tempCharacter == 'n') {
+                        tempCharacter = '\n';
+                    } else if (tempCharacter == 't') {
+                        tempCharacter = '\t';
+                    }
+                    pushVectorElement(tempText, &tempCharacter);
+                    tempIsEscaped = false;
+                } else {
+                    if (tempCharacter == '"') {
+                        break;
+                    } else if (tempCharacter == '\\') {
+                        tempIsEscaped = true;
+                    } else {
+                        pushVectorElement(tempText, &tempCharacter);
+                    }
+                }
+                scriptBodyPos->index += 1;
+            }
+            scriptBodyPos->index += 1;
+            scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+            tempHeapValue->type = SCRIPT_VALUE_TYPE_STRING;
+            *(vector_t **)&(tempHeapValue->data) = tempText;
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION;
+            *(scriptHeapValue_t **)&(expressionResult.value.data) = tempHeapValue;
+            break;
+        }
         // TODO: Handle more types of expressions.
         
         // TODO: Error handling.
