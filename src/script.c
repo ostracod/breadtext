@@ -94,6 +94,8 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
                 scriptBodyPos->index += 1;
             }
             scriptBodyPos->index += 1;
+            int8_t tempCharacter = 0;
+            pushVectorElement(tempText, &tempCharacter);
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
             tempHeapValue->type = SCRIPT_VALUE_TYPE_STRING;
             *(vector_t **)&(tempHeapValue->data) = tempText;
