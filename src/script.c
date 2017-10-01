@@ -26,6 +26,40 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
 }
 
+expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos);
+
+// Returns whether the operation was successful.
+int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *scriptBodyPos) {
+    createEmptyVector(destination, sizeof(vector_t));
+    while (true) {
+        scriptBodyPosSkipWhitespace(scriptBodyPos);
+        int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (tempCharacter == '\n' || tempCharacter == 0) {
+            // TODO: Error handling.
+            
+        }
+        if (tempCharacter == ')') {
+            break;
+        }
+        expressionResult_t tempResult = evaluateExpression(scriptBodyPos);
+        if (!tempResult.shouldContinue) {
+            return false;
+        }
+        pushVectorElement(destination, &(tempResult.value));
+        scriptBodyPosSkipWhitespace(scriptBodyPos);
+        tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (tempCharacter == ',') {
+            scriptBodyPos->index += 1;
+        } else if (tempCharacter == ')') {
+            break;
+        } else {
+            // TODO: Error handling.
+            
+        }
+    }
+    return true;
+}
+
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
     expressionResult_t expressionResult;
     expressionResult.shouldContinue = true;
@@ -109,8 +143,32 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
         expressionResult.shouldContinue = false;
         return expressionResult;
     }
-    // TODO: Handle binary operators.
-    
+    while (true) {
+        scriptBodyPosSkipWhitespace(scriptBodyPos);
+        int8_t hasProcessedOperator = false;
+        while (true) {
+            int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+            if (tempFirstCharacter == '(') {
+                scriptBodyPos->index += 1;
+                vector_t tempArgumentList;
+                int8_t tempResult = getFunctionInvocationArguments(&tempArgumentList, scriptBodyPos);
+                if (!tempResult) {
+                    expressionResult.shouldContinue = false;
+                    return expressionResult;
+                }
+                // TODO: Call the function.
+                
+                hasProcessedOperator = true;
+                break;
+            }
+            // TODO: Handle binary operators.
+            
+            break;
+        }
+        if (!hasProcessedOperator) {
+            break;
+        }
+    }
     return expressionResult;
 }
 
