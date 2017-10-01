@@ -34,6 +34,22 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (isScriptNumberCharacter(tempFirstCharacter)) {
+            scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
+            scriptBodyPosSeekEndOfNumber(&tempScriptBodyPos);
+            int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
+            int8_t tempText[tempLength + 1];
+            copyData(tempText, getScriptBodyPosPointer(scriptBodyPos), tempLength);
+            tempText[tempLength] = 0;
+            double tempNumber;
+            sscanf((char *)tempText, "%lf", &tempNumber);
+            // TODO: Handle malformed numbers.
+            // TODO: Handle hexadecimal numbers.
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(float *)&(expressionResult.value.data) = tempNumber;
+            *scriptBodyPos = tempScriptBodyPos;
+            break;
+        }
         if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
             scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);

@@ -92,10 +92,25 @@ int8_t isScriptIdentifierCharacter(int8_t character) {
             || character == '_');
 }
 
+int8_t isScriptNumberCharacter(int8_t character) {
+    return ((character >= '0' && character <= '9')
+            || character == '.');
+}
+
 void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos) {
     while (true) {
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
         if (!isScriptIdentifierCharacter(tempCharacter)) {
+            break;
+        }
+        scriptBodyPos->index += 1;
+    }
+}
+
+void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos) {
+    while (true) {
+        int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (!isScriptNumberCharacter(tempCharacter)) {
             break;
         }
         scriptBodyPos->index += 1;
