@@ -60,14 +60,23 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
     return true;
 }
 
+// Returns whether the operation was successful.
+int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector_t *argumentList) {
+    
+}
+
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
     expressionResult_t expressionResult;
     expressionResult.shouldContinue = true;
+    expressionResult.value.type = SCRIPT_VALUE_TYPE_MISSING;
     expressionResult.destinationType = DESTINATION_TYPE_NONE;
     expressionResult.destination = NULL;
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+        if (tempFirstCharacter == '\n' || tempFirstCharacter == 0) {
+            return expressionResult;
+        }
         if (isScriptNumberCharacter(tempFirstCharacter)) {
             scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
             scriptBodyPosSeekEndOfNumber(&tempScriptBodyPos);
@@ -156,8 +165,15 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
                     expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
-                // TODO: Call the function.
-                
+                scriptValue_t tempValue;
+                tempResult = invokeFunction(&tempValue, expressionResult.value, &tempArgumentList);
+                if (!tempResult) {
+                    expressionResult.shouldContinue = false;
+                    return expressionResult;
+                }
+                expressionResult.value = tempValue;
+                expressionResult.destinationType = DESTINATION_TYPE_NONE;
+                expressionResult.destination = NULL;
                 hasProcessedOperator = true;
                 break;
             }
