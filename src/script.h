@@ -4,7 +4,8 @@
 
 #include "scriptValue.h"
 
-int8_t importScript(int8_t *path);
+void initializeScriptingEnvironment();
+int8_t runScript(int8_t *path);
 
 // SCRIPT_HEADER_FILE
 #endif

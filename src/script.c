@@ -22,9 +22,22 @@ typedef struct expressionResult {
 } expressionResult_t;
 
 vector_t scriptBodyList;
+int8_t scriptHasError = false;
+int8_t scriptErrorMessage[1000];
+scriptBodyLine_t *scriptErrorLine = NULL;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
+}
+
+void reportScriptErrorWithoutLine(int8_t *message) {
+    scriptHasError = true;
+    strcpy((char *)scriptErrorMessage, (char *)message);
+}
+
+void reportScriptError(int8_t *message, scriptBodyLine_t *line) {
+    reportScriptErrorWithoutLine(message);
+    scriptErrorLine = line;
 }
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos);
@@ -36,8 +49,8 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
         if (tempCharacter == '\n' || tempCharacter == 0) {
-            // TODO: Error handling.
-            
+            reportScriptError((int8_t *)"Unexpected end of invocation.", scriptBodyPos->scriptBodyLine);
+            return false;
         }
         if (tempCharacter == ')') {
             break;
@@ -54,8 +67,8 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
         } else if (tempCharacter == ')') {
             break;
         } else {
-            // TODO: Error handling.
-            
+            reportScriptError((int8_t *)"Bad function invocation.", scriptBodyPos->scriptBodyLine);
+            return false;
         }
     }
     return true;
@@ -69,9 +82,9 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
         switch (tempFunction->number) {
             case NOTIFY_USER:
             {
-                if (tempArgumentCount != 0) {
-                    // TODO: Error handling.
-                    
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return false;
                 }
                 // TODO: Refactor this.
                 scriptValue_t tempValue;
@@ -83,8 +96,10 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
             }
             default:
             {
-                // TODO: Error handling.
-                
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Unknown function.");
+                    return false;
+                }
                 break;
             }
         }
@@ -141,8 +156,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
             while (true) {
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
                 if (tempCharacter == '\n' || tempCharacter == 0) {
-                    // TODO: Error handling.
-                    
+                    reportScriptError((int8_t *)"Unexpected end of string.", scriptBodyPos->scriptBodyLine);
+                    expressionResult.shouldContinue = false;
+                    return expressionResult;
                 }
                 if (tempIsEscaped) {
                     if (tempCharacter == 'n') {
@@ -175,7 +191,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
         }
         // TODO: Handle more types of expressions.
         
-        // TODO: Error handling.
+        reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
         expressionResult.shouldContinue = false;
         return expressionResult;
     }
@@ -268,4 +284,12 @@ int8_t importScript(int8_t *path) {
     return output;
 }
 
-
+int8_t runScript(int8_t *path) {
+    int8_t output = importScript(path);
+    if (scriptHasError) {
+        int8_t tempText[1000];
+        sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
+        notifyUser(tempText);
+    }
+    return output;
+}

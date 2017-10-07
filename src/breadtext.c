@@ -25,6 +25,7 @@
 #include "fuzz.h"
 #include "syntax.h"
 #include "systematicTest.h"
+#include "script.h"
 #include "breadtext.h"
 
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
@@ -1192,7 +1193,7 @@ int8_t initializeApplication() {
     
     initializeScriptingEnvironment();
     if (!tempIsTesting) {
-        importScript(rcScriptFilePath);
+        runScript(rcScriptFilePath);
     }
     
     return true;
