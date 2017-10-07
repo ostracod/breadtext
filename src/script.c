@@ -8,6 +8,7 @@
 #include "vector.h"
 #include "scriptValue.h"
 #include "script.h"
+#include "display.h"
 
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VALUE 1
@@ -62,7 +63,33 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
 
 // Returns whether the operation was successful.
 int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector_t *argumentList) {
-    
+    int32_t tempArgumentCount = argumentList->length;
+    if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
+        scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
+        switch (tempFunction->number) {
+            case NOTIFY_USER:
+            {
+                if (tempArgumentCount != 0) {
+                    // TODO: Error handling.
+                    
+                }
+                // TODO: Refactor this.
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempValue.data);
+                vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                notifyUser(tempText->data);
+                break;
+            }
+            default:
+            {
+                // TODO: Error handling.
+                
+                break;
+            }
+        }
+    }
+    return true;
 }
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
@@ -89,7 +116,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
             // TODO: Handle malformed numbers.
             // TODO: Handle hexadecimal numbers.
             expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-            *(float *)&(expressionResult.value.data) = tempNumber;
+            *(double *)&(expressionResult.value.data) = tempNumber;
             *scriptBodyPos = tempScriptBodyPos;
             break;
         }
