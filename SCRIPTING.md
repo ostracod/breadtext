@@ -33,7 +33,9 @@ String literal: `"Hello"`
 
 List literal: `[1, 2, 3]`
 
-Variable declaration and assignment: `myNumber = 5`
+Variable declaration: `dec myNumber`
+
+Variable declaration and assignment: `dec myNumber = 5`
 
 Comment: `# comment`
 
@@ -66,6 +68,18 @@ Expression statement:
 
 ```
 <expression>
+```
+
+Variable declaration:
+
+```
+dec <name>
+```
+
+Variable declaration and assignment:
+
+```
+dec <name> = <value>
 ```
 
 If statement:
@@ -209,7 +223,7 @@ Primality test:
 ```
 # Returns true iff the given number is prime.
 func isPrime(number)
-    factor = 2
+    dec factor = 2
     while factor < number
         if number % factor == 0
             ret false
@@ -222,7 +236,7 @@ end
 # Then notify whether the number is prime.
 # Return null or a boolean indicating primality.
 func notifyPrimality(text)
-    number = num(text)
+    dec number = num(text)
     if number === null
         notifyUser("Text is not a number.")
         ret null
@@ -238,7 +252,7 @@ end
 
 # Tell the user whether the highlighted number is prime.
 func checkSelectionPrimality()
-    text = getSelectionContents()
+    dec text = getSelectionContents()
     notifyPrimality(text)
     # Return true to override the default key action.
     ret true
