@@ -24,7 +24,7 @@ typedef struct expressionResult {
 vector_t scriptBodyList;
 int8_t scriptHasError = false;
 int8_t scriptErrorMessage[1000];
-scriptBodyLine_t *scriptErrorLine = NULL;
+scriptBodyLine_t scriptErrorLine;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
@@ -37,7 +37,7 @@ void reportScriptErrorWithoutLine(int8_t *message) {
 
 void reportScriptError(int8_t *message, scriptBodyLine_t *line) {
     reportScriptErrorWithoutLine(message);
-    scriptErrorLine = line;
+    scriptErrorLine = *line;
 }
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos);
@@ -236,6 +236,9 @@ int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
     expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos);
+    if (scriptHasError) {
+        scriptErrorLine = *scriptBodyLine;
+    }
     seekNextScriptBodyLine(scriptBodyLine);
     return tempResult.shouldContinue;
 }
@@ -285,10 +288,16 @@ int8_t importScript(int8_t *path) {
 }
 
 int8_t runScript(int8_t *path) {
+    scriptHasError = false;
+    scriptErrorLine.number = -1;
     int8_t output = importScript(path);
     if (scriptHasError) {
         int8_t tempText[1000];
-        sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
+        if (scriptErrorLine.number < 0) {
+            sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
+        } else {
+            sprintf((char *)tempText, "ERROR: %s (Line %lld)", (char *)scriptErrorMessage, scriptErrorLine.number);
+        }
         notifyUser(tempText);
     }
     return output;
