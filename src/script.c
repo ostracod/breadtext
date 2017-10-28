@@ -80,7 +80,7 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
     if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
         scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
         switch (tempFunction->number) {
-            case NOTIFY_USER:
+            case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
                     reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
