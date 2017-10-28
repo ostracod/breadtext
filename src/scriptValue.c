@@ -164,6 +164,43 @@ void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos) {
     }
 }
 
+int8_t scriptBodyPosMatchesOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator) {
+    int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
+    int8_t tempOffset = 0;
+    while (true) {
+        int8_t tempCharacter1 = (operator->text)[tempOffset];
+        int8_t tempCharacter2 = tempText[tempOffset];
+        if (tempCharacter1 == 0) {
+            return true;
+        }
+        if (tempCharacter1 != tempCharacter2) {
+            return false;
+        }
+        tempOffset += 1;
+    }
+}
+
+scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorType) {
+    int8_t tempLength = 3;
+    while (tempLength >= 1) {
+        int32_t index = 0;
+        while (index < sizeof(scriptOperatorSet) / sizeof(*scriptOperatorSet)) {
+            scriptOperator_t *tempOperator = scriptOperatorSet + index;
+            if (tempOperator->type == operatorType) {
+                if (strlen((char *)(tempOperator->text)) == tempLength) {
+                    if (scriptBodyPosMatchesOperator(scriptBodyPos, tempOperator)) {
+                        scriptBodyPos->index += tempLength;
+                        return tempOperator;
+                    }
+                }
+            }
+            index += 1;
+        }
+        tempLength -= 1;
+    }
+    return NULL;
+}
+
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos) {
     return endScriptBodyPos->index - startScriptBodyPos->index;
 }
