@@ -8,7 +8,7 @@
 #include "scriptValue.h"
 #include "display.h"
 
-scriptBuiltInFunction_t scriptBuiltInFunctionNameSet[] = {
+scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"isNum", IS_NUM, 1},
     {(int8_t *)"isStr", IS_STR, 1},
     {(int8_t *)"isList", IS_LIST, 1},
@@ -129,8 +129,8 @@ int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos) {
 
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length) {
     int32_t index = 0;
-    while (index < sizeof(scriptBuiltInFunctionNameSet) / sizeof(*scriptBuiltInFunctionNameSet)) {
-        scriptBuiltInFunction_t *tempFunction = scriptBuiltInFunctionNameSet + index;
+    while (index < sizeof(scriptBuiltInFunctionSet) / sizeof(*scriptBuiltInFunctionSet)) {
+        scriptBuiltInFunction_t *tempFunction = scriptBuiltInFunctionSet + index;
         if (strlen((char *)(tempFunction->name)) == length) {
             if (equalData(tempFunction->name, name, length)) {
                 return tempFunction;
