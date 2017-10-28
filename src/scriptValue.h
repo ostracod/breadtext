@@ -150,6 +150,7 @@ int8_t isScriptNumberCharacter(int8_t character);
 void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos);
 scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorType);
+void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator);
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);

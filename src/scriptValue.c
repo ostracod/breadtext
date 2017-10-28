@@ -189,7 +189,6 @@ scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_
             if (tempOperator->type == operatorType) {
                 if (strlen((char *)(tempOperator->text)) == tempLength) {
                     if (scriptBodyPosMatchesOperator(scriptBodyPos, tempOperator)) {
-                        scriptBodyPos->index += tempLength;
                         return tempOperator;
                     }
                 }
@@ -199,6 +198,10 @@ scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_
         tempLength -= 1;
     }
     return NULL;
+}
+
+void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator) {
+    scriptBodyPos->index += strlen(operator->text);
 }
 
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos) {
