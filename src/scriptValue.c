@@ -201,7 +201,7 @@ scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_
 }
 
 void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator) {
-    scriptBodyPos->index += strlen(operator->text);
+    scriptBodyPos->index += strlen((char *)(operator->text));
 }
 
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos) {

@@ -40,7 +40,7 @@ void reportScriptError(int8_t *message, scriptBodyLine_t *line) {
     scriptErrorLine = *line;
 }
 
-expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos);
+expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 // Returns whether the operation was successful.
 int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *scriptBodyPos) {
@@ -55,7 +55,7 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
         if (tempCharacter == ')') {
             break;
         }
-        expressionResult_t tempResult = evaluateExpression(scriptBodyPos);
+        expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 0);
         if (!tempResult.shouldContinue) {
             return false;
         }
@@ -107,7 +107,7 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
     return true;
 }
 
-expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
+expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     expressionResult_t expressionResult;
     expressionResult.shouldContinue = true;
     expressionResult.value.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -235,7 +235,7 @@ int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
-    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos);
+    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 0);
     if (scriptHasError) {
         scriptErrorLine = *scriptBodyLine;
     }
