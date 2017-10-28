@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <string.h>
 #include "utilities.h"
+#include "vector.h"
 #include "scriptValue.h"
+#include "display.h"
 
 scriptBuiltInFunction_t scriptBuiltInFunctionNameSet[] = {
     {(int8_t *)"isNum", IS_NUM, 1},
@@ -145,4 +147,48 @@ scriptHeapValue_t *createScriptHeapValue() {
     
     return output;
 }
+
+scriptValue_t convertScriptValueToString(scriptValue_t value) {
+    if (value.type == SCRIPT_VALUE_TYPE_STRING) {
+        return value;
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+        double tempNumber = *(double *)&(value.data);
+        int8_t tempBuffer[50];
+        sprintf((char *)tempBuffer, "%lf", tempNumber);
+        int32_t tempLength = strlen((char *)tempBuffer);
+        int32_t tempStartIndex = 0;
+        while (tempStartIndex < tempLength) {
+            int8_t tempCharacter = tempBuffer[tempStartIndex];
+            if (tempCharacter == '.') {
+                break;
+            }
+            tempStartIndex += 1;
+        }
+        int32_t index = tempLength - 1;
+        while (index >= tempStartIndex) {
+            int8_t tempCharacter = tempBuffer[index];
+            if (tempCharacter != '0' && tempCharacter != '.') {
+                break;
+            }
+            tempBuffer[index] = 0;
+            tempLength = index;
+            index -= 1;
+        }
+        scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+        vector_t *tempVector = malloc(sizeof(vector_t));
+        createVectorFromArray(tempVector, 1, tempBuffer, tempLength + 1);
+        *(vector_t **)&(tempHeapValue->data) = tempVector;
+        scriptValue_t output;
+        output.type = SCRIPT_VALUE_TYPE_STRING;
+        *(scriptHeapValue_t **)&(output.data) = tempHeapValue;
+        return output;
+    }
+    
+    // TODO: Accommodate other input types.
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_NULL;
+    return output;
+}
+
 

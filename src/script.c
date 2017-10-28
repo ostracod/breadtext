@@ -86,10 +86,10 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
                     reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
                     return false;
                 }
-                // TODO: Refactor this.
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
-                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempValue.data);
+                scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempStringValue.data);
                 vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
                 notifyUser(tempText->data);
                 break;
@@ -185,7 +185,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos) {
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
             tempHeapValue->type = SCRIPT_VALUE_TYPE_STRING;
             *(vector_t **)&(tempHeapValue->data) = tempText;
-            expressionResult.value.type = SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION;
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_STRING;
             *(scriptHeapValue_t **)&(expressionResult.value.data) = tempHeapValue;
             break;
         }

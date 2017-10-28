@@ -13,6 +13,18 @@ void createEmptyVector(vector_t *destination, int64_t elementSize) {
     destination->length = 0;
 }
 
+void createVectorFromArray(vector_t *destination, int64_t elementSize, void *source, int64_t elementCount) {
+    destination->elementSize = elementSize;
+    if (elementCount <= 0) {
+        destination->dataSize = elementSize * elementCount;
+    } else {
+        destination->dataSize = elementSize;
+    }
+    destination->data = malloc(destination->dataSize);
+    destination->length = elementCount;
+    copyData(destination->data, source, elementSize * elementCount);
+}
+
 void deleteVector(vector_t *vector) {
     free(vector->data);
 }
