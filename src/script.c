@@ -55,7 +55,7 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
         if (tempCharacter == ')') {
             break;
         }
-        expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 0);
+        expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
         if (!tempResult.shouldContinue) {
             return false;
         }
@@ -220,7 +220,52 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 hasProcessedOperator = true;
                 break;
             }
-            // TODO: Handle binary operators.
+            scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_BINARY);
+            if (tempOperator != NULL) {
+                if (tempOperator->precedence >= precedence) {
+                    break;
+                }
+                scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
+                expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
+                if (!tempResult.shouldContinue) {
+                    expressionResult.shouldContinue = false;
+                    if (scriptHasError) {
+                        return expressionResult;
+                    }
+                }
+                int8_t tempType1 = expressionResult.value.type;
+                int8_t tempType2 = tempResult.value.type;
+                switch (tempOperator->number) {
+                    case SCRIPT_OPERATOR_ADD:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            *(double *)&(expressionResult.value.data) += *(double *)&(tempResult.value.data);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            expressionResult.shouldContinue = false;
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_MULTIPLY:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            *(double *)&(expressionResult.value.data) *= *(double *)&(tempResult.value.data);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            expressionResult.shouldContinue = false;
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                hasProcessedOperator = true;
+                break;
+            }
             
             break;
         }
@@ -235,7 +280,7 @@ int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
-    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 0);
+    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 99);
     if (scriptHasError) {
         scriptErrorLine = *scriptBodyLine;
     }
