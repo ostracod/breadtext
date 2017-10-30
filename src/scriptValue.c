@@ -276,4 +276,53 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
     return output;
 }
 
+int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t *text) {
+    scriptBodyPos_t tempScriptBodyPos;
+    tempScriptBodyPos = *scriptBodyPos;
+    scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+    int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
+    int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
+    if (tempLength != strlen((char *)text)) {
+        return false;
+    }
+    if (equalData(text, tempText, tempLength)) {
+        *scriptBodyPos = tempScriptBodyPos;
+        return true;
+    }
+    return false;
+}
+
+scriptScope_t *createEmptyScriptScope() {
+    scriptScope_t *output = malloc(sizeof(scriptScope_t));
+    createEmptyVector(&(output->variableList), sizeof(scriptVariable_t));
+    return output;
+}
+
+scriptVariable_t createEmptyScriptVariable(int8_t *name) {
+    scriptVariable_t output;
+    output.name = malloc(strlen((char *)name) + 1);
+    strcpy((char *)(output.name), (char *)name);
+    output.value.type = SCRIPT_VALUE_TYPE_MISSING;
+    return output;
+}
+
+scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t variable) {
+    int32_t index = scope->variableList.length;
+    pushVectorElement(&(scope->variableList), &variable);
+    return findVectorElement(&(scope->variableList), index);
+}
+
+scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
+    int32_t index = 0;
+    while (index < scope->variableList.length) {
+        scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
+        if (strcmp((char *)(tempVariable->name), (char *)name) == 0) {
+            return tempVariable;
+        }
+        index += 1;
+    }
+    return NULL;
+}
+
+
 

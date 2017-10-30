@@ -140,6 +140,15 @@ typedef struct scriptHeapValue {
     void *data;
 } scriptHeapValue_t;
 
+typedef struct scriptVariable {
+    int8_t *name;
+    scriptValue_t value;
+} scriptVariable_t;
+
+typedef struct scriptScope {
+    vector_t variableList;
+} scriptScope_t;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 void seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
@@ -151,11 +160,16 @@ void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos);
 scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorType);
 void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator);
+int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t *text);
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
 scriptHeapValue_t *createScriptHeapValue();
 scriptValue_t convertScriptValueToString(scriptValue_t value);
+scriptScope_t *createEmptyScriptScope();
+scriptVariable_t createEmptyScriptVariable(int8_t *name);
+scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t variable);
+scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

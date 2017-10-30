@@ -22,12 +22,16 @@ typedef struct expressionResult {
 } expressionResult_t;
 
 vector_t scriptBodyList;
+scriptScope_t *globalScriptScope;
+scriptScope_t *localScriptScope;
 int8_t scriptHasError = false;
 int8_t scriptErrorMessage[1000];
 scriptBodyLine_t scriptErrorLine;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
+    globalScriptScope = createEmptyScriptScope();
+    localScriptScope = globalScriptScope;
 }
 
 void reportScriptErrorWithoutLine(int8_t *message) {
@@ -211,6 +215,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 scriptValue_t tempValue;
                 tempResult = invokeFunction(&tempValue, expressionResult.value, &tempArgumentList);
                 if (!tempResult) {
+                    if (scriptHasError) {
+                        scriptErrorLine = *(scriptBodyPos->scriptBodyLine);
+                    }
                     expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
@@ -276,24 +283,49 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     return expressionResult;
 }
 
-int8_t evaluateExpressionStatement(scriptBodyLine_t *scriptBodyLine) {
-    scriptBodyPos_t tempScriptBodyPos;
-    tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
-    tempScriptBodyPos.index = scriptBodyLine->index;
-    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 99);
-    if (scriptHasError) {
-        scriptErrorLine = *scriptBodyLine;
-    }
-    seekNextScriptBodyLine(scriptBodyLine);
-    return tempResult.shouldContinue;
-}
-
 int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
     if (scriptBodyLine->index >= scriptBodyLine->scriptBody->length) {
         return false;
     }
-    // TODO: Add other kinds of statements.
-    return evaluateExpressionStatement(scriptBodyLine);
+    scriptBodyPos_t scriptBodyPos;
+    scriptBodyPos.scriptBodyLine = scriptBodyLine;
+    scriptBodyPos.index = scriptBodyLine->index;
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+    if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dec")) {
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+            if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+                reportScriptError((int8_t *)"Missing declaration name.", scriptBodyLine);
+                return false;
+            }
+            scriptBodyPos_t tempScriptBodyPos;
+            tempScriptBodyPos = scriptBodyPos;
+            scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+            int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+            int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+            int8_t tempName[tempLength + 1];
+            copyData(tempName, tempText, tempLength);
+            tempName[tempLength] = 0;
+            scriptVariable_t *tempVariable = scriptScopeFindVariable(localScriptScope, tempName);
+            if (tempVariable == NULL) {
+                scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
+                tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+            }
+            scriptBodyPos = tempScriptBodyPos;
+            // TODO: Handle optional initialization.
+            
+            seekNextScriptBodyLine(scriptBodyLine);
+            return true;
+        }
+    }
+    scriptBodyPos_t tempScriptBodyPos;
+    tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
+    tempScriptBodyPos.index = scriptBodyLine->index;
+    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 99);
+    seekNextScriptBodyLine(scriptBodyLine);
+    return tempResult.shouldContinue;
 }
 
 int8_t importScriptHelper(int8_t *path) {
