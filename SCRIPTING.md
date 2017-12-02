@@ -79,7 +79,7 @@ dec <name>
 Variable declaration and assignment:
 
 ```
-dec <name> = <value>
+dec <name> = <expression>
 ```
 
 If statement:
@@ -125,7 +125,7 @@ end
 Return with value statement:
 
 ```
-ret <value>
+ret <expression>
 ```
 
 Return without value statement:
@@ -138,6 +138,20 @@ Import statement:
 
 ```
 import <path>
+    <body>
+end
+```
+
+Retrieve specific variables in import body:
+
+```
+share <name>, <name>, <name>
+```
+
+Retrieve every variable in import body:
+
+```
+greedy dirtbag
 ```
 
 ## General-purpose Built-in Functions
