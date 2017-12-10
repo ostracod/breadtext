@@ -117,10 +117,45 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     expressionResult.value.type = SCRIPT_VALUE_TYPE_MISSING;
     expressionResult.destinationType = DESTINATION_TYPE_NONE;
     expressionResult.destination = NULL;
+    scriptBodyPosSkipWhitespace(scriptBodyPos);
+    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+    scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_UNARY_PREFIX);
+    if (tempOperator != NULL) {
+        scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
+        expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
+        if (!tempResult.shouldContinue) {
+            expressionResult.shouldContinue = false;
+            if (scriptHasError) {
+                return expressionResult;
+            }
+        }
+        int8_t tempType = tempResult.value.type;
+        switch (tempOperator->number) {
+            case SCRIPT_OPERATOR_BOOLEAN_NOT:
+            {
+                if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                    expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)&(expressionResult.value.data) = (*(double *)&(tempResult.value.data) == 0.0);
+                } else {
+                    reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                    expressionResult.shouldContinue = false;
+                    return expressionResult;
+                }
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        return expressionResult;
+    }
     while (true) {
-        scriptBodyPosSkipWhitespace(scriptBodyPos);
-        int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-        if (tempFirstCharacter == '\n' || tempFirstCharacter == 0) {
+        if (tempFirstCharacter == '\n') {
+            return expressionResult;
+        }
+        if (tempFirstCharacter == 0) {
+            expressionResult.shouldContinue = false;
             return expressionResult;
         }
         if (isScriptNumberCharacter(tempFirstCharacter)) {
@@ -351,7 +386,7 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
                 scriptBodyPos.index += 1;
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
                 expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
-                if (!tempResult.shouldContinue) {
+                if (!tempResult.shouldContinue && scriptHasError) {
                     return false;
                 }
                 tempVariable->value = tempResult.value;
