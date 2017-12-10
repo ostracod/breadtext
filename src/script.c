@@ -144,6 +144,20 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
             int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
             int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
+            scriptVariable_t *tempVariable = scriptScopeFindVariableWithNameLength(localScriptScope, tempText, tempLength);
+            if (tempVariable != NULL) {
+                expressionResult.value = tempVariable->value;
+                *scriptBodyPos = tempScriptBodyPos;
+                break;
+            }
+            if (localScriptScope != globalScriptScope) {
+                tempVariable = scriptScopeFindVariableWithNameLength(globalScriptScope, tempText, tempLength);
+                if (tempVariable != NULL) {
+                    expressionResult.value = tempVariable->value;
+                    *scriptBodyPos = tempScriptBodyPos;
+                    break;
+                }
+            }
             scriptBuiltInFunction_t *tempBuiltInFunction = findScriptBuiltInFunctionByName(tempText, tempLength);
             if (tempBuiltInFunction != NULL) {
                 expressionResult.value.type = SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION;

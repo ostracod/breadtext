@@ -312,16 +312,22 @@ scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t 
     return findVectorElement(&(scope->variableList), index);
 }
 
-scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
+scriptVariable_t *scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
     int32_t index = 0;
     while (index < scope->variableList.length) {
         scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
-        if (strcmp((char *)(tempVariable->name), (char *)name) == 0) {
-            return tempVariable;
+        if (strlen((char *)(tempVariable->name)) == length) {
+            if (equalData(tempVariable->name, name, length)) {
+                return tempVariable;
+            }
         }
         index += 1;
     }
     return NULL;
+}
+
+scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
+    return scriptScopeFindVariableWithNameLength(scope, name, strlen((char *)name));
 }
 
 
