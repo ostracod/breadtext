@@ -345,8 +345,17 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
                 tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
             }
             scriptBodyPos = tempScriptBodyPos;
-            // TODO: Handle optional initialization.
-            
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+            if (tempCharacter == '=') {
+                scriptBodyPos.index += 1;
+                scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                if (!tempResult.shouldContinue) {
+                    return false;
+                }
+                tempVariable->value = tempResult.value;
+            }
             seekNextScriptBodyLine(scriptBodyLine);
             return true;
         }
