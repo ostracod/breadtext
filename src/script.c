@@ -147,6 +147,8 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptVariable_t *tempVariable = scriptScopeFindVariableWithNameLength(localScriptScope, tempText, tempLength);
             if (tempVariable != NULL) {
                 expressionResult.value = tempVariable->value;
+                expressionResult.destinationType = DESTINATION_TYPE_VALUE;
+                expressionResult.destination = &(tempVariable->value);
                 *scriptBodyPos = tempScriptBodyPos;
                 break;
             }
@@ -154,6 +156,8 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 tempVariable = scriptScopeFindVariableWithNameLength(globalScriptScope, tempText, tempLength);
                 if (tempVariable != NULL) {
                     expressionResult.value = tempVariable->value;
+                    expressionResult.destinationType = DESTINATION_TYPE_VALUE;
+                    expressionResult.destination = &(tempVariable->value);
                     *scriptBodyPos = tempScriptBodyPos;
                     break;
                 }
@@ -279,11 +283,24 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         }
                         break;
                     }
+                    case SCRIPT_OPERATOR_ASSIGN:
+                    {
+                        if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
+                            *(scriptValue_t *)(expressionResult.destination) = tempResult.value;
+                        } else {
+                            reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
+                            expressionResult.shouldContinue = false;
+                            return expressionResult;
+                        }
+                        break;
+                    }
                     default:
                     {
                         break;
                     }
                 }
+                expressionResult.destinationType = DESTINATION_TYPE_NONE;
+                expressionResult.destination = NULL;
                 hasProcessedOperator = true;
                 break;
             }
