@@ -150,7 +150,7 @@ typedef struct scriptScope {
 } scriptScope_t;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
-void seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
+int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos);
 int8_t isFirstScriptIdentifierCharacter(int8_t character);

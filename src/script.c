@@ -44,6 +44,10 @@ void reportScriptError(int8_t *message, scriptBodyLine_t *line) {
     scriptErrorLine = *line;
 }
 
+int8_t characterIsEndOfScriptLine(int8_t character) {
+    return (character == '\n' || character == 0 || character == '#');
+}
+
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 // Returns whether the operation was successful.
@@ -52,7 +56,7 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-        if (tempCharacter == '\n' || tempCharacter == 0) {
+        if (characterIsEndOfScriptLine(tempCharacter)) {
             reportScriptError((int8_t *)"Unexpected end of invocation.", scriptBodyPos->scriptBodyLine);
             return false;
         }
@@ -134,9 +138,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
         if (!tempResult.shouldContinue) {
             expressionResult.shouldContinue = false;
-            if (scriptHasError) {
-                return expressionResult;
-            }
+            return expressionResult;
         }
         int8_t tempType = tempResult.value.type;
         switch (tempOperator->number) {
@@ -161,11 +163,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     }
     int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
     while (true) {
-        if (tempFirstCharacter == '\n') {
-            return expressionResult;
-        }
-        if (tempFirstCharacter == 0) {
-            expressionResult.shouldContinue = false;
+        if (characterIsEndOfScriptLine(tempFirstCharacter)) {
             return expressionResult;
         }
         if (isScriptNumberCharacter(tempFirstCharacter)) {
@@ -222,7 +220,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             int8_t tempIsEscaped = false;
             while (true) {
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-                if (tempCharacter == '\n' || tempCharacter == 0) {
+                if (characterIsEndOfScriptLine(tempCharacter)) {
                     reportScriptError((int8_t *)"Unexpected end of string.", scriptBodyPos->scriptBodyLine);
                     expressionResult.shouldContinue = false;
                     return expressionResult;
@@ -255,7 +253,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         if (tempFirstCharacter == '\'') {
             scriptBodyPos->index += 1;
             int8_t tempValue = scriptBodyPosGetCharacter(scriptBodyPos);
-            if (tempValue == '\n' || tempValue == 0) {
+            if (characterIsEndOfScriptLine(tempValue)) {
                 reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
                 expressionResult.shouldContinue = false;
                 return expressionResult;
@@ -263,7 +261,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPos->index += 1;
             if (tempValue == '\\') {
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-                if (tempCharacter == '\n' || tempCharacter == 0) {
+                if (characterIsEndOfScriptLine(tempCharacter)) {
                     reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
                     expressionResult.shouldContinue = false;
                     return expressionResult;
@@ -387,9 +385,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
                 if (!tempResult.shouldContinue) {
                     expressionResult.shouldContinue = false;
-                    if (scriptHasError) {
-                        return expressionResult;
-                    }
+                    return expressionResult;
                 }
                 int8_t tempType1 = expressionResult.value.type;
                 int8_t tempType2 = tempResult.value.type;
@@ -483,21 +479,22 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
                 scriptBodyPos.index += 1;
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
                 expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
-                if (!tempResult.shouldContinue && scriptHasError) {
+                if (!tempResult.shouldContinue) {
                     return false;
                 }
                 tempVariable->value = tempResult.value;
             }
-            seekNextScriptBodyLine(scriptBodyLine);
-            return true;
+            return seekNextScriptBodyLine(scriptBodyLine);
         }
     }
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
-    expressionResult_t tempResult = evaluateExpression(&tempScriptBodyPos, 99);
-    seekNextScriptBodyLine(scriptBodyLine);
-    return tempResult.shouldContinue;
+    expressionResult_t tempExpressionResult = evaluateExpression(&tempScriptBodyPos, 99);
+    if (!tempExpressionResult.shouldContinue) {
+        return false;
+    }
+    return seekNextScriptBodyLine(scriptBodyLine);
 }
 
 int8_t importScriptHelper(int8_t *path) {
