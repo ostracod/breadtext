@@ -111,6 +111,16 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
     return true;
 }
 
+int8_t escapeScriptCharacter(int8_t character) {
+    if (character == 'n') {
+        return '\n';
+    } else if (character == 't') {
+        return '\t';
+    } else {
+        return character;
+    }
+}
+
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     expressionResult_t expressionResult;
     expressionResult.shouldContinue = true;
@@ -218,11 +228,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     return expressionResult;
                 }
                 if (tempIsEscaped) {
-                    if (tempCharacter == 'n') {
-                        tempCharacter = '\n';
-                    } else if (tempCharacter == 't') {
-                        tempCharacter = '\t';
-                    }
+                    tempCharacter = escapeScriptCharacter(tempCharacter);
                     pushVectorElement(tempText, &tempCharacter);
                     tempIsEscaped = false;
                 } else {
@@ -244,6 +250,36 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             *(vector_t **)&(tempHeapValue->data) = tempText;
             expressionResult.value.type = SCRIPT_VALUE_TYPE_STRING;
             *(scriptHeapValue_t **)&(expressionResult.value.data) = tempHeapValue;
+            break;
+        }
+        if (tempFirstCharacter == '\'') {
+            scriptBodyPos->index += 1;
+            int8_t tempValue = scriptBodyPosGetCharacter(scriptBodyPos);
+            if (tempValue == '\n' || tempValue == 0) {
+                reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
+                expressionResult.shouldContinue = false;
+                return expressionResult;
+            }
+            scriptBodyPos->index += 1;
+            if (tempValue == '\\') {
+                int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+                if (tempCharacter == '\n' || tempCharacter == 0) {
+                    reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
+                    expressionResult.shouldContinue = false;
+                    return expressionResult;
+                }
+                scriptBodyPos->index += 1;
+                tempValue = escapeScriptCharacter(tempCharacter);
+            }
+            int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+            if (tempCharacter != '\'') {
+                reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
+                expressionResult.shouldContinue = false;
+                return expressionResult;
+            }
+            scriptBodyPos->index += 1;
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)&(expressionResult.value.data) = tempValue;
             break;
         }
         if (tempFirstCharacter == '(') {
