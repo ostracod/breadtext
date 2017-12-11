@@ -298,6 +298,20 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPos->index += 1;
             break;
         }
+        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"true")) {
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)&(expressionResult.value.data) = 1.0;
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"false")) {
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)&(expressionResult.value.data) = 0.0;
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"null")) {
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_NULL;
+            break;
+        }
         // TODO: Handle more types of expressions.
         
         reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
