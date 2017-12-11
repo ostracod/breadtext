@@ -102,18 +102,18 @@ int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
 }
 
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {
+    scriptBodyLine->number += 1;
     while (scriptBodyLine->index < scriptBodyLine->scriptBody->length) {
         int8_t tempCharacter = (scriptBodyLine->scriptBody->text)[scriptBodyLine->index];
         scriptBodyLine->index += 1;
         if (tempCharacter == '\n') {
-            break;
+            return true;
         }
         if (tempCharacter == 0) {
             return false;
         }
     }
-    scriptBodyLine->number += 1;
-    return true;
+    return false;
 }
 
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos) {
