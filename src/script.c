@@ -118,7 +118,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     expressionResult.destinationType = DESTINATION_TYPE_NONE;
     expressionResult.destination = NULL;
     scriptBodyPosSkipWhitespace(scriptBodyPos);
-    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
     scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_UNARY_PREFIX);
     if (tempOperator != NULL) {
         scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
@@ -150,6 +149,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         }
         return expressionResult;
     }
+    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
     while (true) {
         if (tempFirstCharacter == '\n') {
             return expressionResult;
@@ -244,6 +244,22 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             *(vector_t **)&(tempHeapValue->data) = tempText;
             expressionResult.value.type = SCRIPT_VALUE_TYPE_STRING;
             *(scriptHeapValue_t **)&(expressionResult.value.data) = tempHeapValue;
+            break;
+        }
+        if (tempFirstCharacter == '(') {
+            scriptBodyPos->index += 1;
+            expressionResult = evaluateExpression(scriptBodyPos, 99);
+            if (!expressionResult.shouldContinue) {
+                return expressionResult;
+            }
+            scriptBodyPosSkipWhitespace(scriptBodyPos);
+            int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+            if (tempCharacter != ')') {
+                reportScriptError((int8_t *)"Missing close parenthesis.", scriptBodyPos->scriptBodyLine);
+                expressionResult.shouldContinue = false;
+                return expressionResult;
+            }
+            scriptBodyPos->index += 1;
             break;
         }
         // TODO: Handle more types of expressions.
