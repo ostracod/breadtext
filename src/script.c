@@ -51,16 +51,16 @@ int8_t characterIsEndOfScriptLine(int8_t character) {
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 // Returns whether the operation was successful.
-int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *scriptBodyPos) {
+int8_t getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
     createEmptyVector(destination, sizeof(scriptValue_t));
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
         if (characterIsEndOfScriptLine(tempCharacter)) {
-            reportScriptError((int8_t *)"Unexpected end of invocation.", scriptBodyPos->scriptBodyLine);
+            reportScriptError((int8_t *)"Unexpected end of expression list.", scriptBodyPos->scriptBodyLine);
             return false;
         }
-        if (tempCharacter == ')') {
+        if (tempCharacter == endCharacter) {
             break;
         }
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
@@ -72,10 +72,10 @@ int8_t getFunctionInvocationArguments(vector_t *destination, scriptBodyPos_t *sc
         tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
         if (tempCharacter == ',') {
             scriptBodyPos->index += 1;
-        } else if (tempCharacter == ')') {
+        } else if (tempCharacter == endCharacter) {
             break;
         } else {
-            reportScriptError((int8_t *)"Bad function invocation.", scriptBodyPos->scriptBodyLine);
+            reportScriptError((int8_t *)"Bad expression list.", scriptBodyPos->scriptBodyLine);
             return false;
         }
     }
@@ -296,6 +296,21 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPos->index += 1;
             break;
         }
+        if (tempFirstCharacter == '[') {
+            scriptBodyPos->index += 1;
+            vector_t *tempList = malloc(sizeof(vector_t));
+            int8_t tempResult = getScriptBodyValueList(tempList, scriptBodyPos, ']');
+            if (!tempResult) {
+                expressionResult.shouldContinue = false;
+                return expressionResult;
+            }
+            scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+            tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
+            *(vector_t **)&(tempHeapValue->data) = tempList;
+            expressionResult.value.type = SCRIPT_VALUE_TYPE_LIST;
+            *(scriptHeapValue_t **)&(expressionResult.value.data) = tempHeapValue;
+            break;
+        }
         if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"true")) {
             expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
             *(double *)&(expressionResult.value.data) = 1.0;
@@ -356,7 +371,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             if (tempFirstCharacter == '(') {
                 scriptBodyPos->index += 1;
                 vector_t tempArgumentList;
-                int8_t tempResult = getFunctionInvocationArguments(&tempArgumentList, scriptBodyPos);
+                int8_t tempResult = getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
                 if (!tempResult) {
                     expressionResult.shouldContinue = false;
                     return expressionResult;
