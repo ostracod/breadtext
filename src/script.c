@@ -15,7 +15,6 @@
 #define DESTINATION_TYPE_CHARACTER 2
 
 typedef struct expressionResult {
-    int8_t shouldContinue;
     scriptValue_t value;
     int8_t destinationType;
     void *destination;
@@ -64,7 +63,7 @@ int8_t getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBody
             break;
         }
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
-        if (!tempResult.shouldContinue) {
+        if (scriptHasError) {
             return false;
         }
         pushVectorElement(destination, &(tempResult.value));
@@ -127,7 +126,6 @@ int8_t escapeScriptCharacter(int8_t character) {
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     expressionResult_t expressionResult;
-    expressionResult.shouldContinue = true;
     expressionResult.value.type = SCRIPT_VALUE_TYPE_MISSING;
     expressionResult.destinationType = DESTINATION_TYPE_NONE;
     expressionResult.destination = NULL;
@@ -136,8 +134,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     if (tempOperator != NULL) {
         scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
-        if (!tempResult.shouldContinue) {
-            expressionResult.shouldContinue = false;
+        if (scriptHasError) {
             return expressionResult;
         }
         int8_t tempType = tempResult.value.type;
@@ -149,7 +146,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     *(double *)&(expressionResult.value.data) = (*(double *)&(tempResult.value.data) == 0.0);
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 break;
@@ -222,7 +218,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
                 if (characterIsEndOfScriptLine(tempCharacter)) {
                     reportScriptError((int8_t *)"Unexpected end of string.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 if (tempIsEscaped) {
@@ -255,7 +250,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             int8_t tempValue = scriptBodyPosGetCharacter(scriptBodyPos);
             if (characterIsEndOfScriptLine(tempValue)) {
                 reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
-                expressionResult.shouldContinue = false;
                 return expressionResult;
             }
             scriptBodyPos->index += 1;
@@ -263,7 +257,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
                 if (characterIsEndOfScriptLine(tempCharacter)) {
                     reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 scriptBodyPos->index += 1;
@@ -272,7 +265,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
             if (tempCharacter != '\'') {
                 reportScriptError((int8_t *)"Malformed character.", scriptBodyPos->scriptBodyLine);
-                expressionResult.shouldContinue = false;
                 return expressionResult;
             }
             scriptBodyPos->index += 1;
@@ -283,14 +275,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         if (tempFirstCharacter == '(') {
             scriptBodyPos->index += 1;
             expressionResult = evaluateExpression(scriptBodyPos, 99);
-            if (!expressionResult.shouldContinue) {
+            if (scriptHasError) {
                 return expressionResult;
             }
             scriptBodyPosSkipWhitespace(scriptBodyPos);
             int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
             if (tempCharacter != ')') {
                 reportScriptError((int8_t *)"Missing close parenthesis.", scriptBodyPos->scriptBodyLine);
-                expressionResult.shouldContinue = false;
                 return expressionResult;
             }
             scriptBodyPos->index += 1;
@@ -301,7 +292,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             vector_t *tempList = malloc(sizeof(vector_t));
             int8_t tempResult = getScriptBodyValueList(tempList, scriptBodyPos, ']');
             if (!tempResult) {
-                expressionResult.shouldContinue = false;
                 return expressionResult;
             }
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
@@ -328,7 +318,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         // TODO: Handle more types of expressions.
         
         reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
-        expressionResult.shouldContinue = false;
         return expressionResult;
     }
     while (true) {
@@ -348,7 +337,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         }
                     } else {
                         reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
-                        expressionResult.shouldContinue = false;
                         return expressionResult;
                     }
                     break;
@@ -374,7 +362,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 vector_t tempArgumentList;
                 int8_t tempResult = getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
                 if (!tempResult) {
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 scriptValue_t tempValue;
@@ -383,7 +370,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     if (scriptHasError) {
                         scriptErrorLine = *(scriptBodyPos->scriptBodyLine);
                     }
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 expressionResult.value = tempValue;
@@ -395,15 +381,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             if (tempFirstCharacter == '[') {
                 scriptBodyPos->index += 1;
                 expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
-                if (!tempResult.shouldContinue) {
-                    expressionResult.shouldContinue = false;
+                if (scriptHasError) {
                     return expressionResult;
                 }
                 int8_t tempType1 = expressionResult.value.type;
                 int8_t tempType2 = tempResult.value.type;
                 if (tempType2 != SCRIPT_VALUE_TYPE_NUMBER) {
                     reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 int64_t index = (int64_t)*(double *)&(tempResult.value.data);
@@ -412,7 +396,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
                     if (index < 0 || index >= tempText->length - 1) {
                         reportScriptError((int8_t *)"Index out of range.", scriptBodyPos->scriptBodyLine);
-                        expressionResult.shouldContinue = false;
                         return expressionResult;
                     }
                     int8_t *tempLocation = (int8_t *)findVectorElement(tempText, index);
@@ -426,7 +409,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
                     if (index < 0 || index >= tempList->length - 1) {
                         reportScriptError((int8_t *)"Index out of range.", scriptBodyPos->scriptBodyLine);
-                        expressionResult.shouldContinue = false;
                         return expressionResult;
                     }
                     scriptValue_t *tempLocation = (scriptValue_t *)findVectorElement(tempList, index);
@@ -436,14 +418,12 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     expressionResult.destination = tempLocation;
                 } else {
                     reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 scriptBodyPosSkipWhitespace(scriptBodyPos);
                 int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
                 if (tempCharacter != ']') {
                     reportScriptError((int8_t *)"Missing close bracket.", scriptBodyPos->scriptBodyLine);
-                    expressionResult.shouldContinue = false;
                     return expressionResult;
                 }
                 scriptBodyPos->index += 1;
@@ -457,8 +437,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 }
                 scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
                 expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
-                if (!tempResult.shouldContinue) {
-                    expressionResult.shouldContinue = false;
+                if (scriptHasError) {
                     return expressionResult;
                 }
                 int8_t tempType1 = expressionResult.value.type;
@@ -470,7 +449,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                             *(double *)&(expressionResult.value.data) += *(double *)&(tempResult.value.data);
                         } else {
                             reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            expressionResult.shouldContinue = false;
                             return expressionResult;
                         }
                         break;
@@ -481,7 +459,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                             *(double *)&(expressionResult.value.data) *= *(double *)&(tempResult.value.data);
                         } else {
                             reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            expressionResult.shouldContinue = false;
                             return expressionResult;
                         }
                         break;
@@ -495,12 +472,10 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                                 *(int8_t *)(expressionResult.destination) = (int8_t)*(double *)&(tempResult.value.data);
                             } else {
                                 reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                                expressionResult.shouldContinue = false;
                                 return expressionResult;
                             }
                         } else {
                             reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
-                            expressionResult.shouldContinue = false;
                             return expressionResult;
                         }
                         break;
@@ -561,7 +536,7 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
                 scriptBodyPos.index += 1;
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
                 expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
-                if (!tempResult.shouldContinue) {
+                if (scriptHasError) {
                     return false;
                 }
                 tempVariable->value = tempResult.value;
@@ -572,8 +547,8 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
     tempScriptBodyPos.index = scriptBodyLine->index;
-    expressionResult_t tempExpressionResult = evaluateExpression(&tempScriptBodyPos, 99);
-    if (!tempExpressionResult.shouldContinue) {
+    evaluateExpression(&tempScriptBodyPos, 99);
+    if (scriptHasError) {
         return false;
     }
     return seekNextScriptBodyLine(scriptBodyLine);
