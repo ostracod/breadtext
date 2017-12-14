@@ -2,6 +2,8 @@
 #ifndef SCRIPT_VALUE_HEADER_FILE
 #define SCRIPT_VALUE_HEADER_FILE
 
+#include "vector.h"
+
 #define SCRIPT_VALUE_TYPE_MISSING 0
 #define SCRIPT_VALUE_TYPE_NULL 1
 #define SCRIPT_VALUE_TYPE_NUMBER 2
@@ -84,6 +86,10 @@
 #define SCRIPT_OPERATOR_DECREMENT_PREFIX 41
 #define SCRIPT_OPERATOR_DECREMENT_POSTFIX 42
 
+#define SCRIPT_BRANCH_TYPE_IF 1
+#define SCRIPT_BRANCH_TYPE_WHILE 2
+#define SCRIPT_BRANCH_TYPE_FUNCTION 3
+
 typedef struct scriptBody {
     int8_t *path;
     int8_t *text;
@@ -148,6 +154,13 @@ typedef struct scriptVariable {
 typedef struct scriptScope {
     vector_t variableList;
 } scriptScope_t;
+
+typedef struct scriptBranch {
+    int8_t type;
+    int8_t shouldIgnore;
+    int8_t hasExecuted;
+    scriptBodyLine_t line;
+} scriptBranch_t;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);

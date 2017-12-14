@@ -68,5 +68,10 @@ void pushVectorElement(vector_t *vector, void *source) {
     insertVectorElement(vector, vector->length, source);
 }
 
+void popVectorElement(void *destination, vector_t *vector) {
+    int64_t index = vector->length - 1;
+    getVectorElement(destination, vector, index);
+    removeVectorElement(vector, index);
+}
 
 

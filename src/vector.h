@@ -19,6 +19,7 @@ void *findVectorElement(vector_t *vector, int64_t index);
 void insertVectorElement(vector_t *vector, int64_t index, void *source);
 void removeVectorElement(vector_t *vector, int64_t index);
 void pushVectorElement(vector_t *vector, void *source);
+void popVectorElement(void *destination, vector_t *vector);
 
 // VECTOR_HEADER_FILE
 #endif

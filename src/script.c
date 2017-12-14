@@ -23,12 +23,14 @@ typedef struct expressionResult {
 vector_t scriptBodyList;
 scriptScope_t *globalScriptScope;
 scriptScope_t *localScriptScope;
+vector_t scriptBranchStack;
 int8_t scriptHasError = false;
 int8_t scriptErrorMessage[1000];
 scriptBodyLine_t scriptErrorLine;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
+    createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
     globalScriptScope = createEmptyScriptScope();
     localScriptScope = globalScriptScope;
 }
@@ -499,7 +501,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
     return expressionResult;
 }
 
-int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
+int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBodyLine) {
     if (scriptBodyLine->index >= scriptBodyLine->scriptBody->length) {
         return false;
     }
@@ -554,46 +556,52 @@ int8_t evaluateStatement(scriptBodyLine_t *scriptBodyLine) {
     return seekNextScriptBodyLine(scriptBodyLine);
 }
 
-int8_t importScriptHelper(int8_t *path) {
+scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine) {
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_MISSING;
+    while (true) {
+        int8_t tempResult = evaluateStatement(&output, scriptBodyLine);
+        if (!tempResult || scriptHasError) {
+            break;
+        }
+    }
+    return output;
+}
+
+void importScriptHelper(int8_t *path) {
     int32_t index = 0;
     while (index < scriptBodyList.length) {
         scriptBody_t tempScriptBody;
         getVectorElement(&tempScriptBody, &scriptBodyList, index);
         if (strcmp((char *)(tempScriptBody.path), (char *)path) == 0) {
-            return true;
+            return;
         }
         index += 1;
     }
     scriptBody_t tempScriptBody;
     int8_t tempResult = loadScriptBody(&tempScriptBody, path);
     if (!tempResult) {
-        return false;
+        reportScriptErrorWithoutLine((int8_t *)"Import file missing.");
+        return;
     }
     pushVectorElement(&scriptBodyList, &tempScriptBody);
     scriptBodyLine_t tempScriptBodyLine;
     tempScriptBodyLine.scriptBody = &tempScriptBody;
     tempScriptBodyLine.index = 0;
     tempScriptBodyLine.number = 1;
-    while (true) {
-        int8_t tempResult = evaluateStatement(&tempScriptBodyLine);
-        if (!tempResult) {
-            break;
-        }
-    }
-    return true;
+    evaluateScriptBody(&tempScriptBodyLine);
 }
 
-int8_t importScript(int8_t *path) {
+void importScript(int8_t *path) {
     path = mallocRealpath(path);
-    int8_t output = importScriptHelper(path);
+    importScriptHelper(path);
     free(path);
-    return output;
 }
 
 int8_t runScript(int8_t *path) {
     scriptHasError = false;
     scriptErrorLine.number = -1;
-    int8_t output = importScript(path);
+    importScript(path);
     if (scriptHasError) {
         int8_t tempText[1000];
         if (scriptErrorLine.number < 0) {
@@ -603,5 +611,5 @@ int8_t runScript(int8_t *path) {
         }
         notifyUser(tempText);
     }
-    return output;
+    return !scriptHasError;
 }

@@ -9,6 +9,7 @@
 #include <time.h>
 #include <curses.h>
 #include <signal.h>
+#include <unistd.h>
 #include "utilities.h"
 #include "textAllocation.h"
 #include "textLine.h"
@@ -1193,7 +1194,9 @@ int8_t initializeApplication() {
     
     initializeScriptingEnvironment();
     if (!tempIsTesting) {
-        runScript(rcScriptFilePath);
+        if (access((char *)rcScriptFilePath, F_OK) != -1) {
+            runScript(rcScriptFilePath);
+        }
     }
     
     return true;
