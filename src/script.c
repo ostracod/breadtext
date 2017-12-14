@@ -31,6 +31,10 @@ scriptBodyLine_t scriptErrorLine;
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
+    scriptBranch_t tempBranch;
+    tempBranch.type = SCRIPT_BRANCH_TYPE_ROOT;
+    tempBranch.shouldIgnore = false;
+    pushVectorElement(&scriptBranchStack, &tempBranch);
     globalScriptScope = createEmptyScriptScope();
     localScriptScope = globalScriptScope;
 }
@@ -51,22 +55,21 @@ int8_t characterIsEndOfScriptLine(int8_t character) {
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
-// Returns whether the operation was successful.
-int8_t getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
+void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
     createEmptyVector(destination, sizeof(scriptValue_t));
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
         if (characterIsEndOfScriptLine(tempCharacter)) {
             reportScriptError((int8_t *)"Unexpected end of expression list.", scriptBodyPos->scriptBodyLine);
-            return false;
+            return;
         }
         if (tempCharacter == endCharacter) {
             break;
         }
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
         if (scriptHasError) {
-            return false;
+            return;
         }
         pushVectorElement(destination, &(tempResult.value));
         scriptBodyPosSkipWhitespace(scriptBodyPos);
@@ -77,14 +80,12 @@ int8_t getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBody
             break;
         } else {
             reportScriptError((int8_t *)"Bad expression list.", scriptBodyPos->scriptBodyLine);
-            return false;
+            return;
         }
     }
-    return true;
 }
 
-// Returns whether the operation was successful.
-int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector_t *argumentList) {
+void invokeFunction(scriptValue_t *destination, scriptValue_t function, vector_t *argumentList) {
     int32_t tempArgumentCount = argumentList->length;
     if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
         scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
@@ -93,7 +94,7 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
             {
                 if (tempArgumentCount != 1) {
                     reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return false;
+                    return;
                 }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
@@ -107,13 +108,12 @@ int8_t invokeFunction(scriptValue_t *destination, scriptValue_t function, vector
             {
                 if (tempArgumentCount != 0) {
                     reportScriptErrorWithoutLine((int8_t *)"Unknown function.");
-                    return false;
+                    return;
                 }
                 break;
             }
         }
     }
-    return true;
 }
 
 int8_t escapeScriptCharacter(int8_t character) {
@@ -292,8 +292,8 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         if (tempFirstCharacter == '[') {
             scriptBodyPos->index += 1;
             vector_t *tempList = malloc(sizeof(vector_t));
-            int8_t tempResult = getScriptBodyValueList(tempList, scriptBodyPos, ']');
-            if (!tempResult) {
+            getScriptBodyValueList(tempList, scriptBodyPos, ']');
+            if (scriptHasError) {
                 return expressionResult;
             }
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
@@ -362,16 +362,14 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             if (tempFirstCharacter == '(') {
                 scriptBodyPos->index += 1;
                 vector_t tempArgumentList;
-                int8_t tempResult = getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
-                if (!tempResult) {
+                getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
+                if (scriptHasError) {
                     return expressionResult;
                 }
                 scriptValue_t tempValue;
-                tempResult = invokeFunction(&tempValue, expressionResult.value, &tempArgumentList);
-                if (!tempResult) {
-                    if (scriptHasError) {
-                        scriptErrorLine = *(scriptBodyPos->scriptBodyLine);
-                    }
+                invokeFunction(&tempValue, expressionResult.value, &tempArgumentList);
+                if (scriptHasError) {
+                    scriptErrorLine = *(scriptBodyPos->scriptBodyLine);
                     return expressionResult;
                 }
                 expressionResult.value = tempValue;
@@ -544,6 +542,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 tempVariable->value = tempResult.value;
             }
             return seekNextScriptBodyLine(scriptBodyLine);
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+            // TODO: implement.
+            
         }
     }
     scriptBodyPos_t tempScriptBodyPos;
