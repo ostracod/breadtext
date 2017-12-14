@@ -508,54 +508,96 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     scriptBodyPos.index = scriptBodyLine->index;
     scriptBodyPosSkipWhitespace(&scriptBodyPos);
     int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
-    if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
-        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dec")) {
-            scriptBodyPosSkipWhitespace(&scriptBodyPos);
-            int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
-            if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
-                reportScriptError((int8_t *)"Missing declaration name.", scriptBodyLine);
-                return false;
+    scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+    if (currentBranch->shouldIgnore) {
+        // TODO: Use lastBranch->shouldIgnore to deactivate else statements.
+        scriptBranch_t *lastBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 2);
+        if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+                scriptBranch_t tempBranch;
+                tempBranch.type = SCRIPT_BRANCH_TYPE_IF;
+                tempBranch.shouldIgnore = true;
+                tempBranch.hasExecuted = false;
+                pushVectorElement(&scriptBranchStack, &tempBranch);
+                return seekNextScriptBodyLine(scriptBodyLine);
             }
-            scriptBodyPos_t tempScriptBodyPos;
-            tempScriptBodyPos = scriptBodyPos;
-            scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
-            int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
-            int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
-            int8_t tempName[tempLength + 1];
-            copyData(tempName, tempText, tempLength);
-            tempName[tempLength] = 0;
-            scriptVariable_t *tempVariable = scriptScopeFindVariable(localScriptScope, tempName);
-            if (tempVariable == NULL) {
-                scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
-                tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+                removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+                return seekNextScriptBodyLine(scriptBodyLine);
             }
-            scriptBodyPos = tempScriptBodyPos;
-            scriptBodyPosSkipWhitespace(&scriptBodyPos);
-            int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
-            if (tempCharacter == '=') {
-                scriptBodyPos.index += 1;
+        }
+        return seekNextScriptBodyLine(scriptBodyLine);
+    } else {
+        if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dec")) {
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+                    reportScriptError((int8_t *)"Missing declaration name.", scriptBodyLine);
+                    return false;
+                }
+                scriptBodyPos_t tempScriptBodyPos;
+                tempScriptBodyPos = scriptBodyPos;
+                scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+                int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+                int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+                int8_t tempName[tempLength + 1];
+                copyData(tempName, tempText, tempLength);
+                tempName[tempLength] = 0;
+                scriptVariable_t *tempVariable = scriptScopeFindVariable(localScriptScope, tempName);
+                if (tempVariable == NULL) {
+                    scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
+                    tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+                }
+                scriptBodyPos = tempScriptBodyPos;
+                scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                if (tempCharacter == '=') {
+                    scriptBodyPos.index += 1;
+                    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                    expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                    if (scriptHasError) {
+                        return false;
+                    }
+                    tempVariable->value = tempResult.value;
+                }
+                return seekNextScriptBodyLine(scriptBodyLine);
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
                 expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
                 if (scriptHasError) {
                     return false;
                 }
-                tempVariable->value = tempResult.value;
+                if (tempResult.value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+                    double tempCondition = *(double *)&(tempResult.value.data);
+                    int8_t tempShouldExecute = (tempCondition != 0);
+                    scriptBranch_t tempBranch;
+                    tempBranch.type = SCRIPT_BRANCH_TYPE_IF;
+                    tempBranch.shouldIgnore = !tempShouldExecute;
+                    tempBranch.hasExecuted = tempShouldExecute;
+                    pushVectorElement(&scriptBranchStack, &tempBranch);
+                    return seekNextScriptBodyLine(scriptBodyLine);
+                } else {
+                    reportScriptError((int8_t *)"Invalid condition type.", scriptBodyLine);
+                    return false;
+                }
             }
-            return seekNextScriptBodyLine(scriptBodyLine);
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+                if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
+                    removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+                    return seekNextScriptBodyLine(scriptBodyLine);
+                }
+            }
         }
-        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
-            // TODO: implement.
-            
+        scriptBodyPos_t tempScriptBodyPos;
+        tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
+        tempScriptBodyPos.index = scriptBodyLine->index;
+        evaluateExpression(&tempScriptBodyPos, 99);
+        if (scriptHasError) {
+            return false;
         }
+        return seekNextScriptBodyLine(scriptBodyLine);
     }
-    scriptBodyPos_t tempScriptBodyPos;
-    tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
-    tempScriptBodyPos.index = scriptBodyLine->index;
-    evaluateExpression(&tempScriptBodyPos, 99);
-    if (scriptHasError) {
-        return false;
-    }
-    return seekNextScriptBodyLine(scriptBodyLine);
 }
 
 scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine) {

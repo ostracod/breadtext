@@ -55,7 +55,7 @@ void *findVectorElement(vector_t *vector, int64_t index) {
 
 void insertVectorElement(vector_t *vector, int64_t index, void *source) {
     setVectorLength(vector, vector->length + 1);
-    copyData(vector->data + (index + 1) * vector->elementSize, vector->data + index * vector->elementSize, (vector->length - index) * vector->elementSize);
+    copyData(vector->data + (index + 1) * vector->elementSize, vector->data + index * vector->elementSize, (vector->length - index - 1) * vector->elementSize);
     copyData(vector->data + index * vector->elementSize, source, vector->elementSize);
 }
 
