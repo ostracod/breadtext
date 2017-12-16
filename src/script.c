@@ -1090,6 +1090,33 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 index -= 1;
             }
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"ret")) {
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+            if (!characterIsEndOfScriptLine(tempCharacter)) {
+                expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                if (scriptHasError) {
+                    return false;
+                }
+                *returnValue = tempResult.value;
+            } else {
+                returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
+            }
+            int64_t index = scriptBranchStack.length - 1;
+            while (true) {
+                if (index < 0) {
+                    reportScriptError((int8_t *)"Invalid return statement.", scriptBodyLine);
+                    return false;
+                }
+                scriptBranch_t tempBranch;
+                getVectorElement(&tempBranch, &scriptBranchStack, index);
+                removeVectorElement(&scriptBranchStack, index);
+                if (tempBranch.type == SCRIPT_BRANCH_TYPE_FUNCTION) {
+                    return false;
+                }
+                index -= 1;
+            }
+        }
         scriptBodyPos_t tempScriptBodyPos;
         tempScriptBodyPos.scriptBodyLine = scriptBodyLine;
         tempScriptBodyPos.index = scriptBodyLine->index;
