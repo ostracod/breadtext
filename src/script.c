@@ -1508,7 +1508,22 @@ int8_t runScript(int8_t *path) {
         if (scriptErrorLine.number < 0) {
             sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
         } else {
-            sprintf((char *)tempText, "ERROR: %s (Line %lld)", (char *)scriptErrorMessage, scriptErrorLine.number);
+            int8_t *tempPath = scriptErrorLine.scriptBody->path;
+            int64_t tempFileNameIndex = strlen((char *)tempPath);
+            while (tempFileNameIndex > 0) {
+                int8_t tempCharacter = tempPath[tempFileNameIndex - 1];
+                if (tempCharacter == '/') {
+                    break;
+                }
+                tempFileNameIndex -= 1;
+            }
+            sprintf(
+                (char *)tempText,
+                "ERROR: %s (Line %lld, %s)",
+                (char *)scriptErrorMessage,
+                scriptErrorLine.number,
+                (char *)(tempPath + tempFileNameIndex)
+            );
         }
         notifyUser(tempText);
     }
