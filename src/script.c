@@ -1164,8 +1164,21 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"greedy")) {
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
                 if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dirtbag")) {
-                    // TODO: Implement.
-                    
+                    int64_t index = 0;
+                    while (index < tempScope->variableList.length) {
+                        scriptVariable_t *tempSourceVariable = findVectorElement(&(tempScope->variableList), index);
+                        int8_t *tempName = tempSourceVariable->name;
+                        scriptVariable_t *tempDestinationVariable = scriptScopeFindVariable(localScriptScope, tempName);
+                        if (tempDestinationVariable == NULL) {
+                            scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
+                            tempDestinationVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+                        } else {
+                            reportScriptError((int8_t *)"Greedy dirtbag collision.", scriptBodyLine);
+                            return false;
+                        }
+                        tempDestinationVariable->value = tempSourceVariable->value;
+                        index += 1;
+                    }
                     return seekNextScriptBodyLine(scriptBodyLine);
                 }
             }
