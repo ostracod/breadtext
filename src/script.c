@@ -510,7 +510,6 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     if (currentBranch->shouldIgnore) {
-        // TODO: Use lastBranch->shouldIgnore to deactivate else statements.
         scriptBranch_t *lastBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 2);
         if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
@@ -520,6 +519,15 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 tempBranch.hasExecuted = false;
                 pushVectorElement(&scriptBranchStack, &tempBranch);
                 return seekNextScriptBodyLine(scriptBodyLine);
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
+                if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
+                    if (!lastBranch->shouldIgnore && !currentBranch->hasExecuted) {
+                        currentBranch->shouldIgnore = false;
+                        currentBranch->hasExecuted = true;
+                    }
+                    return seekNextScriptBodyLine(scriptBodyLine);
+                }
             }
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
                 removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
@@ -580,6 +588,12 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 } else {
                     reportScriptError((int8_t *)"Invalid condition type.", scriptBodyLine);
                     return false;
+                }
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
+                if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
+                    currentBranch->shouldIgnore = true;
+                    return seekNextScriptBodyLine(scriptBodyLine);
                 }
             }
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
