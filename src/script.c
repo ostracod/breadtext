@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 #include <curses.h>
 #include "utilities.h"
 #include "vector.h"
@@ -146,6 +147,45 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
                     expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                     *(double *)&(expressionResult.value.data) = (*(double *)&(tempResult.value.data) == 0.0);
+                } else {
+                    reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                    return expressionResult;
+                }
+                break;
+            }
+            case SCRIPT_OPERATOR_BITWISE_NOT:
+            {
+                if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                    expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)&(expressionResult.value.data) = (double)~(uint32_t)*(double *)&(tempResult.value.data);
+                } else {
+                    reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                    return expressionResult;
+                }
+                break;
+            }
+            case SCRIPT_OPERATOR_INCREMENT_PREFIX:
+            {
+                if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                    if (tempResult.destinationType == DESTINATION_TYPE_VALUE) {
+                        scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
+                        *(double *)&(tempValue->data) += 1;
+                        expressionResult.value = *tempValue;
+                    }
+                } else {
+                    reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                    return expressionResult;
+                }
+                break;
+            }
+            case SCRIPT_OPERATOR_DECREMENT_PREFIX:
+            {
+                if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                    if (tempResult.destinationType == DESTINATION_TYPE_VALUE) {
+                        scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
+                        *(double *)&(tempValue->data) -= 1;
+                        expressionResult.value = *tempValue;
+                    }
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
                     return expressionResult;
@@ -343,6 +383,19 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     }
                     break;
                 }
+                case SCRIPT_OPERATOR_DECREMENT_POSTFIX:
+                {
+                    if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                        if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
+                            scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
+                            *(double *)&(tempValue->data) = *(double *)&(expressionResult.value.data) - 1;
+                        }
+                    } else {
+                        reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                        return expressionResult;
+                    }
+                    break;
+                }
                 default:
                 {
                     break;
@@ -453,10 +506,159 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         }
                         break;
                     }
+                    case SCRIPT_OPERATOR_SUBTRACT:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            *(double *)&(expressionResult.value.data) -= *(double *)&(tempResult.value.data);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
                     case SCRIPT_OPERATOR_MULTIPLY:
                     {
                         if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                             *(double *)&(expressionResult.value.data) *= *(double *)&(tempResult.value.data);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_DIVIDE:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue = *(double *)&(tempResult.value.data);
+                            if (tempValue == 0.0) {
+                                reportScriptError((int8_t *)"Divide by zero.", scriptBodyPos->scriptBodyLine);
+                                return expressionResult;
+                            }
+                            *(double *)&(expressionResult.value.data) /= tempValue;
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_MODULUS:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            if (tempValue2 == 0.0) {
+                                reportScriptError((int8_t *)"Divide by zero.", scriptBodyPos->scriptBodyLine);
+                                return expressionResult;
+                            }
+                            *(double *)&(expressionResult.value.data) = fmod(tempValue1, tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BOOLEAN_AND:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 && tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BOOLEAN_OR:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 || tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BOOLEAN_XOR:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(!!tempValue1 ^ !!tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BITWISE_AND:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            uint32_t tempValue1 = (uint32_t)*(double *)&(expressionResult.value.data);
+                            uint32_t tempValue2 = (uint32_t)*(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 & tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BITWISE_OR:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            uint32_t tempValue1 = (uint32_t)*(double *)&(expressionResult.value.data);
+                            uint32_t tempValue2 = (uint32_t)*(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 | tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BITWISE_XOR:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            uint32_t tempValue1 = (uint32_t)*(double *)&(expressionResult.value.data);
+                            uint32_t tempValue2 = (uint32_t)*(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 ^ tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BITSHIFT_LEFT:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            uint32_t tempValue1 = (uint32_t)*(double *)&(expressionResult.value.data);
+                            uint32_t tempValue2 = (uint32_t)*(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 << tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_BITSHIFT_RIGHT:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            uint32_t tempValue1 = (uint32_t)*(double *)&(expressionResult.value.data);
+                            uint32_t tempValue2 = (uint32_t)*(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 >> tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_GREATER:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 > tempValue2);
                         } else {
                             reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
                             return expressionResult;
@@ -481,6 +683,66 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                             double tempValue1 = *(double *)&(expressionResult.value.data);
                             double tempValue2 = *(double *)&(tempResult.value.data);
                             *(double *)&(expressionResult.value.data) = (double)(tempValue1 == tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_NOT_EQUAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 != tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_GREATER_OR_EQUAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 >= tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_LESS_OR_EQUAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 <= tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_IDENTICAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 == tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_NOT_IDENTICAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 != tempValue2);
                         } else {
                             reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
                             return expressionResult;
