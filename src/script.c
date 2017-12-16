@@ -52,6 +52,7 @@ int8_t characterIsEndOfScriptLine(int8_t character) {
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine);
+scriptBody_t *importScript(int8_t *path);
 
 void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
     createEmptyVector(destination, sizeof(scriptValue_t));
@@ -1115,6 +1116,29 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     vector_t *currentScopeStack = &(currentBranch->line.scriptBody->scopeStack);
     globalScriptScope = findVectorElement(currentScopeStack, 0);
     localScriptScope = findVectorElement(currentScopeStack, currentScopeStack->length - 1);
+    if (currentBranch->type == SCRIPT_BRANCH_TYPE_IMPORT) {
+        if (!currentBranch->shouldIgnore) {
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"share")) {
+                // TODO: Implement.
+                
+                return seekNextScriptBodyLine(scriptBodyLine);
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"greedy")) {
+                scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dirtbag")) {
+                    // TODO: Implement.
+                    
+                    return seekNextScriptBodyLine(scriptBodyLine);
+                }
+            }
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+            removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+            return seekNextScriptBodyLine(scriptBodyLine);
+        }
+        reportScriptError((int8_t *)"Invalid statement in import body.", scriptBodyLine);
+        return false;
+    }
     if (currentBranch->shouldIgnore) {
         scriptBranch_t *lastBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 2);
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
@@ -1351,6 +1375,27 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     return false;
                 }
                 index -= 1;
+            }
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"import")) {
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
+            if (tempResult.value.type == SCRIPT_VALUE_TYPE_STRING) {
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempResult.value.data);
+                vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                scriptBranch_t tempBranch;
+                tempBranch.type = SCRIPT_BRANCH_TYPE_IMPORT;
+                tempBranch.shouldIgnore = false;
+                tempBranch.line = *scriptBodyLine;
+                tempBranch.importScriptBody = importScript(tempText->data);
+                pushVectorElement(&scriptBranchStack, &tempBranch);
+                return seekNextScriptBodyLine(scriptBodyLine);
+            } else {
+                reportScriptError((int8_t *)"Invalid path type.", scriptBodyLine);
+                return false;
             }
         }
         scriptBodyPos_t tempScriptBodyPos;

@@ -90,6 +90,7 @@
 #define SCRIPT_BRANCH_TYPE_IF 2
 #define SCRIPT_BRANCH_TYPE_WHILE 3
 #define SCRIPT_BRANCH_TYPE_FUNCTION 4
+#define SCRIPT_BRANCH_TYPE_IMPORT 5
 
 typedef struct scriptValue {
     int8_t type;
@@ -162,6 +163,7 @@ typedef struct scriptBranch {
     int8_t shouldIgnore;
     int8_t hasExecuted;
     scriptBodyLine_t line;
+    scriptBody_t *importScriptBody;
 } scriptBranch_t;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
