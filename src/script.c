@@ -63,6 +63,7 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
             return;
         }
         if (tempCharacter == endCharacter) {
+            scriptBodyPos->index += 1;
             break;
         }
         expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
@@ -75,6 +76,7 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
         if (tempCharacter == ',') {
             scriptBodyPos->index += 1;
         } else if (tempCharacter == endCharacter) {
+            scriptBodyPos->index += 1;
             break;
         } else {
             reportScriptError((int8_t *)"Bad expression list.", scriptBodyPos->scriptBodyLine);
