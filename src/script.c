@@ -1376,27 +1376,28 @@ scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine) {
     return output;
 }
 
-void importScriptHelper(int8_t *path) {
+scriptBody_t *importScriptHelper(int8_t *path) {
     int32_t index = 0;
     while (index < scriptBodyList.length) {
-        scriptBody_t tempScriptBody;
-        getVectorElement(&tempScriptBody, &scriptBodyList, index);
-        if (strcmp((char *)(tempScriptBody.path), (char *)path) == 0) {
-            return;
+        scriptBody_t *tempScriptBody;
+        tempScriptBody = findVectorElement(&scriptBodyList, index);
+        if (strcmp((char *)(tempScriptBody->path), (char *)path) == 0) {
+            return tempScriptBody;
         }
         index += 1;
     }
-    scriptBody_t tempScriptBody;
-    int8_t tempResult = loadScriptBody(&tempScriptBody, path);
+    scriptBody_t tempNewScriptBody;
+    int8_t tempResult = loadScriptBody(&tempNewScriptBody, path);
     if (!tempResult) {
         reportScriptErrorWithoutLine((int8_t *)"Import file missing.");
-        return;
+        return NULL;
     }
-    createEmptyVector(&(tempScriptBody.scopeStack), sizeof(scriptScope_t));
-    scriptBodyAddScope(&tempScriptBody, createEmptyScriptScope());
-    pushVectorElement(&scriptBodyList, &tempScriptBody);
+    createEmptyVector(&(tempNewScriptBody.scopeStack), sizeof(scriptScope_t));
+    scriptBodyAddScope(&tempNewScriptBody, createEmptyScriptScope());
+    pushVectorElement(&scriptBodyList, &tempNewScriptBody);
+    scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, scriptBodyList.length - 1);
     scriptBodyLine_t tempScriptBodyLine;
-    tempScriptBodyLine.scriptBody = &tempScriptBody;
+    tempScriptBodyLine.scriptBody = tempScriptBody;
     tempScriptBodyLine.index = 0;
     tempScriptBodyLine.number = 1;
     scriptBranch_t tempBranch;
@@ -1405,12 +1406,14 @@ void importScriptHelper(int8_t *path) {
     tempBranch.line = tempScriptBodyLine;
     pushVectorElement(&scriptBranchStack, &tempBranch);
     evaluateScriptBody(&tempScriptBodyLine);
+    return tempScriptBody;
 }
 
-void importScript(int8_t *path) {
+scriptBody_t *importScript(int8_t *path) {
     path = mallocRealpath(path);
-    importScriptHelper(path);
+    scriptBody_t *output = importScriptHelper(path);
     free(path);
+    return output;
 }
 
 int8_t runScript(int8_t *path) {
