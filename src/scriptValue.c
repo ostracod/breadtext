@@ -296,10 +296,16 @@ int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t
     return false;
 }
 
-scriptScope_t *createEmptyScriptScope() {
-    scriptScope_t *output = malloc(sizeof(scriptScope_t));
-    createEmptyVector(&(output->variableList), sizeof(scriptVariable_t));
+scriptScope_t createEmptyScriptScope() {
+    scriptScope_t output;
+    createEmptyVector(&(output.variableList), sizeof(scriptVariable_t));
     return output;
+}
+
+scriptScope_t *scriptBodyAddScope(scriptBody_t *body, scriptScope_t scope) {
+    int32_t index = body->scopeStack.length;
+    pushVectorElement(&(body->scopeStack), &scope);
+    return findVectorElement(&(body->scopeStack), index);
 }
 
 scriptVariable_t createEmptyScriptVariable(int8_t *name) {
