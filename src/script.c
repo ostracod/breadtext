@@ -269,6 +269,10 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
                         *(double *)&(tempValue->data) += 1;
                         expressionResult.value = *tempValue;
+                    } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
+                        int8_t *tempValue = (int8_t *)(tempResult.destination);
+                        *tempValue += 1;
+                        *(double *)&(expressionResult.value.data) = (double)*tempValue;
                     }
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
@@ -283,6 +287,10 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
                         *(double *)&(tempValue->data) -= 1;
                         expressionResult.value = *tempValue;
+                    } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
+                        int8_t *tempValue = (int8_t *)(tempResult.destination);
+                        *tempValue -= 1;
+                        *(double *)&(expressionResult.value.data) = (double)*tempValue;
                     }
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
@@ -459,51 +467,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         return expressionResult;
     }
     while (true) {
-        scriptBodyPosSkipWhitespace(scriptBodyPos);
-        int8_t hasProcessedOperator = false;
-        scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_UNARY_POSTFIX);
-        if (tempOperator != NULL) {
-            scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
-            int8_t tempType = expressionResult.value.type;
-            switch (tempOperator->number) {
-                case SCRIPT_OPERATOR_INCREMENT_POSTFIX:
-                {
-                    if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                        if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
-                            scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
-                            *(double *)&(tempValue->data) = *(double *)&(expressionResult.value.data) + 1;
-                        }
-                    } else {
-                        reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
-                        return expressionResult;
-                    }
-                    break;
-                }
-                case SCRIPT_OPERATOR_DECREMENT_POSTFIX:
-                {
-                    if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                        if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
-                            scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
-                            *(double *)&(tempValue->data) = *(double *)&(expressionResult.value.data) - 1;
-                        }
-                    } else {
-                        reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
-                        return expressionResult;
-                    }
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-            hasProcessedOperator = true;
-        }
-        if (!hasProcessedOperator) {
-            break;
-        }
-    }
-    while (true) {
         int8_t hasProcessedOperator = false;
         while (true) {
             scriptBodyPosSkipWhitespace(scriptBodyPos);
@@ -581,6 +544,61 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 hasProcessedOperator = true;
                 break;
             }
+            scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_UNARY_POSTFIX);
+            if (tempOperator != NULL) {
+                scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
+                int8_t tempType = expressionResult.value.type;
+                switch (tempOperator->number) {
+                    case SCRIPT_OPERATOR_INCREMENT_POSTFIX:
+                    {
+                        if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                            if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
+                                scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
+                                *(double *)&(tempValue->data) += 1;
+                            } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
+                                int8_t *tempValue = (int8_t *)(expressionResult.destination);
+                                *tempValue += 1;
+                            }
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    case SCRIPT_OPERATOR_DECREMENT_POSTFIX:
+                    {
+                        if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                            if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
+                                scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
+                                *(double *)&(tempValue->data) -= 1;
+                            } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
+                                int8_t *tempValue = (int8_t *)(expressionResult.destination);
+                                *tempValue -= 1;
+                            }
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                hasProcessedOperator = true;
+                break;
+            }
+            break;
+        }
+        if (!hasProcessedOperator) {
+            break;
+        }
+    }
+    while (true) {
+        int8_t hasProcessedOperator = false;
+        while (true) {
+            scriptBodyPosSkipWhitespace(scriptBodyPos);
             scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_BINARY);
             if (tempOperator != NULL) {
                 if (tempOperator->precedence >= precedence) {
