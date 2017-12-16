@@ -1118,9 +1118,47 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     localScriptScope = findVectorElement(currentScopeStack, currentScopeStack->length - 1);
     if (currentBranch->type == SCRIPT_BRANCH_TYPE_IMPORT) {
         if (!currentBranch->shouldIgnore) {
+            scriptScope_t *tempScope = findVectorElement(&(currentBranch->importScriptBody->scopeStack), 0);
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"share")) {
-                // TODO: Implement.
-                
+                while (true) {
+                    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                    if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+                        reportScriptError((int8_t *)"Bad variable name.", scriptBodyLine);
+                        return false;
+                    }
+                    scriptBodyPos_t tempScriptBodyPos;
+                    tempScriptBodyPos = scriptBodyPos;
+                    scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+                    int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+                    int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+                    int8_t tempName[tempLength + 1];
+                    copyData(tempName, tempText, tempLength);
+                    tempName[tempLength] = 0;
+                    scriptVariable_t *tempSourceVariable = scriptScopeFindVariable(tempScope, tempName);
+                    if (tempSourceVariable == NULL) {
+                        reportScriptError((int8_t *)"Missing variable.", scriptBodyLine);
+                        return false;
+                    }
+                    scriptVariable_t *tempDestinationVariable = scriptScopeFindVariable(localScriptScope, tempName);
+                    if (tempDestinationVariable == NULL) {
+                        scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
+                        tempDestinationVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+                    }
+                    tempDestinationVariable->value = tempSourceVariable->value;
+                    scriptBodyPos = tempScriptBodyPos;
+                    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                    int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                    if (characterIsEndOfScriptLine(tempCharacter)) {
+                        break;
+                    }
+                    if (tempCharacter == ',') {
+                        scriptBodyPos.index += 1;
+                    } else {
+                        reportScriptError((int8_t *)"Unexpected token.", scriptBodyLine);
+                        return false;
+                    }
+                }
                 return seekNextScriptBodyLine(scriptBodyLine);
             }
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"greedy")) {
