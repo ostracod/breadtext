@@ -892,6 +892,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     {
                         if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                             *(double *)&(expressionResult.value.data) += *(double *)&(tempResult.value.data);
+                        } else if (tempType1 == SCRIPT_VALUE_TYPE_STRING && tempType2 == SCRIPT_VALUE_TYPE_STRING) {
+                            scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)&(expressionResult.value.data);
+                            scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)&(tempResult.value.data);
+                            vector_t *tempText1 = *(vector_t **)&(tempHeapValue1->data);
+                            vector_t *tempText2 = *(vector_t **)&(tempHeapValue2->data);
+                            removeVectorElement(tempText1, tempText1->length - 1);
+                            pushVectorOntoVector(tempText1, tempText2);
                         } else {
                             reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
                             return expressionResult;
