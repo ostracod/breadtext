@@ -523,8 +523,32 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
                 if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
                     if (!lastBranch->shouldIgnore && !currentBranch->hasExecuted) {
-                        currentBranch->shouldIgnore = false;
-                        currentBranch->hasExecuted = true;
+                        int8_t tempIsElseIf = false;
+                        scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                        int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                        if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+                            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+                                tempIsElseIf = true;
+                                expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                                if (scriptHasError) {
+                                    return false;
+                                }
+                                if (tempResult.value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+                                    double tempCondition = *(double *)&(tempResult.value.data);
+                                    if (tempCondition) {
+                                        currentBranch->shouldIgnore = false;
+                                        currentBranch->hasExecuted = true;
+                                    }
+                                } else {
+                                    reportScriptError((int8_t *)"Invalid condition type.", scriptBodyLine);
+                                    return false;
+                                }
+                            }
+                        }
+                        if (!tempIsElseIf) {
+                            currentBranch->shouldIgnore = false;
+                            currentBranch->hasExecuted = true;
+                        }
                     }
                     return seekNextScriptBodyLine(scriptBodyLine);
                 }
