@@ -475,6 +475,18 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         }
                         break;
                     }
+                    case SCRIPT_OPERATOR_EQUAL:
+                    {
+                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                            double tempValue1 = *(double *)&(expressionResult.value.data);
+                            double tempValue2 = *(double *)&(tempResult.value.data);
+                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 == tempValue2);
+                        } else {
+                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
+                            return expressionResult;
+                        }
+                        break;
+                    }
                     case SCRIPT_OPERATOR_ASSIGN:
                     {
                         if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
@@ -660,6 +672,39 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     *scriptBodyLine = currentBranch->line;
                     removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
                     return true;
+                }
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"break")) {
+                int64_t index = scriptBranchStack.length - 1;
+                while (true) {
+                    if (index < 0) {
+                        reportScriptError((int8_t *)"Invalid break statement.", scriptBodyLine);
+                        return false;
+                    }
+                    scriptBranch_t *tempBranch = findVectorElement(&scriptBranchStack, index);
+                    tempBranch->shouldIgnore = true;
+                    if (tempBranch->type == SCRIPT_BRANCH_TYPE_WHILE) {
+                        break;
+                    }
+                    index -= 1;
+                }
+                return seekNextScriptBodyLine(scriptBodyLine);
+            }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"continue")) {
+                int64_t index = scriptBranchStack.length - 1;
+                while (true) {
+                    if (index < 0) {
+                        reportScriptError((int8_t *)"Invalid continue statement.", scriptBodyLine);
+                        return false;
+                    }
+                    scriptBranch_t tempBranch;
+                    getVectorElement(&tempBranch, &scriptBranchStack, index);
+                    removeVectorElement(&scriptBranchStack, index);
+                    if (tempBranch.type == SCRIPT_BRANCH_TYPE_WHILE) {
+                        *scriptBodyLine = tempBranch.line;
+                        return true;
+                    }
+                    index -= 1;
                 }
             }
         }
