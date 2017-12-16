@@ -11,6 +11,7 @@ typedef struct vector {
 
 void createEmptyVector(vector_t *destination, int64_t elementSize);
 void createVectorFromArray(vector_t *destination, int64_t elementSize, void *source, int64_t elementCount);
+void copyVector(vector_t *destination, vector_t *source);
 void deleteVector(vector_t *vector);
 void setVectorLength(vector_t *vector, int64_t length);
 void getVectorElement(void *destination, vector_t *vector, int64_t index);
@@ -20,6 +21,8 @@ void insertVectorElement(vector_t *vector, int64_t index, void *source);
 void removeVectorElement(vector_t *vector, int64_t index);
 void pushVectorElement(vector_t *vector, void *source);
 void popVectorElement(void *destination, vector_t *vector);
+void insertVectorIntoVector(vector_t *vector, int64_t index, vector_t *source);
+void pushVectorOntoVector(vector_t *vector, vector_t *source);
 
 // VECTOR_HEADER_FILE
 #endif

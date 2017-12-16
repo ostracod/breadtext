@@ -25,6 +25,14 @@ void createVectorFromArray(vector_t *destination, int64_t elementSize, void *sou
     copyData(destination->data, source, elementSize * elementCount);
 }
 
+void copyVector(vector_t *destination, vector_t *source) {
+    destination->elementSize = source->elementSize;
+    destination->dataSize = source->dataSize;
+    destination->data = malloc(source->dataSize);
+    copyData(destination->data, source->data, source->dataSize);
+    destination->length = source->length;
+}
+
 void deleteVector(vector_t *vector) {
     free(vector->data);
 }
@@ -72,6 +80,16 @@ void popVectorElement(void *destination, vector_t *vector) {
     int64_t index = vector->length - 1;
     getVectorElement(destination, vector, index);
     removeVectorElement(vector, index);
+}
+
+void insertVectorIntoVector(vector_t *vector, int64_t index, vector_t *source) {
+    setVectorLength(vector, vector->length + source->length);
+    copyData(vector->data + (index + source->length) * vector->elementSize, vector->data + index * vector->elementSize, (vector->length - index - source->length) * vector->elementSize);
+    copyData(vector->data + index * vector->elementSize, source->data, source->elementSize * source->length);
+}
+
+void pushVectorOntoVector(vector_t *vector, vector_t *source) {
+    insertVectorIntoVector(vector, vector->length, source);
 }
 
 
