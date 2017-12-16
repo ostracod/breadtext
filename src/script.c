@@ -924,6 +924,42 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     return false;
                 }
             }
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"func")) {
+                scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+                if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+                    reportScriptError((int8_t *)"Missing declaration name.", scriptBodyLine);
+                    return false;
+                }
+                scriptBodyPos_t tempScriptBodyPos;
+                tempScriptBodyPos = scriptBodyPos;
+                scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+                int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+                int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+                int8_t tempName[tempLength + 1];
+                copyData(tempName, tempText, tempLength);
+                tempName[tempLength] = 0;
+                scriptVariable_t *tempVariable = scriptScopeFindVariable(localScriptScope, tempName);
+                if (tempVariable == NULL) {
+                    scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
+                    tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
+                }
+                customScriptFunction_t *tempScriptFunction = malloc(sizeof(customScriptFunction_t));
+                tempScriptFunction->scriptBodyLine = *scriptBodyLine;
+                scriptHeapValue_t *tempHeapValue = malloc(sizeof(scriptHeapValue_t));
+                tempHeapValue->type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
+                *(customScriptFunction_t **)&(tempHeapValue->data) = tempScriptFunction;
+                scriptValue_t tempValue;
+                tempValue.type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
+                *(scriptHeapValue_t **)&(tempValue.data) = tempHeapValue;
+                tempVariable->value = tempValue;
+                scriptBranch_t tempBranch;
+                tempBranch.type = SCRIPT_BRANCH_TYPE_FUNCTION;
+                tempBranch.shouldIgnore = true;
+                tempBranch.line = *scriptBodyLine;
+                pushVectorElement(&scriptBranchStack, &tempBranch);
+                return seekNextScriptBodyLine(scriptBodyLine);
+            }
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
                 if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
                     removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
