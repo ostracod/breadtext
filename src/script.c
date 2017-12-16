@@ -439,8 +439,6 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             expressionResult.value.type = SCRIPT_VALUE_TYPE_NULL;
             break;
         }
-        // TODO: Handle more types of expressions.
-        
         reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
         return expressionResult;
     }
@@ -1052,6 +1050,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
             if (currentBranch->type == SCRIPT_BRANCH_TYPE_FUNCTION) {
                 removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+                // TODO: Clean up.
+                vector_t *tempScopeStack = &(scriptBodyLine->scriptBody->scopeStack);
+                removeVectorElement(tempScopeStack, tempScopeStack->length - 1);
                 returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
                 return false;
             }
