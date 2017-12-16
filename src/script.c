@@ -32,12 +32,6 @@ scriptBodyLine_t scriptErrorLine;
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
-    scriptBranch_t tempBranch;
-    tempBranch.type = SCRIPT_BRANCH_TYPE_ROOT;
-    tempBranch.shouldIgnore = false;
-    pushVectorElement(&scriptBranchStack, &tempBranch);
-    globalScriptScope = createEmptyScriptScope();
-    localScriptScope = globalScriptScope;
 }
 
 void reportScriptErrorWithoutLine(int8_t *message) {
@@ -795,6 +789,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     scriptBodyPosSkipWhitespace(&scriptBodyPos);
     int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+    vector_t *currentScopeStack = &(currentBranch->line.scriptBody->scopeStack);
+    globalScriptScope = findVectorElement(currentScopeStack, 0);
+    localScriptScope = findVectorElement(currentScopeStack, currentScopeStack->length - 1);
     if (currentBranch->shouldIgnore) {
         scriptBranch_t *lastBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 2);
         if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
@@ -803,6 +800,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 tempBranch.type = SCRIPT_BRANCH_TYPE_IF;
                 tempBranch.shouldIgnore = true;
                 tempBranch.hasExecuted = false;
+                tempBranch.line = *scriptBodyLine;
                 pushVectorElement(&scriptBranchStack, &tempBranch);
                 return seekNextScriptBodyLine(scriptBodyLine);
             }
@@ -893,6 +891,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     tempBranch.type = SCRIPT_BRANCH_TYPE_IF;
                     tempBranch.shouldIgnore = !tempShouldExecute;
                     tempBranch.hasExecuted = tempShouldExecute;
+                    tempBranch.line = *scriptBodyLine;
                     pushVectorElement(&scriptBranchStack, &tempBranch);
                     return seekNextScriptBodyLine(scriptBodyLine);
                 } else {
@@ -1009,11 +1008,18 @@ void importScriptHelper(int8_t *path) {
         reportScriptErrorWithoutLine((int8_t *)"Import file missing.");
         return;
     }
+    createEmptyVector(&(tempScriptBody.scopeStack), sizeof(scriptScope_t));
+    pushVectorElement(&(tempScriptBody.scopeStack), createEmptyScriptScope());
     pushVectorElement(&scriptBodyList, &tempScriptBody);
     scriptBodyLine_t tempScriptBodyLine;
     tempScriptBodyLine.scriptBody = &tempScriptBody;
     tempScriptBodyLine.index = 0;
     tempScriptBodyLine.number = 1;
+    scriptBranch_t tempBranch;
+    tempBranch.type = SCRIPT_BRANCH_TYPE_ROOT;
+    tempBranch.shouldIgnore = false;
+    tempBranch.line = tempScriptBodyLine;
+    pushVectorElement(&scriptBranchStack, &tempBranch);
     evaluateScriptBody(&tempScriptBodyLine);
 }
 

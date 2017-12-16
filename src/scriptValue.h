@@ -91,40 +91,6 @@
 #define SCRIPT_BRANCH_TYPE_WHILE 3
 #define SCRIPT_BRANCH_TYPE_FUNCTION 4
 
-typedef struct scriptBody {
-    int8_t *path;
-    int8_t *text;
-    int64_t length;
-} scriptBody_t;
-
-typedef struct scriptBodyLine {
-    scriptBody_t *scriptBody;
-    int64_t index;
-    int64_t number;
-} scriptBodyLine_t;
-
-typedef struct scriptBodyPos {
-    scriptBodyLine_t *scriptBodyLine;
-    int64_t index;
-} scriptBodyPos_t;
-
-typedef struct scriptOperator {
-    int8_t *text;
-    int32_t number;
-    int8_t type;
-    int8_t precedence;
-} scriptOperator_t;
-
-typedef struct scriptBuiltInFunction {
-    int8_t *name;
-    int32_t number;
-    int32_t argumentAmount;
-} scriptBuiltInFunction_t;
-
-typedef struct customScriptFunction {
-    scriptBodyLine_t scriptBodyLine;
-} customScriptFunction_t;
-
 typedef struct scriptValue {
     int8_t type;
     // For null, data is unused.
@@ -155,6 +121,41 @@ typedef struct scriptVariable {
 typedef struct scriptScope {
     vector_t variableList;
 } scriptScope_t;
+
+typedef struct scriptBody {
+    int8_t *path;
+    int8_t *text;
+    int64_t length;
+    vector_t scopeStack;
+} scriptBody_t;
+
+typedef struct scriptBodyLine {
+    scriptBody_t *scriptBody;
+    int64_t index;
+    int64_t number;
+} scriptBodyLine_t;
+
+typedef struct scriptBodyPos {
+    scriptBodyLine_t *scriptBodyLine;
+    int64_t index;
+} scriptBodyPos_t;
+
+typedef struct scriptOperator {
+    int8_t *text;
+    int32_t number;
+    int8_t type;
+    int8_t precedence;
+} scriptOperator_t;
+
+typedef struct scriptBuiltInFunction {
+    int8_t *name;
+    int32_t number;
+    int32_t argumentAmount;
+} scriptBuiltInFunction_t;
+
+typedef struct customScriptFunction {
+    scriptBodyLine_t scriptBodyLine;
+} customScriptFunction_t;
 
 typedef struct scriptBranch {
     int8_t type;
