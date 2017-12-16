@@ -809,26 +809,16 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     }
                     case SCRIPT_OPERATOR_EQUAL:
                     {
-                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                            double tempValue1 = *(double *)&(expressionResult.value.data);
-                            double tempValue2 = *(double *)&(tempResult.value.data);
-                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 == tempValue2);
-                        } else {
-                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            return expressionResult;
-                        }
+                        int8_t tempConditionResult = scriptValuesAreEqualShallow(&(expressionResult.value), &(tempResult.value));
+                        *(double *)&(expressionResult.value.data) = (double)tempConditionResult;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         break;
                     }
                     case SCRIPT_OPERATOR_NOT_EQUAL:
                     {
-                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                            double tempValue1 = *(double *)&(expressionResult.value.data);
-                            double tempValue2 = *(double *)&(tempResult.value.data);
-                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 != tempValue2);
-                        } else {
-                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            return expressionResult;
-                        }
+                        int8_t tempConditionResult = scriptValuesAreEqualShallow(&(expressionResult.value), &(tempResult.value));
+                        *(double *)&(expressionResult.value.data) = (double)!tempConditionResult;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         break;
                     }
                     case SCRIPT_OPERATOR_GREATER_OR_EQUAL:
@@ -857,26 +847,16 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     }
                     case SCRIPT_OPERATOR_IDENTICAL:
                     {
-                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                            double tempValue1 = *(double *)&(expressionResult.value.data);
-                            double tempValue2 = *(double *)&(tempResult.value.data);
-                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 == tempValue2);
-                        } else {
-                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            return expressionResult;
-                        }
+                        int8_t tempConditionResult = scriptValuesAreIdentical(&(expressionResult.value), &(tempResult.value));
+                        *(double *)&(expressionResult.value.data) = (double)tempConditionResult;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         break;
                     }
                     case SCRIPT_OPERATOR_NOT_IDENTICAL:
                     {
-                        if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                            double tempValue1 = *(double *)&(expressionResult.value.data);
-                            double tempValue2 = *(double *)&(tempResult.value.data);
-                            *(double *)&(expressionResult.value.data) = (double)(tempValue1 != tempValue2);
-                        } else {
-                            reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
-                            return expressionResult;
-                        }
+                        int8_t tempConditionResult = scriptValuesAreIdentical(&(expressionResult.value), &(tempResult.value));
+                        *(double *)&(expressionResult.value.data) = (double)!tempConditionResult;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         break;
                     }
                     case SCRIPT_OPERATOR_ASSIGN:
