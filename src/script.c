@@ -479,6 +479,26 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 output = convertTextToStringValue(tempBuffer);
                 break;
             }
+            case SCRIPT_FUNCTION_GET_CURSOR_CHAR_INDEX:
+            {
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)getTextPosIndex(&cursorTextPos);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_CURSOR_LINE_INDEX:
+            {
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(getTextLineNumber(cursorTextPos.line) - 1);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
