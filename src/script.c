@@ -383,6 +383,22 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_PRESS_KEY:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int32_t tempKey = (int32_t)*(double *)&(tempValue.data);
+                handleKey(tempKey);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
