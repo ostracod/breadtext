@@ -117,6 +117,7 @@ int8_t *helpText[] = {
     (int8_t *)"/regex (regex)",
     (int8_t *)"/reverseRegex (regex)",
     (int8_t *)"/replace (pattern) (text)",
+    (int8_t *)"/get (config variable)",
     (int8_t *)"/set (config variable) (value)",
     (int8_t *)"/getPath",
     (int8_t *)"/setPath (path)",
@@ -143,7 +144,8 @@ int8_t *helpText[] = {
 };
 
 void setColorScheme(int32_t number) {
-    if (number == 1) {
+    colorScheme = number;
+    if (colorScheme == 1) {
         colorSet[DEFAULT_COLOR] = WHITE_ON_BLACK;
         colorSet[COMMENT_COLOR] = RED_ON_BLACK;
         colorSet[LITERAL_COLOR] = GREEN_ON_BLACK;
@@ -152,16 +154,16 @@ void setColorScheme(int32_t number) {
         colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_WHITE;
         colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_WHITE;
         colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_WHITE;
-        return;
+    } else {
+        colorSet[DEFAULT_COLOR] = BLACK_ON_WHITE;
+        colorSet[COMMENT_COLOR] = RED_ON_WHITE;
+        colorSet[LITERAL_COLOR] = GREEN_ON_WHITE;
+        colorSet[KEYWORD_COLOR] = CYAN_ON_WHITE;
+        colorSet[HIGHLIGHTED_DEFAULT_COLOR] = WHITE_ON_BLACK;
+        colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_BLACK;
+        colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_BLACK;
+        colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_BLACK;
     }
-    colorSet[DEFAULT_COLOR] = BLACK_ON_WHITE;
-    colorSet[COMMENT_COLOR] = RED_ON_WHITE;
-    colorSet[LITERAL_COLOR] = GREEN_ON_WHITE;
-    colorSet[KEYWORD_COLOR] = CYAN_ON_WHITE;
-    colorSet[HIGHLIGHTED_DEFAULT_COLOR] = WHITE_ON_BLACK;
-    colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_BLACK;
-    colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_BLACK;
-    colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_BLACK;
 }
 
 int64_t getTextLineRowCount(textLine_t *line) {

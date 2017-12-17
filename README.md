@@ -146,6 +146,7 @@ To view controls within BreadText, enter `/help`.
 `/regex (regex)`  
 `/reverseRegex (regex)`  
 `/replace (pattern) (text)`  
+`/get (config variable)`  
 `/set (config variable) (value)`  
 `/getPath`  
 `/setPath (path)`  

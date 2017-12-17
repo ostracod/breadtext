@@ -26,6 +26,7 @@ int32_t viewPortHeight;
 int8_t colorSet[8];
 textLine_t *topTextLine;
 int64_t topTextLineRow;
+int32_t colorScheme;
 
 void setColorScheme(int32_t number);
 int64_t getTextLineRowCount(textLine_t *line);

@@ -102,6 +102,9 @@ void deleteTextCommandCharacter() {
 }
 
 void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
+    if (destination != NULL) {
+        destination->type = SCRIPT_VALUE_TYPE_NULL;
+    }
     if (activityMode != TEXT_COMMAND_MODE) {
         setActivityMode(TEXT_COMMAND_MODE);
     }
@@ -281,6 +284,29 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         notifyUser(tempText);
         return;
     }
+    if (strcmp((char *)(termList[0]), "get") == 0) {
+        if (termListLength != 2) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Wrong number of arguments.");
+            return;
+        }
+        int64_t tempValue;
+        int8_t tempResult = getConfigurationVariable(&tempValue, termList[1]);
+        if (!tempResult) {
+            setActivityMode(PREVIOUS_MODE);
+            notifyUser((int8_t *)"Error: Could not get variable.");
+            return;
+        }
+        setActivityMode(PREVIOUS_MODE);
+        int8_t tempText[1000];
+        sprintf((char *)tempText, "%s: %lld", (char *)termList[1], (long long)(tempValue));
+        notifyUser(tempText);
+        if (destination != NULL) {
+            destination->type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)&(destination->data) = (double)tempValue;
+        }
+        return;
+    }
     if (strcmp((char *)(termList[0]), "set") == 0) {
         if (termListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
@@ -311,6 +337,9 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         }
         setActivityMode(PREVIOUS_MODE);
         notifyUser(filePath);
+        if (destination != NULL) {
+            *destination = convertTextToStringValue(filePath);
+        }
         return;
     }
     if (strcmp((char *)(termList[0]), "setPath") == 0) {
@@ -330,6 +359,9 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
     if (strcmp((char *)(termList[0]), "version") == 0) {
         setActivityMode(PREVIOUS_MODE);
         notifyUser(applicationVersion);
+        if (destination != NULL) {
+            *destination = convertTextToStringValue(applicationVersion);
+        }
         return;
     }
     if (strcmp((char *)(termList[0]), "crane") == 0) {

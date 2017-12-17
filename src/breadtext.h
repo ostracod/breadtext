@@ -74,6 +74,7 @@ void setTextPosIndex(textPos_t *pos, int64_t index);
 int8_t textPosIsAfterTextPos(textPos_t *textPos1, textPos_t *textPos2);
 void handleTextLineDeleted(textLine_t *lineToBeDeleted);
 void setActivityMode(int8_t mode);
+int8_t getConfigurationVariable(int64_t *destination, int8_t *name);
 int8_t setConfigurationVariable(int8_t *name, int64_t value);
 void storeInitialFileContents();
 void clearInitialFileContents();

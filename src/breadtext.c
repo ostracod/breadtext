@@ -875,6 +875,39 @@ void promptSingleCharacter() {
     singleCharacterAction = SINGLE_CHARACTER_ACTION_NONE;
 }
 
+int8_t getConfigurationVariable(int64_t *destination, int8_t *name) {
+    int8_t output = false;
+    if (strcmp((char *)name, "colorScheme") == 0) {
+        *destination = colorScheme;
+        output = true;
+    }
+    if (strcmp((char *)name, "indentationWidth") == 0) {
+        *destination = indentationWidth;
+        output = true;
+    }
+    if (strcmp((char *)name, "shouldUseHardTabs") == 0) {
+        *destination = shouldUseHardTabs;
+        output = true;
+    }
+    if (strcmp((char *)name, "isCaseSensitive") == 0) {
+        *destination = isCaseSensitive;
+        output = true;
+    }
+    if (strcmp((char *)name, "shouldUseSystemClipboard") == 0) {
+        *destination = shouldUseSystemClipboard;
+        output = true;
+    }
+    if (strcmp((char *)name, "shouldHighlightSyntax") == 0) {
+        *destination = shouldHighlightSyntax;
+        output = true;
+    }
+    if (strcmp((char *)name, "shouldUseXclip") == 0) {
+        *destination = shouldUseXclip;
+        output = true;
+    }
+    return output;
+}
+
 int8_t setConfigurationVariable(int8_t *name, int64_t value) {
     int8_t output = false;
     if (strcmp((char *)name, "colorScheme") == 0) {
