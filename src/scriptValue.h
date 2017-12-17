@@ -155,9 +155,9 @@ typedef struct scriptBuiltInFunction {
     int32_t argumentAmount;
 } scriptBuiltInFunction_t;
 
-typedef struct customScriptFunction {
+typedef struct scriptCustomFunction {
     scriptBodyLine_t scriptBodyLine;
-} customScriptFunction_t;
+} scriptCustomFunction_t;
 
 typedef struct scriptBranch {
     int8_t type;
@@ -188,6 +188,8 @@ typedef struct commandBinding {
     scriptValue_t callback;
 } commandBinding_t;
 
+scriptHeapValue_t *firstHeapValue;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
@@ -203,7 +205,9 @@ int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
+void deleteScriptCustomFunction(scriptCustomFunction_t *function);
 scriptHeapValue_t *createScriptHeapValue();
+void deleteScriptHeapValue(scriptHeapValue_t *value);
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);

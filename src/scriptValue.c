@@ -250,11 +250,44 @@ scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t l
     return NULL;
 }
 
+void deleteScriptCustomFunction(scriptCustomFunction_t *function) {
+    free(function);
+}
+
 scriptHeapValue_t *createScriptHeapValue() {
     scriptHeapValue_t *output = malloc(sizeof(scriptHeapValue_t));
-    // TODO: Manage garbage collection of the heap value.
-    
+    output->type = SCRIPT_VALUE_TYPE_MISSING;
+    output->previous = NULL;
+    output->next = firstHeapValue;
+    if (firstHeapValue != NULL) {
+        firstHeapValue->previous = output;
+    }
+    output->lockDepth = 0;
+    firstHeapValue = output;
     return output;
+}
+
+void deleteScriptHeapValue(scriptHeapValue_t *value) {
+    if (value->previous == NULL) {
+        firstHeapValue = value->next;
+    } else {
+        value->previous->next = value->next;
+    }
+    if (value->next != NULL) {
+        value->next->previous = value->previous;
+    }
+    int8_t tempType = value->type;
+    if (tempType == SCRIPT_VALUE_TYPE_STRING || tempType == SCRIPT_VALUE_TYPE_LIST) {
+        vector_t *tempVector = *(vector_t **)&(value->data);
+        cleanUpVector(tempVector);
+        free(tempVector);
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION) {
+        scriptCustomFunction_t *tempFunction = *(scriptCustomFunction_t **)&(value->data);
+        deleteScriptCustomFunction(tempFunction);
+        free(tempFunction);
+    }
+    free(value);
 }
 
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {

@@ -33,7 +33,7 @@ void copyVector(vector_t *destination, vector_t *source) {
     destination->length = source->length;
 }
 
-void deleteVector(vector_t *vector) {
+void cleanUpVector(vector_t *vector) {
     free(vector->data);
 }
 

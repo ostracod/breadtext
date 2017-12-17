@@ -37,6 +37,7 @@ vector_t keyMappingList;
 vector_t commandBindingList;
 
 void initializeScriptingEnvironment() {
+    firstHeapValue = NULL;
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
@@ -125,7 +126,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
     int32_t tempArgumentCount = argumentList->length;
     if (function.type == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION) {
         scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(function.data);
-        customScriptFunction_t *tempFunction = *(customScriptFunction_t **)&(tempHeapValue->data);
+        scriptCustomFunction_t *tempFunction = *(scriptCustomFunction_t **)&(tempHeapValue->data);
         scriptBodyLine_t tempLine = tempFunction->scriptBodyLine;
         scriptBodyPos_t tempScriptBodyPos;
         tempScriptBodyPos.scriptBodyLine = &tempLine;
@@ -1808,11 +1809,11 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
                 tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
             }
-            customScriptFunction_t *tempScriptFunction = malloc(sizeof(customScriptFunction_t));
+            scriptCustomFunction_t *tempScriptFunction = malloc(sizeof(scriptCustomFunction_t));
             tempScriptFunction->scriptBodyLine = *scriptBodyLine;
             scriptHeapValue_t *tempHeapValue = malloc(sizeof(scriptHeapValue_t));
             tempHeapValue->type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
-            *(customScriptFunction_t **)&(tempHeapValue->data) = tempScriptFunction;
+            *(scriptCustomFunction_t **)&(tempHeapValue->data) = tempScriptFunction;
             scriptValue_t tempValue;
             tempValue.type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
             *(scriptHeapValue_t **)&(tempValue.data) = tempHeapValue;
@@ -2054,7 +2055,7 @@ int8_t invokeKeyBinding(int32_t key) {
         }
         index += 1;
     }
-    deleteVector(&tempArgumentList);
+    cleanUpVector(&tempArgumentList);
     return output;
 }
 
