@@ -83,7 +83,7 @@ int8_t checkTextBufferHygiene();
 void addNonconsecutiveEscapeSequenceFrame();
 void promptSingleCharacter();
 void handleResize();
-int8_t handleKey(int32_t key);
+int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings);
 void resetApplication();
 
 // BREADTEXT_HEADER_FILE

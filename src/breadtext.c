@@ -202,7 +202,13 @@ void playMacro();
 void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
-int8_t handleKey(int32_t key) {
+int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings) {
+    if (shouldUseBindings) {
+        int8_t tempResult = invokeKeyBinding(key);
+        if (tempResult) {
+            return false;
+        }
+    }
     if (isRecordingMacro) {
         if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
             stopRecordingMacro();
@@ -254,10 +260,6 @@ int8_t handleKey(int32_t key) {
         if (singleCharacterAction == SINGLE_CHARACTER_ACTION_HIGHLIGHT_WORD) {
             highlightWordByDelimiter(key);
         }
-        return false;
-    }
-    int8_t tempResult = invokeKeyBinding(key);
-    if (tempResult) {
         return false;
     }
     // Escape.
@@ -867,7 +869,7 @@ void playMacro() {
     macroIndex = 0;
     while (macroIndex < macroKeyListLength) {
         int32_t tempKey = macroKeyList[macroIndex];
-        handleKey(tempKey);
+        handleKey(tempKey, false, false);
         macroIndex += 1;
     }
     isPlayingMacro = false;
@@ -1332,7 +1334,7 @@ int main(int argc, const char *argv[]) {
         #endif
         
         int32_t tempKey = getch();
-        int8_t tempResult = handleKey(tempKey);
+        int8_t tempResult = handleKey(tempKey, true, true);
         if (tempResult) {
             break;
         }
