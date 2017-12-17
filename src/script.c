@@ -409,6 +409,17 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         }
         int8_t tempType = tempResult.value.type;
         switch (tempOperator->number) {
+            case SCRIPT_OPERATOR_NEGATE:
+            {
+                if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                    expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)&(expressionResult.value.data) = -*(double *)&(tempResult.value.data);
+                } else {
+                    reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
+                    return expressionResult;
+                }
+                break;
+            }
             case SCRIPT_OPERATOR_BOOLEAN_NOT:
             {
                 if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
