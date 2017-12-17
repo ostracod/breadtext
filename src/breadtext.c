@@ -479,6 +479,7 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 }
                 case 'h':
                 {
+                    highlightTextPos = cursorTextPos;
                     setActivityMode(HIGHLIGHT_CHARACTER_MODE);
                     break;
                 }

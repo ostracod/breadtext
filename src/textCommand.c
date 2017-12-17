@@ -18,6 +18,7 @@
 #include "syntax.h"
 #include "textCommand.h"
 #include "scriptValue.h"
+#include "script.h"
 #include "breadtext.h"
 
 int8_t compileRegexesHelper() {
@@ -111,6 +112,10 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
     if (termListLength <= 0) {
         setActivityMode(PREVIOUS_MODE);
         notifyUser((int8_t *)"Error: Invalid command.");
+        return;
+    }
+    int8_t tempResult = invokeCommandBinding(destination, termList, termListLength);
+    if (tempResult) {
         return;
     }
     if (strcmp((char *)(termList[0]), "gotoLine") == 0) {

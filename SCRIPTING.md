@@ -243,6 +243,7 @@ func isPrime(number)
     while factor < number
         if number % factor == 0
             ret false
+        end
         factor++
     end
     ret true
@@ -268,6 +269,10 @@ end
 
 # Tell the user whether the highlighted number is prime.
 func checkSelectionPrimality()
+    dec mode = getMode()
+    if mode != MODE_HIGHLIGHT_STATIC && mode != MODE_HIGHLIGHT_CHARACTER
+        ret false
+    end
     dec text = getSelectionContents()
     notifyPrimality(text)
     # Return true to override the default key action.

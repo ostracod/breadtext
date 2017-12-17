@@ -34,12 +34,14 @@ scriptBodyLine_t scriptErrorLine;
 int8_t scriptErrorHasLine = false;
 vector_t keyBindingList;
 vector_t keyMappingList;
+vector_t commandBindingList;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
     createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
+    createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
 }
 
 void reportScriptErrorWithoutLine(int8_t *message) {
@@ -99,6 +101,18 @@ keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
         keyMapping_t *tempKeyMapping = findVectorElement(&keyMappingList, index);
         if (mode == tempKeyMapping->mode && oldKey == tempKeyMapping->oldKey) {
             return tempKeyMapping;
+        }
+        index += 1;
+    }
+    return NULL;
+}
+
+commandBinding_t *findCommandBinding(int8_t *commandName) {
+    int64_t index = 0;
+    while (index < commandBindingList.length) {
+        commandBinding_t *tempCommandBinding = findVectorElement(&commandBindingList, index);
+        if (strcmp((char *)(tempCommandBinding->commandName), (char *)commandName) == 0) {
+            return tempCommandBinding;
         }
         index += 1;
     }
@@ -512,6 +526,9 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     index += 1;
                 }
                 executeTextCommandByTermList(&output, tempTermList, tempList->length + 1);
+                if (scriptHasError) {
+                    return output;
+                }
                 break;
             }
             case SCRIPT_FUNCTION_NOTIFY_USER:
@@ -584,6 +601,31 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     pushVectorElement(&keyMappingList, &tempNewKeyMapping);
                 } else {
                     tempOldKeyMapping->newKey = tempNewKey;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_BIND_COMMAND:
+            {
+                scriptValue_t tempCommandNameValue;
+                scriptValue_t tempCallbackValue;
+                getVectorElement(&tempCommandNameValue, argumentList, 0);
+                getVectorElement(&tempCallbackValue, argumentList, 1);
+                if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                endwin();
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempCommandNameValue.data);
+                vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                commandBinding_t *tempOldCommandBinding = findCommandBinding(tempText->data);
+                if (tempOldCommandBinding == NULL) {
+                    commandBinding_t tempNewCommandBinding;
+                    tempNewCommandBinding.commandName = malloc(tempText->length);
+                    strcpy((char *)(tempNewCommandBinding.commandName), (char *)(tempText->data));
+                    tempNewCommandBinding.callback = tempCallbackValue;
+                    pushVectorElement(&commandBindingList, &tempNewCommandBinding);
+                } else {
+                    tempOldCommandBinding->callback = tempCallbackValue;
                 }
                 break;
             }
@@ -939,7 +981,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 } else if (tempType1 == SCRIPT_VALUE_TYPE_LIST) {
                     scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(expressionResult.value.data);
                     vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
-                    if (index < 0 || index >= tempList->length - 1) {
+                    if (index < 0 || index > tempList->length - 1) {
                         reportScriptError((int8_t *)"Index out of range.", scriptBodyPos->scriptBodyLine);
                         return expressionResult;
                     }
@@ -1645,6 +1687,22 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 return seekNextScriptBodyLine(scriptBodyLine);
             }
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
+            scriptBranch_t tempBranch;
+            tempBranch.type = SCRIPT_BRANCH_TYPE_WHILE;
+            tempBranch.shouldIgnore = true;
+            tempBranch.line = *scriptBodyLine;
+            pushVectorElement(&scriptBranchStack, &tempBranch);
+            return seekNextScriptBodyLine(scriptBodyLine);
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"import")) {
+            scriptBranch_t tempBranch;
+            tempBranch.type = SCRIPT_BRANCH_TYPE_IMPORT;
+            tempBranch.shouldIgnore = true;
+            tempBranch.line = *scriptBodyLine;
+            pushVectorElement(&scriptBranchStack, &tempBranch);
+            return seekNextScriptBodyLine(scriptBodyLine);
+        }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
             removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
             return seekNextScriptBodyLine(scriptBodyLine);
@@ -2008,3 +2066,36 @@ int32_t invokeKeyMapping(int32_t key) {
     return key;
 }
 
+int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
+    commandBinding_t *tempCommandBinding = findCommandBinding(termList[0]);
+    if (tempCommandBinding == NULL) {
+        return false;
+    }
+    setActivityMode(COMMAND_MODE);
+    vector_t *tempArgumentList = malloc(sizeof(vector_t));
+    createEmptyVector(tempArgumentList, sizeof(scriptValue_t));
+    int64_t index = 1;
+    while (index < termListLength) {
+        scriptValue_t tempValue = convertTextToStringValue(termList[index]);
+        pushVectorElement(tempArgumentList, &tempValue);
+        index += 1;
+    }
+    scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+    tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
+    *(vector_t **)&(tempHeapValue->data) = tempArgumentList;
+    scriptValue_t tempListValue;
+    tempListValue.type = SCRIPT_VALUE_TYPE_LIST;
+    *(scriptHeapValue_t **)&(tempListValue.data) = tempHeapValue;
+    vector_t tempSingleArgumentList;
+    createEmptyVector(&tempSingleArgumentList, sizeof(scriptValue_t));
+    pushVectorElement(&tempSingleArgumentList, &tempListValue);
+    resetScriptError();
+    scriptValue_t tempResult = invokeFunction(tempCommandBinding->callback, &tempSingleArgumentList);
+    if (scriptHasError) {
+        displayScriptError();
+    }
+    if (destination != NULL) {
+        *destination = tempResult;
+    }
+    return true;
+}

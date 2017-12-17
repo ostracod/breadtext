@@ -183,6 +183,11 @@ typedef struct keyMapping {
     int32_t mode;
 } keyMapping_t;
 
+typedef struct commandBinding {
+    int8_t *commandName;
+    scriptValue_t callback;
+} commandBinding_t;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
