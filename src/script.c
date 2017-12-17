@@ -172,6 +172,55 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
     } else if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
         scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
         switch (tempFunction->number) {
+            case SCRIPT_FUNCTION_IS_NUM:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(tempValue.type == SCRIPT_VALUE_TYPE_NUMBER);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_STR:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(tempValue.type == SCRIPT_VALUE_TYPE_STRING);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_LIST:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(tempValue.type == SCRIPT_VALUE_TYPE_LIST);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_FUNC:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(tempValue.type == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION
+                    || tempValue.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
@@ -188,10 +237,8 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             default:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Unknown function.");
-                    return output;
-                }
+                reportScriptErrorWithoutLine((int8_t *)"Unknown function.");
+                return output;
                 break;
             }
         }
