@@ -180,7 +180,7 @@ greedy dirtbag
 
 ## BreadText-specific Built-in Functions
 
-`pressKey(num)` - Simulates a key press in the editor.
+`pressKey(key)` - Simulates a key press in the editor.
 
 `getMode()` - Returns the editor operation mode.
 
@@ -206,7 +206,9 @@ greedy dirtbag
 
 `promptChar()` - Waits for the user to press a key. Returns the corresponding character if the user pressed a character key. Returns null otherwise.
 
-`bindKey(num, callback)` - Causes the callback to be invoked when the user presses the given key. The callback function should return a boolean indicating whether to override the default action.
+`bindKey(key, callback)` - Causes the callback to be invoked when the user presses the given key. The callback function should return a boolean indicating whether to override the default action.
+
+`mapKey(oldKey, newKey, mode)` - Maps one key to another in the given mode.
 
 `bindCommand(name, callback)` - Sets up a command which the user can invoke by pressing the forward-slash key. The callback function should accept a list of arguments. The callback function may return a value to be consumed by `runCommand`.
 

@@ -79,6 +79,7 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"promptKey", SCRIPT_FUNCTION_PROMPT_KEY, 0},
     {(int8_t *)"promptChar", SCRIPT_FUNCTION_PROMPT_CHAR, 0},
     {(int8_t *)"bindKey", SCRIPT_FUNCTION_BIND_KEY, 2},
+    {(int8_t *)"mapKey", SCRIPT_FUNCTION_MAP_KEY, 3},
     {(int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND, 2}
 };
 
