@@ -11,6 +11,7 @@
 #include "script.h"
 #include "display.h"
 #include "selection.h"
+#include "motion.h"
 
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VALUE 1
@@ -472,6 +473,10 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 int64_t tempLineIndex = (int64_t)*(double *)&(tempValue.data);
                 textLine_t *tempLine = getTextLineByNumber(tempLineIndex + 1);
+                if (tempLine == NULL) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad line index.");
+                    return output;
+                }
                 textAllocation_t *tempAllocation = &(tempLine->textAllocation);
                 int8_t tempBuffer[tempAllocation->length + 1];
                 copyData(tempBuffer, tempAllocation->text, tempAllocation->length);
@@ -497,6 +502,38 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)&(output.data) = (double)(getTextLineNumber(cursorTextPos.line) - 1);
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_CURSOR_POS:
+            {
+                if (tempArgumentCount != 2) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
+                    return output;
+                }
+                scriptValue_t tempCharIndexValue;
+                scriptValue_t tempLineIndexValue;
+                getVectorElement(&tempCharIndexValue, argumentList, 0);
+                getVectorElement(&tempLineIndexValue, argumentList, 1);
+                if (tempCharIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempLineIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int64_t tempCharIndex = (int64_t)*(double *)&(tempCharIndexValue.data);
+                int64_t tempLineIndex = (int64_t)*(double *)&(tempLineIndexValue.data);
+                textLine_t *tempLine = getTextLineByNumber(tempLineIndex + 1);
+                if (tempLine == NULL) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad line index.");
+                    return output;
+                }
+                textAllocation_t *tempAllocation = &(tempLine->textAllocation);
+                if (tempCharIndex < 0 || tempCharIndex > tempAllocation->length) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad char index.");
+                    return output;
+                }
+                textPos_t tempTextPos;
+                tempTextPos.line = tempLine;
+                setTextPosIndex(&tempTextPos, tempCharIndex);
+                moveCursor(&tempTextPos);
                 break;
             }
             case SCRIPT_FUNCTION_NOTIFY_USER:
