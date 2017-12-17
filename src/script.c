@@ -10,6 +10,7 @@
 #include "scriptValue.h"
 #include "script.h"
 #include "display.h"
+#include "selection.h"
 
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VALUE 1
@@ -429,7 +430,21 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 if (tempMode != COMMAND_MODE && activityMode != COMMAND_MODE) {
                     setActivityMode(COMMAND_MODE);
                 }
+                if (tempMode == HIGHLIGHT_CHARACTER_MODE || tempMode == HIGHLIGHT_STATIC_MODE) {
+                    highlightTextPos = cursorTextPos;
+                }
                 setActivityMode(tempMode);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_SELECTION_CONTENTS:
+            {
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+                    return output;
+                }
+                int8_t *tempText = allocateStringFromSelection();
+                output = convertTextToStringValue(tempText);
+                free(tempText);
                 break;
             }
             case SCRIPT_FUNCTION_NOTIFY_USER:

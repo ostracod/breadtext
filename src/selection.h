@@ -2,6 +2,7 @@
 #ifndef SELECTION_HEADER_FILE
 #define SELECTION_HEADER_FILE
 
+int8_t *allocateStringFromSelection();
 int8_t copySelectionHelper();
 void copySelection();
 void deleteSelectionHelper();

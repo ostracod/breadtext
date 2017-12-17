@@ -187,6 +187,8 @@ int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBo
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
 scriptHeapValue_t *createScriptHeapValue();
+scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
+scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);
 scriptValue_t convertScriptValueToNumber(scriptValue_t value);
 scriptScope_t createEmptyScriptScope();
