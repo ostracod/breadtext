@@ -204,7 +204,7 @@ greedy dirtbag
 
 `promptKey()` - Waits for the user to press a key. Returns the pressed key.
 
-`promptCharacter()` - Waits for the user to press a key. Returns the corresponding character if the user pressed a character key. Returns null otherwise.
+`promptChar()` - Waits for the user to press a key. Returns the corresponding character if the user pressed a character key. Returns null otherwise.
 
 `bindKey(num, callback)` - Causes the callback to be invoked when the user presses the given key. The callback function should return a boolean indicating whether to override the default action.
 

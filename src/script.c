@@ -174,13 +174,21 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
         return evaluateScriptBody(&tempLine);
     } else if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
         scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
+        if (tempArgumentCount != tempFunction->argumentAmount) {
+            if (tempFunction->argumentAmount == 0) {
+                reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+            } else if (tempFunction->argumentAmount == 1) {
+                reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+            } else {
+                int8_t tempBuffer[1000];
+                sprintf((char *)tempBuffer, "Expected %d arguments.", tempFunction->argumentAmount);
+                reportScriptErrorWithoutLine(tempBuffer);
+            }
+            return output;
+        }
         switch (tempFunction->number) {
             case SCRIPT_FUNCTION_IS_NUM:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
@@ -189,10 +197,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_IS_STR:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
@@ -201,10 +205,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_IS_LIST:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
@@ -213,10 +213,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_IS_FUNC:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
@@ -226,10 +222,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_COPY:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output = copyScriptValue(&tempValue);
@@ -237,10 +229,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_STR:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output = convertScriptValueToString(tempValue);
@@ -248,10 +236,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_NUM:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 output = convertScriptValueToNumber(tempValue);
@@ -259,10 +243,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_FLOOR:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
@@ -275,10 +255,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_LEN:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 if (tempValue.type == SCRIPT_VALUE_TYPE_STRING) {
@@ -299,10 +275,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_INS:
             {
-                if (tempArgumentCount != 3) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 3 arguments.");
-                    return output;
-                }
                 scriptValue_t tempSequenceValue;
                 scriptValue_t tempIndexValue;
                 scriptValue_t tempItemValue;
@@ -347,10 +319,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_REM:
             {
-                if (tempArgumentCount != 2) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
-                    return output;
-                }
                 scriptValue_t tempSequenceValue;
                 scriptValue_t tempIndexValue;
                 getVectorElement(&tempSequenceValue, argumentList, 0);
@@ -388,10 +356,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_PRESS_KEY:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
@@ -404,20 +368,12 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_GET_MODE:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
-                    return output;
-                }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)&(output.data) = (double)(activityMode);
                 break;
             }
             case SCRIPT_FUNCTION_SET_MODE:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
@@ -440,10 +396,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_GET_SELECTION_CONTENTS:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
-                    return output;
-                }
                 int8_t *tempText = allocateStringFromSelection();
                 output = convertTextToStringValue(tempText);
                 free(tempText);
@@ -451,10 +403,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_GET_LINE_COUNT:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
-                    return output;
-                }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 textLine_t *tempLine = getRightmostTextLine(rootTextLine);
                 *(double *)&(output.data) = (double)getTextLineNumber(tempLine);
@@ -462,10 +410,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_GET_LINE_CONTENTS:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
@@ -487,30 +431,18 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_GET_CURSOR_CHAR_INDEX:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
-                    return output;
-                }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)&(output.data) = (double)getTextPosIndex(&cursorTextPos);
                 break;
             }
             case SCRIPT_FUNCTION_GET_CURSOR_LINE_INDEX:
             {
-                if (tempArgumentCount != 0) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
-                    return output;
-                }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)&(output.data) = (double)(getTextLineNumber(cursorTextPos.line) - 1);
                 break;
             }
             case SCRIPT_FUNCTION_SET_CURSOR_POS:
             {
-                if (tempArgumentCount != 2) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
-                    return output;
-                }
                 scriptValue_t tempCharIndexValue;
                 scriptValue_t tempLineIndexValue;
                 getVectorElement(&tempCharIndexValue, argumentList, 0);
@@ -539,10 +471,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_RUN_COMMAND:
             {
-                if (tempArgumentCount != 2) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
-                    return output;
-                }
                 scriptValue_t tempCommandNameValue;
                 scriptValue_t tempArgumentsValue;
                 getVectorElement(&tempCommandNameValue, argumentList, 0);
@@ -572,16 +500,30 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
-                if (tempArgumentCount != 1) {
-                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
-                    return output;
-                }
                 scriptValue_t tempValue;
                 getVectorElement(&tempValue, argumentList, 0);
                 scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempStringValue.data);
                 vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
                 notifyUser(tempText->data);
+                break;
+            }
+            case SCRIPT_FUNCTION_PROMPT_KEY:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(getch());
+                break;
+            }
+            case SCRIPT_FUNCTION_PROMPT_CHAR:
+            {
+                notifyUser((int8_t *)"Type a character.");
+                int32_t tempKey = getch();
+                if (tempKey < 32 || tempKey > 126) {
+                    output.type = SCRIPT_VALUE_TYPE_NULL;
+                } else {
+                    output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)&(output.data) = (double)(tempKey);
+                }
                 break;
             }
             default:
