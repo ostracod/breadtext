@@ -447,6 +447,38 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 free(tempText);
                 break;
             }
+            case SCRIPT_FUNCTION_GET_LINE_COUNT:
+            {
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                textLine_t *tempLine = getRightmostTextLine(rootTextLine);
+                *(double *)&(output.data) = (double)getTextLineNumber(tempLine);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_LINE_CONTENTS:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int64_t tempLineIndex = (int64_t)*(double *)&(tempValue.data);
+                textLine_t *tempLine = getTextLineByNumber(tempLineIndex + 1);
+                textAllocation_t *tempAllocation = &(tempLine->textAllocation);
+                int8_t tempBuffer[tempAllocation->length + 1];
+                copyData(tempBuffer, tempAllocation->text, tempAllocation->length);
+                tempBuffer[tempAllocation->length] = 0;
+                output = convertTextToStringValue(tempBuffer);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
