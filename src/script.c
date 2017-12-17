@@ -399,6 +399,39 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 handleKey(tempKey);
                 break;
             }
+            case SCRIPT_FUNCTION_GET_MODE:
+            {
+                if (tempArgumentCount != 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected no arguments.");
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(activityMode);
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_MODE:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int32_t tempMode = (int32_t)*(double *)&(tempValue.data);
+                if (tempMode < 1 || tempMode > 9) {
+                    reportScriptErrorWithoutLine((int8_t *)"Invalid mode.");
+                    return output;
+                }
+                if (tempMode != COMMAND_MODE && activityMode != COMMAND_MODE) {
+                    setActivityMode(COMMAND_MODE);
+                }
+                setActivityMode(tempMode);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
