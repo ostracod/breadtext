@@ -1,0 +1,5 @@
+COMMENT
+#
+KEYWORDS
+null true false dec if else end while break continue func ret import share greedy dirtbag isNum isStr isList isFunc copy str num floor len ins rem pressKey getMode setMode getSelectionContents getLineCount getLineContents getCursorCharIndex getCursorLineIndex setCursorPos runCommand notifyUser promptKey promptCharacter bindKey bindCommand KEY_ESCAPE KEY_LEFT KEY_RIGHT KEY_UP KEY_DOWN KEY_SPACE KEY_NEWLINE KEY_BACKSPACE KEY_TAB KEY_BACKTAB MODE_COMMAND MODE_TEXT_ENTRY MODE_TEXT_REPLACE MODE_HIGHLIGHT_CHARACTER MODE_HIGHLIGHT_STATIC MODE_HIGHLIGHT_LINE
+
