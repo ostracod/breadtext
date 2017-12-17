@@ -17,6 +17,7 @@
 #include "secret.h"
 #include "syntax.h"
 #include "textCommand.h"
+#include "scriptValue.h"
 #include "breadtext.h"
 
 int8_t compileRegexesHelper() {
@@ -100,31 +101,22 @@ void deleteTextCommandCharacter() {
     displayTextCommandCursor();
 }
 
-void executeTextCommand() {
-    int8_t *tempTermList[20];
-    int32_t tempTermListLength;
-    parseSpaceSeperatedTerms(tempTermList, &tempTermListLength, textCommandBuffer);
-    /*
-    endwin();
-    int64_t index = 0;
-    while (index < tempTermListLength) {
-        printf("%s\n", (char *)(tempTermList[index]));
-        index += 1;
+void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
+    if (activityMode != TEXT_COMMAND_MODE) {
+        setActivityMode(TEXT_COMMAND_MODE);
     }
-    exit(0);
-    */
-    if (tempTermListLength <= 0) {
+    if (termListLength <= 0) {
         setActivityMode(PREVIOUS_MODE);
         notifyUser((int8_t *)"Error: Invalid command.");
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "gotoLine") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "gotoLine") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        int64_t tempLineNumber = atoi((char *)(tempTermList[1]));
+        int64_t tempLineNumber = atoi((char *)(termList[1]));
         textPos_t tempTextPos;
         tempTextPos.line = getTextLineByNumber(tempLineNumber);
         tempTextPos.row = 0;
@@ -140,13 +132,13 @@ void executeTextCommand() {
         historyFrameIsConsecutive = false;
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "find") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "find") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
@@ -159,13 +151,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "reverseFind") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "reverseFind") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
@@ -178,13 +170,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "findWord") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "findWord") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
@@ -197,13 +189,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "reverseFindWord") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "reverseFindWord") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
@@ -216,13 +208,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "regex") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "regex") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = true;
         int8_t tempResult = compileRegexes();
@@ -240,13 +232,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "reverseRegex") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "reverseRegex") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = true;
         int8_t tempResult = compileRegexes();
@@ -264,13 +256,13 @@ void executeTextCommand() {
         }
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "replace") == 0) {
-        if (tempTermListLength != 3) {
+    if (strcmp((char *)(termList[0]), "replace") == 0) {
+        if (termListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        strcpy((char *)searchTerm, (char *)(tempTermList[1]));
+        strcpy((char *)searchTerm, (char *)(termList[1]));
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(COMMAND_MODE);
@@ -279,7 +271,7 @@ void executeTextCommand() {
         cursorSnapColumn = 0;
         historyFrameIsConsecutive = false;
         scrollCursorOntoScreen();
-        int64_t tempResult = findAndReplaceAllTerms(tempTermList[2]);
+        int64_t tempResult = findAndReplaceAllTerms(termList[2]);
         int8_t tempText[1000];
         if (tempResult == 1) {
             sprintf((char *)tempText, "Replaced %lld term.", (long long)(tempResult));
@@ -289,14 +281,14 @@ void executeTextCommand() {
         notifyUser(tempText);
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "set") == 0) {
-        if (tempTermListLength != 3) {
+    if (strcmp((char *)(termList[0]), "set") == 0) {
+        if (termListLength != 3) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        int64_t tempValue = atoi((char *)(tempTermList[2]));
-        int8_t tempResult = setConfigurationVariable(tempTermList[1], tempValue);
+        int64_t tempValue = atoi((char *)(termList[2]));
+        int8_t tempResult = setConfigurationVariable(termList[1], tempValue);
         if (!tempResult) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Could not set variable.");
@@ -307,12 +299,12 @@ void executeTextCommand() {
         notifyUser((int8_t *)"Set configuration variable.");
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "help") == 0) {
+    if (strcmp((char *)(termList[0]), "help") == 0) {
         setActivityMode(HELP_MODE);
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "getPath") == 0) {
-        if (tempTermListLength != 1) {
+    if (strcmp((char *)(termList[0]), "getPath") == 0) {
+        if (termListLength != 1) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
@@ -321,13 +313,13 @@ void executeTextCommand() {
         notifyUser(filePath);
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "setPath") == 0) {
-        if (tempTermListLength != 2) {
+    if (strcmp((char *)(termList[0]), "setPath") == 0) {
+        if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
             return;
         }
-        filePath = mallocRealpath(tempTermList[1]);
+        filePath = mallocRealpath(termList[1]);
         fileLastModifiedTime = TIME_NEVER;
         clearInitialFileContents();
         updateSyntaxDefinition();
@@ -335,23 +327,30 @@ void executeTextCommand() {
         notifyUser((int8_t *)"Changed file path.");
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "version") == 0) {
+    if (strcmp((char *)(termList[0]), "version") == 0) {
         setActivityMode(PREVIOUS_MODE);
         notifyUser(applicationVersion);
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "crane") == 0) {
+    if (strcmp((char *)(termList[0]), "crane") == 0) {
         craneSecret();
         setActivityMode(PREVIOUS_MODE);
         return;
     }
-    if (strcmp((char *)(tempTermList[0]), "jitter") == 0) {
+    if (strcmp((char *)(termList[0]), "jitter") == 0) {
         jitterSecret();
         setActivityMode(PREVIOUS_MODE);
         return;
     }
     setActivityMode(PREVIOUS_MODE);
     notifyUser((int8_t *)"Error: Unrecognized command name.");
+}
+
+void executeTextCommand() {
+    int8_t *tempTermList[20];
+    int32_t tempTermListLength;
+    parseSpaceSeperatedTerms(tempTermList, &tempTermListLength, textCommandBuffer);
+    executeTextCommandByTermList(NULL, tempTermList, tempTermListLength);
 }
 
 void enterBeginningOfCommand(int8_t *text) {
