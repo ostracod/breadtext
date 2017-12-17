@@ -294,6 +294,54 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_INS:
+            {
+                if (tempArgumentCount != 3) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 3 arguments.");
+                    return output;
+                }
+                scriptValue_t tempSequenceValue;
+                scriptValue_t tempIndexValue;
+                scriptValue_t tempItemValue;
+                getVectorElement(&tempSequenceValue, argumentList, 0);
+                getVectorElement(&tempIndexValue, argumentList, 1);
+                getVectorElement(&tempItemValue, argumentList, 2);
+                if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int64_t index = (int64_t)*(double *)&(tempIndexValue.data);
+                if (index < 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                    return output;
+                }
+                if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    if (tempItemValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                        reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                        return output;
+                    }
+                    int8_t tempCharacter = (int8_t)*(double *)&(tempItemValue.data);
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempSequenceValue.data);
+                    vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                    if (index >= tempText->length) {
+                        reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                        return output;
+                    }
+                    insertVectorElement(tempText, index, &tempCharacter);
+                } else if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempSequenceValue.data);
+                    vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
+                    if (index > tempList->length) {
+                        reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                        return output;
+                    }
+                    insertVectorElement(tempList, index, &tempItemValue);
+                } else {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
