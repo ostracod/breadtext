@@ -12,6 +12,7 @@
 #include "display.h"
 #include "selection.h"
 #include "motion.h"
+#include "textCommand.h"
 
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VALUE 1
@@ -534,6 +535,39 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 tempTextPos.line = tempLine;
                 setTextPosIndex(&tempTextPos, tempCharIndex);
                 moveCursor(&tempTextPos);
+                break;
+            }
+            case SCRIPT_FUNCTION_RUN_COMMAND:
+            {
+                if (tempArgumentCount != 2) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
+                    return output;
+                }
+                scriptValue_t tempCommandNameValue;
+                scriptValue_t tempArgumentsValue;
+                getVectorElement(&tempCommandNameValue, argumentList, 0);
+                getVectorElement(&tempArgumentsValue, argumentList, 1);
+                if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING || tempArgumentsValue.type != SCRIPT_VALUE_TYPE_LIST) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)&(tempCommandNameValue.data);
+                scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)&(tempArgumentsValue.data);
+                vector_t *tempName = *(vector_t **)&(tempHeapValue1->data);
+                vector_t *tempList = *(vector_t **)&(tempHeapValue2->data);
+                int8_t *tempTermList[tempList->length + 1];
+                tempTermList[0] = tempName->data;
+                int64_t index = 0;
+                while (index < tempList->length) {
+                    scriptValue_t tempArgumentValue;
+                    getVectorElement(&tempArgumentValue, tempList, index);
+                    scriptValue_t tempStringValue = convertScriptValueToString(tempArgumentValue);
+                    scriptHeapValue_t *tempHeapValue3 = *(scriptHeapValue_t **)&(tempStringValue.data);
+                    vector_t *tempText = *(vector_t **)&(tempHeapValue3->data);
+                    tempTermList[index + 1] = tempText->data;
+                    index += 1;
+                }
+                executeTextCommandByTermList(&output, tempTermList, tempList->length + 1);
                 break;
             }
             case SCRIPT_FUNCTION_NOTIFY_USER:
