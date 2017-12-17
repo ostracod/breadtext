@@ -256,6 +256,10 @@ int8_t handleKey(int32_t key) {
         }
         return false;
     }
+    int8_t tempResult = invokeKeyBinding(key);
+    if (tempResult) {
+        return false;
+    }
     // Escape.
     if (key == 27) {
         if (activityMode == TEXT_COMMAND_MODE) {

@@ -32,10 +32,12 @@ int8_t scriptHasError = false;
 int8_t scriptErrorMessage[1000];
 scriptBodyLine_t scriptErrorLine;
 int8_t scriptErrorHasLine = false;
+vector_t keyBindingList;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
+    createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
 }
 
 void reportScriptErrorWithoutLine(int8_t *message) {
@@ -524,6 +526,23 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     output.type = SCRIPT_VALUE_TYPE_NUMBER;
                     *(double *)&(output.data) = (double)(tempKey);
                 }
+                break;
+            }
+            case SCRIPT_FUNCTION_BIND_KEY:
+            {
+                scriptValue_t tempKeyValue;
+                scriptValue_t tempCallbackValue;
+                getVectorElement(&tempKeyValue, argumentList, 0);
+                getVectorElement(&tempCallbackValue, argumentList, 1);
+                if (tempKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int32_t tempKey = (int32_t)*(double *)&(tempKeyValue.data);
+                keyBinding_t tempKeyBinding;
+                tempKeyBinding.key = tempKey;
+                tempKeyBinding.callback = tempCallbackValue;
+                pushVectorElement(&keyBindingList, &tempKeyBinding);
                 break;
             }
             default:
@@ -1868,33 +1887,73 @@ scriptBody_t *importScript(int8_t *path) {
     return output;
 }
 
-int8_t runScript(int8_t *path) {
+void resetScriptError() {
     scriptHasError = false;
     scriptErrorLine.number = -1;
+}
+
+void displayScriptError() {
+    int8_t tempText[1000];
+    if (scriptErrorLine.number < 0) {
+        sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
+    } else {
+        int8_t *tempPath = scriptErrorLine.scriptBody->path;
+        int64_t tempFileNameIndex = strlen((char *)tempPath);
+        while (tempFileNameIndex > 0) {
+            int8_t tempCharacter = tempPath[tempFileNameIndex - 1];
+            if (tempCharacter == '/') {
+                break;
+            }
+            tempFileNameIndex -= 1;
+        }
+        sprintf(
+            (char *)tempText,
+            "ERROR: %s (Line %lld, %s)",
+            (char *)scriptErrorMessage,
+            scriptErrorLine.number,
+            (char *)(tempPath + tempFileNameIndex)
+        );
+    }
+    notifyUser(tempText);
+}
+
+int8_t runScript(int8_t *path) {
+    resetScriptError();
     importScript(path);
     if (scriptHasError) {
-        int8_t tempText[1000];
-        if (scriptErrorLine.number < 0) {
-            sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
-        } else {
-            int8_t *tempPath = scriptErrorLine.scriptBody->path;
-            int64_t tempFileNameIndex = strlen((char *)tempPath);
-            while (tempFileNameIndex > 0) {
-                int8_t tempCharacter = tempPath[tempFileNameIndex - 1];
-                if (tempCharacter == '/') {
-                    break;
-                }
-                tempFileNameIndex -= 1;
-            }
-            sprintf(
-                (char *)tempText,
-                "ERROR: %s (Line %lld, %s)",
-                (char *)scriptErrorMessage,
-                scriptErrorLine.number,
-                (char *)(tempPath + tempFileNameIndex)
-            );
-        }
-        notifyUser(tempText);
+        displayScriptError();
     }
     return !scriptHasError;
+}
+
+int8_t invokeKeyBinding(int32_t key) {
+    vector_t tempArgumentList;
+    createEmptyVector(&tempArgumentList, sizeof(scriptValue_t));
+    resetScriptError();
+    int8_t output = false;
+    int64_t index = 0;
+    while (index < keyBindingList.length) {
+        keyBinding_t *tempKeyBinding = findVectorElement(&keyBindingList, index);
+        if (tempKeyBinding->key == key) {
+            scriptValue_t tempResult = invokeFunction(tempKeyBinding->callback, &tempArgumentList);
+            if (scriptHasError) {
+                displayScriptError();
+                output = true;
+                break;
+            }
+            if (tempResult.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                notifyUser((int8_t *)"ERROR: Key binding must return boolean.");
+                output = true;
+                break;
+            }
+            int8_t tempShouldOverride = *(double *)&(tempResult.data);
+            if (tempShouldOverride) {
+                output = true;
+                break;
+            }
+        }
+        index += 1;
+    }
+    deleteVector(&tempArgumentList);
+    return output;
 }

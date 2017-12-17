@@ -171,6 +171,11 @@ typedef struct scriptConstant {
     int32_t value;
 } scriptConstant_t;
 
+typedef struct keyBinding {
+    int32_t key;
+    scriptValue_t callback;
+} keyBinding_t;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
