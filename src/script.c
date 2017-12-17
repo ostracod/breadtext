@@ -342,6 +342,47 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_REM:
+            {
+                if (tempArgumentCount != 2) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 2 arguments.");
+                    return output;
+                }
+                scriptValue_t tempSequenceValue;
+                scriptValue_t tempIndexValue;
+                getVectorElement(&tempSequenceValue, argumentList, 0);
+                getVectorElement(&tempIndexValue, argumentList, 1);
+                if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int64_t index = (int64_t)*(double *)&(tempIndexValue.data);
+                if (index < 0) {
+                    reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                    return output;
+                }
+                if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempSequenceValue.data);
+                    vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                    if (index >= tempText->length - 1) {
+                        reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                        return output;
+                    }
+                    removeVectorElement(tempText, index);
+                } else if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempSequenceValue.data);
+                    vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
+                    if (index >= tempList->length) {
+                        reportScriptErrorWithoutLine((int8_t *)"Index out of range.");
+                        return output;
+                    }
+                    removeVectorElement(tempList, index);
+                } else {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {
