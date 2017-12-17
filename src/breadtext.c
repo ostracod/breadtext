@@ -209,6 +209,9 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
             return false;
         }
     }
+    if (shouldUseMappings) {
+        key = invokeKeyMapping(key);
+    }
     if (isRecordingMacro) {
         if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
             stopRecordingMacro();

@@ -33,11 +33,13 @@ int8_t scriptErrorMessage[1000];
 scriptBodyLine_t scriptErrorLine;
 int8_t scriptErrorHasLine = false;
 vector_t keyBindingList;
+vector_t keyMappingList;
 
 void initializeScriptingEnvironment() {
     createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
+    createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
 }
 
 void reportScriptErrorWithoutLine(int8_t *message) {
@@ -89,6 +91,18 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
             return;
         }
     }
+}
+
+keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
+    int64_t index = 0;
+    while (index < keyMappingList.length) {
+        keyMapping_t *tempKeyMapping = findVectorElement(&keyMappingList, index);
+        if (mode == tempKeyMapping->mode && oldKey == tempKeyMapping->oldKey) {
+            return tempKeyMapping;
+        }
+        index += 1;
+    }
+    return NULL;
 }
 
 scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
@@ -543,6 +557,34 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 tempKeyBinding.key = tempKey;
                 tempKeyBinding.callback = tempCallbackValue;
                 pushVectorElement(&keyBindingList, &tempKeyBinding);
+                break;
+            }
+            case SCRIPT_FUNCTION_MAP_KEY:
+            {
+                scriptValue_t tempOldKeyValue;
+                scriptValue_t tempNewKeyValue;
+                scriptValue_t tempModeValue;
+                getVectorElement(&tempOldKeyValue, argumentList, 0);
+                getVectorElement(&tempNewKeyValue, argumentList, 1);
+                getVectorElement(&tempModeValue, argumentList, 2);
+                if (tempOldKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempNewKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER
+                        || tempModeValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
+                    return output;
+                }
+                int32_t tempOldKey = (int32_t)*(double *)&(tempOldKeyValue.data);
+                int32_t tempNewKey = (int32_t)*(double *)&(tempNewKeyValue.data);
+                int32_t tempMode = (int32_t)*(double *)&(tempModeValue.data);
+                keyMapping_t *tempOldKeyMapping = findKeyMapping(tempOldKey, tempMode);
+                if (tempOldKeyMapping == NULL) {
+                    keyMapping_t tempNewKeyMapping;
+                    tempNewKeyMapping.oldKey = tempOldKey;
+                    tempNewKeyMapping.newKey = tempNewKey;
+                    tempNewKeyMapping.mode = tempMode;
+                    pushVectorElement(&keyMappingList, &tempNewKeyMapping);
+                } else {
+                    tempOldKeyMapping->newKey = tempNewKey;
+                }
                 break;
             }
             default:
@@ -1957,3 +1999,12 @@ int8_t invokeKeyBinding(int32_t key) {
     deleteVector(&tempArgumentList);
     return output;
 }
+
+int32_t invokeKeyMapping(int32_t key) {
+    keyMapping_t *tempKeyMapping = findKeyMapping(key, activityMode);
+    if (tempKeyMapping != NULL) {
+        return tempKeyMapping->newKey;
+    }
+    return key;
+}
+

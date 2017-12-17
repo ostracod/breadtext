@@ -177,6 +177,12 @@ typedef struct keyBinding {
     scriptValue_t callback;
 } keyBinding_t;
 
+typedef struct keyMapping {
+    int32_t oldKey;
+    int32_t newKey;
+    int32_t mode;
+} keyMapping_t;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
