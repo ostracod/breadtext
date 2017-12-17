@@ -166,6 +166,11 @@ typedef struct scriptBranch {
     scriptBody_t *importScriptBody;
 } scriptBranch_t;
 
+typedef struct scriptConstant {
+    int8_t *name;
+    int32_t value;
+} scriptConstant_t;
+
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
@@ -193,6 +198,7 @@ scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2);
 int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2);
 scriptValue_t copyScriptValue(scriptValue_t *value);
+scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

@@ -82,6 +82,25 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND, 2}
 };
 
+scriptConstant_t scriptConstantSet[] = {
+    {(int8_t *)"KEY_ESCAPE", 27},
+    {(int8_t *)"KEY_LEFT", KEY_LEFT},
+    {(int8_t *)"KEY_RIGHT", KEY_RIGHT},
+    {(int8_t *)"KEY_UP", KEY_UP},
+    {(int8_t *)"KEY_DOWN", KEY_DOWN},
+    {(int8_t *)"KEY_SPACE", ' '},
+    {(int8_t *)"KEY_NEWLINE", '\n'},
+    {(int8_t *)"KEY_BACKSPACE", 127},
+    {(int8_t *)"KEY_TAB", '\t'},
+    {(int8_t *)"KEY_BACKTAB", KEY_BTAB},
+    {(int8_t *)"MODE_COMMAND", COMMAND_MODE},
+    {(int8_t *)"MODE_TEXT_ENTRY", TEXT_ENTRY_MODE},
+    {(int8_t *)"MODE_TEXT_REPLACE", TEXT_REPLACE_MODE},
+    {(int8_t *)"MODE_HIGHLIGHT_CHARACTER", HIGHLIGHT_CHARACTER_MODE},
+    {(int8_t *)"MODE_HIGHLIGHT_STATIC", HIGHLIGHT_STATIC_MODE},
+    {(int8_t *)"MODE_HIGHLIGHT_LINE", HIGHLIGHT_LINE_MODE}
+};
+
 scriptHeapValue_t *firstScriptHeapValue = NULL;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
@@ -540,5 +559,20 @@ scriptValue_t copyScriptValue(scriptValue_t *value) {
     }
     return *value;
 }
+
+scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length) {
+    int32_t index = 0;
+    while (index < sizeof(scriptConstantSet) / sizeof(*scriptConstantSet)) {
+        scriptConstant_t *tempConstant = scriptConstantSet + index;
+        if (strlen((char *)(tempConstant->name)) == length) {
+            if (equalData(tempConstant->name, name, length)) {
+                return tempConstant;
+            }
+        }
+        index += 1;
+    }
+    return NULL;
+}
+
 
 

@@ -593,6 +593,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 *scriptBodyPos = tempScriptBodyPos;
                 break;
             }
+            scriptConstant_t *tempConstant = getScriptConstantByName(tempText, tempLength);
+            if (tempConstant != NULL) {
+                expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(expressionResult.value.data) = (double)(tempConstant->value);
+                *scriptBodyPos = tempScriptBodyPos;
+                break;
+            }
         }
         if (tempFirstCharacter == '"') {
             vector_t *tempText = malloc(sizeof(vector_t));
