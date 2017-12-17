@@ -183,6 +183,7 @@ int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
 scriptHeapValue_t *createScriptHeapValue();
 scriptValue_t convertScriptValueToString(scriptValue_t value);
+scriptValue_t convertScriptValueToNumber(scriptValue_t value);
 scriptScope_t createEmptyScriptScope();
 scriptScope_t *scriptBodyAddScope(scriptBody_t *body, scriptScope_t scope);
 scriptVariable_t createEmptyScriptVariable(int8_t *name);

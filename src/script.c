@@ -243,6 +243,17 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 output = convertScriptValueToString(tempValue);
                 break;
             }
+            case SCRIPT_FUNCTION_NUM:
+            {
+                if (tempArgumentCount != 1) {
+                    reportScriptErrorWithoutLine((int8_t *)"Expected 1 argument.");
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                output = convertScriptValueToNumber(tempValue);
+                break;
+            }
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 if (tempArgumentCount != 1) {

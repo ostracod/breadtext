@@ -331,6 +331,30 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
     return output;
 }
 
+scriptValue_t convertScriptValueToNumber(scriptValue_t value) {
+    if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+        return value;
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_STRING) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value.data);
+        vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+        double tempNumber;
+        int32_t tempResult = sscanf((char *)(tempText->data), "%lf", &tempNumber);
+        scriptValue_t output;
+        if (tempResult < 1) {
+            output.type = SCRIPT_VALUE_TYPE_NULL;
+            return output;
+        }
+        output.type = SCRIPT_VALUE_TYPE_NUMBER;
+        *(double *)&(output.data) = tempNumber;
+        return output;
+    }
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_NULL;
+    return output;
+}
+
+
 int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t *text) {
     scriptBodyPos_t tempScriptBodyPos;
     tempScriptBodyPos = *scriptBodyPos;
