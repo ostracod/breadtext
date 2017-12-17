@@ -191,6 +191,7 @@ scriptVariable_t *scriptScopeFindVariableWithNameLength(scriptScope_t *scope, in
 scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2);
 int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2);
+scriptValue_t copyScriptValue(scriptValue_t *value);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

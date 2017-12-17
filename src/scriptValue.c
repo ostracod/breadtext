@@ -428,4 +428,42 @@ int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2) {
     return true;
 }
 
+scriptValue_t copyScriptValue(scriptValue_t *value) {
+    int8_t tempType = value->type;
+    if (tempType == SCRIPT_VALUE_TYPE_NULL || tempType == SCRIPT_VALUE_TYPE_MISSING) {
+        return *value;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+        return *value;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION || tempType == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION) {
+        return *value;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_STRING) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)&(value->data);
+        vector_t *tempText1 = *(vector_t **)&(tempHeapValue1->data);
+        vector_t *tempText2 = malloc(sizeof(vector_t));
+        scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
+        scriptValue_t output;
+        copyVector(tempText2, tempText1);
+        *(vector_t **)&(tempHeapValue2->data) = tempText2;
+        output.type = SCRIPT_VALUE_TYPE_STRING;
+        *(scriptHeapValue_t **)&(output.data) = tempHeapValue2;
+        return output;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_LIST) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)&(value->data);
+        vector_t *tempList1 = *(vector_t **)&(tempHeapValue1->data);
+        vector_t *tempList2 = malloc(sizeof(vector_t));
+        scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
+        scriptValue_t output;
+        copyVector(tempList2, tempList1);
+        *(vector_t **)&(tempHeapValue2->data) = tempList2;
+        output.type = SCRIPT_VALUE_TYPE_LIST;
+        *(scriptHeapValue_t **)&(output.data) = tempHeapValue2;
+        return output;
+    }
+    return *value;
+}
+
 
