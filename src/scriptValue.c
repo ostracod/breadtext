@@ -237,7 +237,31 @@ scriptHeapValue_t *createScriptHeapValue() {
     return output;
 }
 
+scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {
+    scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+    vector_t *tempVector = malloc(sizeof(vector_t));
+    *tempVector = vector;
+    *(vector_t **)&(tempHeapValue->data) = tempVector;
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_STRING;
+    *(scriptHeapValue_t **)&(output.data) = tempHeapValue;
+    return output;
+}
+
+scriptValue_t convertTextToStringValue(int8_t *text) {
+    int64_t tempLength = strlen((char *)text);
+    vector_t tempVector;
+    createVectorFromArray(&tempVector, 1, text, tempLength + 1);
+    return convertCharacterVectorToStringValue(tempVector);
+}
+
 scriptValue_t convertScriptValueToString(scriptValue_t value) {
+    if (value.type == SCRIPT_VALUE_TYPE_MISSING) {
+        return convertTextToStringValue((int8_t *)"(Missing Value)");
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_NULL) {
+        return convertTextToStringValue((int8_t *)"(Null)");
+    }
     if (value.type == SCRIPT_VALUE_TYPE_STRING) {
         return value;
     }
@@ -261,20 +285,47 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
                 break;
             }
             tempBuffer[index] = 0;
-            tempLength = index;
             index -= 1;
         }
-        scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
-        vector_t *tempVector = malloc(sizeof(vector_t));
-        createVectorFromArray(tempVector, 1, tempBuffer, tempLength + 1);
-        *(vector_t **)&(tempHeapValue->data) = tempVector;
-        scriptValue_t output;
-        output.type = SCRIPT_VALUE_TYPE_STRING;
-        *(scriptHeapValue_t **)&(output.data) = tempHeapValue;
-        return output;
+        return convertTextToStringValue(tempBuffer);
     }
-    
-    // TODO: Accommodate other input types.
+    if (value.type == SCRIPT_VALUE_TYPE_LIST) {
+        vector_t tempVector;
+        createEmptyVector(&tempVector, 1);
+        int8_t tempCharacter;
+        tempCharacter = '[';
+        pushVectorElement(&tempVector, &tempCharacter);
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value.data);
+        vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
+        int64_t index = 0;
+        while (index < tempList->length) {
+            if (index > 0) {
+                tempCharacter = ',';
+                pushVectorElement(&tempVector, &tempCharacter);
+                tempCharacter = ' ';
+                pushVectorElement(&tempVector, &tempCharacter);
+            }
+            scriptValue_t tempValue;
+            getVectorElement(&tempValue, tempList, index);
+            scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
+            scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempStringValue.data);
+            vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+            pushVectorOntoVector(&tempVector, tempText);
+            removeVectorElement(&tempVector, tempVector.length - 1);
+            index += 1;
+        }
+        tempCharacter = ']';
+        pushVectorElement(&tempVector, &tempCharacter);
+        tempCharacter = 0;
+        pushVectorElement(&tempVector, &tempCharacter);
+        return convertCharacterVectorToStringValue(tempVector);
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
+        return convertTextToStringValue((int8_t *)"(Built-In Function)");
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION) {
+        return convertTextToStringValue((int8_t *)"(Custom Function)");
+    }
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_NULL;
     return output;
