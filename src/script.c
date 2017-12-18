@@ -2054,6 +2054,11 @@ void resetScriptError() {
 }
 
 void displayScriptError() {
+    scriptHeapValue_t *tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        tempHeapValue->lockDepth = 0;
+        tempHeapValue = tempHeapValue->next;
+    }
     int8_t tempText[1000];
     if (scriptErrorLine.number < 0) {
         sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
