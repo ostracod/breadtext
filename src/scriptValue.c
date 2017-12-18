@@ -290,6 +290,68 @@ void deleteScriptHeapValue(scriptHeapValue_t *value) {
     free(value);
 }
 
+int8_t scriptValueIsInHeap(scriptValue_t *value) {
+    int8_t tempType = value->type;
+    return (tempType == SCRIPT_VALUE_TYPE_STRING || tempType == SCRIPT_VALUE_TYPE_LIST
+        || tempType == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION);
+}
+
+void lockScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        tempHeapValue->lockDepth += 1;
+    }
+}
+
+void unlockScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        tempHeapValue->lockDepth -= 1;
+    }
+}
+
+void unmarkScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        unmarkScriptHeapValue(tempHeapValue);
+    }
+}
+
+void unmarkScriptHeapValue(scriptHeapValue_t *value) {
+    if (!value->isMarked) {
+        return;
+    }
+    value->isMarked = false;
+    int8_t tempType = value->type;
+    if (tempType == SCRIPT_VALUE_TYPE_LIST) {
+        vector_t *tempVector = *(vector_t **)&(value->data);
+        int64_t index = 0;
+        while (index < tempVector->length) {
+            scriptValue_t *tempValue = findVectorElement(tempVector, index);
+            unmarkScriptValue(tempValue);
+            index += 1;
+        }
+    }
+}
+
+void unmarkScriptScope(scriptScope_t *scope) {
+    int64_t index = 0;
+    while (index < scope->variableList.length) {
+        scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
+        unmarkScriptValue(&(tempVariable->value));
+        index += 1;
+    }
+}
+
+void unmarkScriptBody(scriptBody_t *body) {
+    int64_t index = 0;
+    while (index < body->scopeStack.length) {
+        scriptScope_t *tempScope = findVectorElement(&(body->scopeStack), index);
+        unmarkScriptScope(tempScope);
+        index += 1;
+    }
+}
+
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {
     scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
     vector_t *tempVector = malloc(sizeof(vector_t));

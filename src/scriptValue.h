@@ -208,6 +208,13 @@ scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t l
 void deleteScriptCustomFunction(scriptCustomFunction_t *function);
 scriptHeapValue_t *createScriptHeapValue();
 void deleteScriptHeapValue(scriptHeapValue_t *value);
+int8_t scriptValueIsInHeap(scriptValue_t *value);
+void lockScriptValue(scriptValue_t *value);
+void unlockScriptValue(scriptValue_t *value);
+void unmarkScriptValue(scriptValue_t *value);
+void unmarkScriptHeapValue(scriptHeapValue_t *value);
+void unmarkScriptScope(scriptScope_t *scope);
+void unmarkScriptBody(scriptBody_t *body);
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);

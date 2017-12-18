@@ -45,6 +45,37 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
 }
 
+void garbageCollectScriptHeapValues() {
+    // Mark all heap values for deletion.
+    scriptHeapValue_t *tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        tempHeapValue->isMarked = true;
+        tempHeapValue = tempHeapValue->next;
+    }
+    int64_t index = 0;
+    while (index < scriptBodyList.length) {
+        scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, index);
+        unmarkScriptBody(tempScriptBody);
+        index += 1;
+    }
+    tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        if (tempHeapValue->lockDepth > 0) {
+            unmarkScriptHeapValue(tempHeapValue);
+        }
+        tempHeapValue = tempHeapValue->next;
+    }
+    // Delete all values which are still marked.
+    tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        scriptHeapValue_t *tempNextHeapValue = tempHeapValue->next;
+        if (tempHeapValue->isMarked) {
+            deleteScriptHeapValue(tempHeapValue);
+        }
+        tempHeapValue = tempNextHeapValue;
+    }
+}
+
 void reportScriptErrorWithoutLine(int8_t *message) {
     scriptHasError = true;
     strcpy((char *)scriptErrorMessage, (char *)message);
