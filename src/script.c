@@ -98,6 +98,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
 scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine);
 scriptBody_t *importScript(int8_t *path);
 
+// All output values will be locked.
 void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
     createEmptyVector(destination, sizeof(scriptValue_t));
     while (true) {
@@ -115,6 +116,7 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
         if (scriptHasError) {
             return;
         }
+        lockScriptValue(&(tempResult.value));
         pushVectorElement(destination, &(tempResult.value));
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
@@ -934,6 +936,12 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPos->index += 1;
             vector_t *tempList = malloc(sizeof(vector_t));
             getScriptBodyValueList(tempList, scriptBodyPos, ']');
+            int64_t index = 0;
+            while (index < tempList->length) {
+                scriptValue_t *tempValue = findVectorElement(tempList, index);
+                unlockScriptValue(tempValue);
+                index += 1;
+            }
             if (scriptHasError) {
                 return expressionResult;
             }
@@ -970,6 +978,12 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                 scriptBodyPos->index += 1;
                 vector_t tempArgumentList;
                 getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
+                int64_t index = 0;
+                while (index < tempArgumentList.length) {
+                    scriptValue_t *tempValue = findVectorElement(&tempArgumentList, index);
+                    unlockScriptValue(tempValue);
+                    index += 1;
+                }
                 if (scriptHasError) {
                     return expressionResult;
                 }
@@ -990,7 +1004,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             }
             if (tempFirstCharacter == '[') {
                 scriptBodyPos->index += 1;
+                lockScriptValue(&(expressionResult.value));
                 expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
+                unlockScriptValue(&(expressionResult.value));
                 if (scriptHasError) {
                     return expressionResult;
                 }
@@ -1101,7 +1117,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     break;
                 }
                 scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
+                lockScriptValue(&(expressionResult.value));
                 expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
+                unlockScriptValue(&(expressionResult.value));
                 if (scriptHasError) {
                     return expressionResult;
                 }
@@ -1605,9 +1623,8 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     }
     garbageCollectionDelay -= 1;
     if (garbageCollectionDelay <= 0) {
-        //garbageCollectScriptHeapValues();
-        // TODO: Decrease the frequency.
-        garbageCollectionDelay = 0;
+        garbageCollectScriptHeapValues();
+        garbageCollectionDelay = 100;
     }
     scriptBodyPos_t scriptBodyPos;
     scriptBodyPos.scriptBodyLine = scriptBodyLine;
