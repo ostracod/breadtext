@@ -1869,7 +1869,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
             scriptCustomFunction_t *tempScriptFunction = malloc(sizeof(scriptCustomFunction_t));
             tempScriptFunction->scriptBodyLine = *scriptBodyLine;
-            scriptHeapValue_t *tempHeapValue = malloc(sizeof(scriptHeapValue_t));
+            scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
             tempHeapValue->type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
             *(scriptCustomFunction_t **)&(tempHeapValue->data) = tempScriptFunction;
             scriptValue_t tempValue;
