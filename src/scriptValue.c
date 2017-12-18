@@ -356,6 +356,7 @@ scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {
     scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
     vector_t *tempVector = malloc(sizeof(vector_t));
     *tempVector = vector;
+    tempHeapValue->type = SCRIPT_VALUE_TYPE_STRING;
     *(vector_t **)&(tempHeapValue->data) = tempVector;
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_STRING;
@@ -530,6 +531,21 @@ scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
     return scriptScopeFindVariableWithNameLength(scope, name, strlen((char *)name));
 }
 
+void cleanUpScriptVariable(scriptVariable_t *variable) {
+    free(variable->name);
+}
+
+void cleanUpScriptScope(scriptScope_t *scope) {
+    int64_t index = 0;
+    while (index < scope->variableList.length) {
+        scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
+        cleanUpScriptVariable(tempVariable);
+        index += 1;
+    }
+    cleanUpVector(&(scope->variableList));
+}
+
+
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2) {
     int8_t type1 = value1->type;
     int8_t type2 = value2->type;
@@ -636,6 +652,7 @@ scriptValue_t copyScriptValue(scriptValue_t *value) {
         scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
         scriptValue_t output;
         copyVector(tempText2, tempText1);
+        tempHeapValue2->type = SCRIPT_VALUE_TYPE_STRING;
         *(vector_t **)&(tempHeapValue2->data) = tempText2;
         output.type = SCRIPT_VALUE_TYPE_STRING;
         *(scriptHeapValue_t **)&(output.data) = tempHeapValue2;
@@ -648,6 +665,7 @@ scriptValue_t copyScriptValue(scriptValue_t *value) {
         scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
         scriptValue_t output;
         copyVector(tempList2, tempList1);
+        tempHeapValue2->type = SCRIPT_VALUE_TYPE_LIST;
         *(vector_t **)&(tempHeapValue2->data) = tempList2;
         output.type = SCRIPT_VALUE_TYPE_LIST;
         *(scriptHeapValue_t **)&(output.data) = tempHeapValue2;

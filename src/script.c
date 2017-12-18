@@ -35,6 +35,7 @@ int8_t scriptErrorHasLine = false;
 vector_t keyBindingList;
 vector_t keyMappingList;
 vector_t commandBindingList;
+int32_t garbageCollectionDelay = 0;
 
 void initializeScriptingEnvironment() {
     firstHeapValue = NULL;
@@ -52,12 +53,14 @@ void garbageCollectScriptHeapValues() {
         tempHeapValue->isMarked = true;
         tempHeapValue = tempHeapValue->next;
     }
+    // Unmark all reachable values.
     int64_t index = 0;
     while (index < scriptBodyList.length) {
         scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, index);
         unmarkScriptBody(tempScriptBody);
         index += 1;
     }
+    // Unmark all locked values.
     tempHeapValue = firstHeapValue;
     while (tempHeapValue != NULL) {
         if (tempHeapValue->lockDepth > 0) {
@@ -971,6 +974,7 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     return expressionResult;
                 }
                 scriptValue_t tempValue = invokeFunction(expressionResult.value, &tempArgumentList);
+                cleanUpVector(&tempArgumentList);
                 if (scriptHasError) {
                     if (!scriptErrorHasLine) {
                         scriptErrorLine = *(scriptBodyPos->scriptBodyLine);
@@ -1599,6 +1603,12 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     if (scriptBodyLine->index >= scriptBodyLine->scriptBody->length) {
         return false;
     }
+    garbageCollectionDelay -= 1;
+    if (garbageCollectionDelay <= 0) {
+        //garbageCollectScriptHeapValues();
+        // TODO: Decrease the frequency.
+        garbageCollectionDelay = 0;
+    }
     scriptBodyPos_t scriptBodyPos;
     scriptBodyPos.scriptBodyLine = scriptBodyLine;
     scriptBodyPos.index = scriptBodyLine->index;
@@ -1868,9 +1878,11 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
             if (currentBranch->type == SCRIPT_BRANCH_TYPE_FUNCTION) {
                 removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
-                // TODO: Clean up.
                 vector_t *tempScopeStack = &(scriptBodyLine->scriptBody->scopeStack);
-                removeVectorElement(tempScopeStack, tempScopeStack->length - 1);
+                int64_t index = tempScopeStack->length - 1;
+                scriptScope_t *tempScope = findVectorElement(tempScopeStack, index);
+                cleanUpScriptScope(tempScope);
+                removeVectorElement(tempScopeStack, index);
                 returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
                 return false;
             }
@@ -2123,6 +2135,7 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     pushVectorElement(&tempSingleArgumentList, &tempListValue);
     resetScriptError();
     scriptValue_t tempResult = invokeFunction(tempCommandBinding->callback, &tempSingleArgumentList);
+    cleanUpVector(&tempSingleArgumentList);
     if (scriptHasError) {
         displayScriptError();
     }

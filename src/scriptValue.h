@@ -225,6 +225,8 @@ scriptVariable_t createEmptyScriptVariable(int8_t *name);
 scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t variable);
 scriptVariable_t *scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length);
 scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
+void cleanUpScriptVariable(scriptVariable_t *variable);
+void cleanUpScriptScope(scriptScope_t *scope);
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2);
 int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2);
 scriptValue_t copyScriptValue(scriptValue_t *value);
