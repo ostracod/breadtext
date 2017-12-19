@@ -27,6 +27,7 @@
 #include "syntax.h"
 #include "systematicTest.h"
 #include "script.h"
+#include "scriptTest.h"
 #include "breadtext.h"
 
 int32_t macroKeyList[MAXIMUM_MACRO_LENGTH];
@@ -1121,13 +1122,12 @@ void cleanUpApplication() {
     }
 }
 
+int8_t isTesting() {
+    return (isPerformingFuzzTest || isPerformingSystematicTest || isPerformingScriptTest);
+}
+
 int8_t initializeApplication() {
-    FILE *tempFile;
-    if (isPerformingFuzzTest) {
-        tempFile = NULL;
-    } else {
-        tempFile = fopen((char *)filePath, "r");
-    }
+    FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
         if (errno == EACCES) {
             printf("Permission denied.\n");
@@ -1216,8 +1216,7 @@ int8_t initializeApplication() {
     nonconsecutiveEscapeSequenceFrameIsSet = false;
     isConsumingSingleCharacter = false;
     
-    int8_t tempIsTesting = (isPerformingFuzzTest || isPerformingSystematicTest);
-    if (!tempIsTesting) {
+    if (!isTesting()) {
         processRcFile();
     }
     
@@ -1235,7 +1234,7 @@ int8_t initializeApplication() {
     handleResize();
     
     initializeScriptingEnvironment();
-    if (!tempIsTesting) {
+    if (!isTesting()) {
         if (access((char *)rcScriptFilePath, F_OK) != -1) {
             runScript(rcScriptFilePath);
         }
@@ -1271,11 +1270,18 @@ int main(int argc, const char *argv[]) {
     int8_t tempArgumentsAreValid = false;
     isPerformingFuzzTest = false;
     isPerformingSystematicTest = false;
+    isPerformingScriptTest = false;
     if (argc == 3) {
         if (strcmp(argv[1], "--test") == 0) {
             isPerformingSystematicTest = true;
             systematicTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
             systematicTestResultPath = mallocRealpath((int8_t *)"./systematicTestResult.txt");
+            tempArgumentsAreValid = true;
+        }
+        if (strcmp(argv[1], "--script-test") == 0) {
+            isPerformingScriptTest = true;
+            scriptTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
+            scriptTestResultPath = mallocRealpath((int8_t *)"./systematicTestResult.txt");
             tempArgumentsAreValid = true;
         }
     }
@@ -1291,7 +1297,7 @@ int main(int argc, const char *argv[]) {
         printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
         return 0;
     }
-    if (isPerformingFuzzTest || isPerformingSystematicTest) {
+    if (isTesting()) {
         filePath = mallocRealpath((int8_t *)"./bupkis.txt");
     } else {
         filePath = mallocRealpath((int8_t *)(argv[1]));
@@ -1321,6 +1327,16 @@ int main(int argc, const char *argv[]) {
     
     if (isPerformingSystematicTest) {
         int8_t tempResult = runSystematicTest();
+        endwin();
+        if (tempResult) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+    
+    if (isPerformingScriptTest) {
+        int8_t tempResult = runScriptTest();
         endwin();
         if (tempResult) {
             return 0;

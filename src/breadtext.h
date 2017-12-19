@@ -61,6 +61,7 @@ int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
 int8_t isPerformingFuzzTest;
 int8_t isPerformingSystematicTest;
+int8_t isPerformingScriptTest;
 int8_t shouldHighlightSyntax;
 int8_t applicationVersion[50];
 int8_t shouldUseXclip;
@@ -85,6 +86,7 @@ void promptSingleCharacter();
 void handleResize();
 int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings);
 void resetApplication();
+int8_t isTesting();
 
 // BREADTEXT_HEADER_FILE
 #endif
