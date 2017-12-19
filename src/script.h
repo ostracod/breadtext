@@ -5,6 +5,7 @@
 #include "vector.h"
 #include "scriptValue.h"
 
+int8_t scriptHasError;
 vector_t scriptTestLogMessageList;
 
 void initializeScriptingEnvironment();

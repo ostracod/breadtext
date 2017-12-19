@@ -126,7 +126,6 @@ void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text) {
     int8_t tempPath[] = "/bupkis.btsl";
     destination->path = malloc(strlen((char *)tempPath) + 1);
     strcpy((char *)(destination->path), (char *)tempPath);
-    destination->path = NULL;
     destination->length = strlen((char *)text);
     destination->text = malloc(destination->length + 1);
     strcpy((char *)(destination->text), (char *)text);

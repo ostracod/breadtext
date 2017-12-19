@@ -2,6 +2,7 @@
 START_TEST "Number literals"
 testLog(15)
 testLog(2.5)
+RUN_SCRIPT
 ASSERT_OUTPUT
 15
 2.5
@@ -10,6 +11,7 @@ END_TEST
 START_TEST "Boolean literals"
 testLog(true)
 testLog(false)
+RUN_SCRIPT
 ASSERT_OUTPUT
 1
 0
@@ -17,8 +19,17 @@ END_TEST
 
 START_TEST "Null literal"
 testLog(null)
+RUN_SCRIPT
 ASSERT_OUTPUT
 (Null)
 END_TEST
+
+START_TEST "Bad identifier"
+testLog(kjehwfkjwe)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
 
 

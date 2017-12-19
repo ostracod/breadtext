@@ -28,7 +28,6 @@ vector_t scriptBodyList;
 scriptScope_t *globalScriptScope;
 scriptScope_t *localScriptScope;
 vector_t scriptBranchStack;
-int8_t scriptHasError = false;
 int8_t scriptErrorMessage[1000];
 scriptBodyLine_t scriptErrorLine;
 int8_t scriptErrorHasLine = false;

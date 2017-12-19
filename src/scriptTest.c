@@ -12,7 +12,8 @@
 
 #define SCRIPT_TEST_PHASE_NONE 0
 #define SCRIPT_TEST_PHASE_LOAD 1
-#define SCRIPT_TEST_PHASE_ASSERT 2
+#define SCRIPT_TEST_PHASE_RUN 2
+#define SCRIPT_TEST_PHASE_ASSERT_OUTPUT 3
 
 FILE *scriptTestResultFile;
 int32_t failedTestCount;
@@ -46,11 +47,11 @@ int8_t processScriptTestCommand(int8_t *command) {
             return true;
         }
     } else if (scriptTestPhase == SCRIPT_TEST_PHASE_LOAD) {
-        if (strcmp((char *)command, "ASSERT_OUTPUT") == 0) {
+        if (strcmp((char *)command, "RUN_SCRIPT") == 0) {
             int8_t tempCharacter = 0;
             pushVectorElement(&scriptContent, &tempCharacter);
             runScriptAsText(scriptContent.data);
-            scriptTestPhase = SCRIPT_TEST_PHASE_ASSERT;
+            scriptTestPhase = SCRIPT_TEST_PHASE_RUN;
             scriptTestLogIndex = 0;
             return true;
         }
@@ -58,7 +59,39 @@ int8_t processScriptTestCommand(int8_t *command) {
         int8_t tempCharacter = '\n';
         pushVectorElement(&scriptContent, &tempCharacter);
         return true;
-    } else if (scriptTestPhase == SCRIPT_TEST_PHASE_ASSERT) {
+    } else if (scriptTestPhase == SCRIPT_TEST_PHASE_RUN) {
+        int8_t *tempTermList[50];
+        int32_t tempTermListLength;
+        parseSpaceSeperatedTerms(tempTermList, &tempTermListLength, command);
+        if (tempTermListLength <= 0) {
+            fprintf(scriptTestResultFile, "ERROR: Invalid command.\n");
+            fflush(scriptTestResultFile);
+            return false;
+        }
+        if (strcmp((char *)(tempTermList[0]), "ASSERT_OUTPUT") == 0) {
+            if (tempTermListLength != 1) {
+                fprintf(scriptTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            scriptTestPhase = SCRIPT_TEST_PHASE_ASSERT_OUTPUT;
+            return true;
+        }
+        if (strcmp((char *)(tempTermList[0]), "ASSERT_ERROR") == 0) {
+            if (tempTermListLength != 1) {
+                fprintf(scriptTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            if (!scriptHasError) {
+                failedTestCount += 1;
+                fprintf(scriptTestResultFile, "ASSERTION FAILURE\nMissing script error.\n");
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            return true;
+        }
+    } else if (scriptTestPhase == SCRIPT_TEST_PHASE_ASSERT_OUTPUT) {
         if (strcmp((char *)command, "END_TEST") == 0) {
             scriptTestPhase = SCRIPT_TEST_PHASE_NONE;
             if (scriptTestLogIndex < scriptTestLogMessageList.length) {
