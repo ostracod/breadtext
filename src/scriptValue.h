@@ -39,6 +39,7 @@
 #define SCRIPT_FUNCTION_BIND_KEY 25
 #define SCRIPT_FUNCTION_MAP_KEY 26
 #define SCRIPT_FUNCTION_BIND_COMMAND 27
+#define SCRIPT_FUNCTION_TEST_LOG 28
 
 #define SCRIPT_OPERATOR_TYPE_BINARY 1
 #define SCRIPT_OPERATOR_TYPE_UNARY_PREFIX 2
@@ -191,6 +192,7 @@ typedef struct commandBinding {
 scriptHeapValue_t *firstHeapValue;
 
 int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
+void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos);

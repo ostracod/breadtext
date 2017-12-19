@@ -80,7 +80,8 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"promptChar", SCRIPT_FUNCTION_PROMPT_CHAR, 0},
     {(int8_t *)"bindKey", SCRIPT_FUNCTION_BIND_KEY, 2},
     {(int8_t *)"mapKey", SCRIPT_FUNCTION_MAP_KEY, 3},
-    {(int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND, 2}
+    {(int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND, 2},
+    {(int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG, 1}
 };
 
 scriptConstant_t scriptConstantSet[] = {
@@ -119,6 +120,16 @@ int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
     (destination->text)[destination->length] = 0;
     fclose(tempFile);
     return true;
+}
+
+void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text) {
+    int8_t tempPath[] = "/bupkis.btsl";
+    destination->path = malloc(strlen((char *)tempPath) + 1);
+    strcpy((char *)(destination->path), (char *)tempPath);
+    destination->path = NULL;
+    destination->length = strlen((char *)text);
+    destination->text = malloc(destination->length + 1);
+    strcpy((char *)(destination->text), (char *)text);
 }
 
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {

@@ -82,10 +82,18 @@ void popVectorElement(void *destination, vector_t *vector) {
     removeVectorElement(vector, index);
 }
 
+void insertVectorElementArray(vector_t *vector, int64_t index, void *source, int64_t amount) {
+    setVectorLength(vector, vector->length + amount);
+    copyData(vector->data + (index + amount) * vector->elementSize, vector->data + index * vector->elementSize, (vector->length - index - amount) * vector->elementSize);
+    copyData(vector->data + index * vector->elementSize, source, vector->elementSize * amount);
+}
+
 void insertVectorIntoVector(vector_t *vector, int64_t index, vector_t *source) {
-    setVectorLength(vector, vector->length + source->length);
-    copyData(vector->data + (index + source->length) * vector->elementSize, vector->data + index * vector->elementSize, (vector->length - index - source->length) * vector->elementSize);
-    copyData(vector->data + index * vector->elementSize, source->data, source->elementSize * source->length);
+    insertVectorElementArray(vector, vector->length, source->data, source->length);
+}
+
+void pushVectorElementArray(vector_t *vector, void *source, int64_t amount) {
+    insertVectorElementArray(vector, vector->length, source, amount);
 }
 
 void pushVectorOntoVector(vector_t *vector, vector_t *source) {

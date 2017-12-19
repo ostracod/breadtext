@@ -1281,7 +1281,7 @@ int main(int argc, const char *argv[]) {
         if (strcmp(argv[1], "--script-test") == 0) {
             isPerformingScriptTest = true;
             scriptTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
-            scriptTestResultPath = mallocRealpath((int8_t *)"./systematicTestResult.txt");
+            scriptTestResultPath = mallocRealpath((int8_t *)"./scriptTestResult.txt");
             tempArgumentsAreValid = true;
         }
     }

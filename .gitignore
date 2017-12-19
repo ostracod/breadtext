@@ -10,3 +10,6 @@ failure.txt
 failures
 systematicTestResult.txt
 systematicTestResults
+scriptTestResult.txt
+scriptTestResults
+

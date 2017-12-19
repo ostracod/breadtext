@@ -44,6 +44,13 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
     createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
+    createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
+}
+
+void addScriptTestLogMessage(int8_t *text) {
+    int8_t *tempText = malloc(strlen((char *)text) + 1);
+    strcpy((char *)tempText, (char *)text);
+    pushVectorElement(&scriptTestLogMessageList, &tempText);
 }
 
 void garbageCollectScriptHeapValues() {
@@ -95,7 +102,7 @@ int8_t characterIsEndOfScriptLine(int8_t character) {
 }
 
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
-scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine);
+scriptValue_t evaluateScriptBodyAtLine(scriptBodyLine_t *scriptBody_t);
 scriptBody_t *importScript(int8_t *path);
 
 // All output values will be locked.
@@ -238,7 +245,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             reportScriptError((int8_t *)"Unexpected end of script", &tempLine);
             return output;
         }
-        return evaluateScriptBody(&tempLine);
+        return evaluateScriptBodyAtLine(&tempLine);
     } else if (function.type == SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION) {
         scriptBuiltInFunction_t *tempFunction = *(scriptBuiltInFunction_t **)&(function.data);
         if (tempArgumentCount != tempFunction->argumentAmount) {
@@ -664,6 +671,16 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 } else {
                     tempOldCommandBinding->callback = tempCallbackValue;
                 }
+                break;
+            }
+            case SCRIPT_FUNCTION_TEST_LOG:
+            {
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, argumentList, 0);
+                scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempStringValue.data);
+                vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
+                addScriptTestLogMessage(tempText->data);
                 break;
             }
             default:
@@ -1996,7 +2013,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     }
 }
 
-scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine) {
+scriptValue_t evaluateScriptBodyAtLine(scriptBodyLine_t *scriptBodyLine) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
     while (true) {
@@ -2006,6 +2023,21 @@ scriptValue_t evaluateScriptBody(scriptBodyLine_t *scriptBodyLine) {
         }
     }
     return output;
+}
+
+void evaluateScriptBody(scriptBody_t *scriptBody) {
+    createEmptyVector(&(scriptBody->scopeStack), sizeof(scriptScope_t));
+    scriptBodyAddScope(scriptBody, createEmptyScriptScope());
+    scriptBodyLine_t tempScriptBodyLine;
+    tempScriptBodyLine.scriptBody = scriptBody;
+    tempScriptBodyLine.index = 0;
+    tempScriptBodyLine.number = 1;
+    scriptBranch_t tempBranch;
+    tempBranch.type = SCRIPT_BRANCH_TYPE_ROOT;
+    tempBranch.shouldIgnore = false;
+    tempBranch.line = tempScriptBodyLine;
+    pushVectorElement(&scriptBranchStack, &tempBranch);
+    evaluateScriptBodyAtLine(&tempScriptBodyLine);
 }
 
 scriptBody_t *importScriptHelper(int8_t *path) {
@@ -2024,20 +2056,9 @@ scriptBody_t *importScriptHelper(int8_t *path) {
         reportScriptErrorWithoutLine((int8_t *)"Import file missing.");
         return NULL;
     }
-    createEmptyVector(&(tempNewScriptBody.scopeStack), sizeof(scriptScope_t));
-    scriptBodyAddScope(&tempNewScriptBody, createEmptyScriptScope());
     pushVectorElement(&scriptBodyList, &tempNewScriptBody);
     scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, scriptBodyList.length - 1);
-    scriptBodyLine_t tempScriptBodyLine;
-    tempScriptBodyLine.scriptBody = tempScriptBody;
-    tempScriptBodyLine.index = 0;
-    tempScriptBodyLine.number = 1;
-    scriptBranch_t tempBranch;
-    tempBranch.type = SCRIPT_BRANCH_TYPE_ROOT;
-    tempBranch.shouldIgnore = false;
-    tempBranch.line = tempScriptBodyLine;
-    pushVectorElement(&scriptBranchStack, &tempBranch);
-    evaluateScriptBody(&tempScriptBodyLine);
+    evaluateScriptBody(tempScriptBody);
     return tempScriptBody;
 }
 
@@ -2086,6 +2107,17 @@ void displayScriptError() {
 int8_t runScript(int8_t *path) {
     resetScriptError();
     importScript(path);
+    if (scriptHasError) {
+        displayScriptError();
+    }
+    return !scriptHasError;
+}
+
+int8_t runScriptAsText(int8_t *text) {
+    resetScriptError();
+    scriptBody_t *tempScriptBody = malloc(sizeof(scriptBody_t));
+    loadScriptBodyFromText(tempScriptBody, text);
+    evaluateScriptBody(tempScriptBody);
     if (scriptHasError) {
         displayScriptError();
     }
