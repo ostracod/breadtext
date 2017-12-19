@@ -1,6 +1,0 @@
-
-START_TEST "Basic test logging"
-testLog("abc123")
-ASSERT_OUTPUT
-abc123
-END_TEST

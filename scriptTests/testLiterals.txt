@@ -1,0 +1,24 @@
+
+START_TEST "Number literals"
+testLog(15)
+testLog(2.5)
+ASSERT_OUTPUT
+15
+2.5
+END_TEST
+
+START_TEST "Boolean literals"
+testLog(true)
+testLog(false)
+ASSERT_OUTPUT
+1
+0
+END_TEST
+
+START_TEST "Null literal"
+testLog(null)
+ASSERT_OUTPUT
+(Null)
+END_TEST
+
+
