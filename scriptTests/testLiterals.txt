@@ -2,10 +2,12 @@
 START_TEST "Number literals"
 testLog(15)
 testLog(2.5)
+testLog(.25)
 RUN_SCRIPT
 ASSERT_OUTPUT
 15
 2.5
+0.25
 END_TEST
 
 START_TEST "Boolean literals"
