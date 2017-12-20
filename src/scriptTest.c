@@ -91,6 +91,23 @@ int8_t processScriptTestCommand(int8_t *command) {
             }
             return true;
         }
+        if (strcmp((char *)(tempTermList[0]), "PRESS_KEY") == 0) {
+            if (tempTermListLength < 2) {
+                fprintf(scriptTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            int32_t index = 1;
+            while (index < tempTermListLength) {
+                int8_t *tempName = tempTermList[index];
+                int32_t tempKey = tempName[0];
+                handleKey(tempKey, true, true);
+                refresh();
+                sleepMilliseconds(1);
+                index += 1;
+            }
+            return true;
+        }
     } else if (scriptTestPhase == SCRIPT_TEST_PHASE_ASSERT_OUTPUT) {
         if (strcmp((char *)command, "END_TEST") == 0) {
             scriptTestPhase = SCRIPT_TEST_PHASE_NONE;
