@@ -114,7 +114,7 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
             reportScriptError((int8_t *)"Unexpected end of expression list.", scriptBodyPos->scriptBodyLine);
             return;
         }
-        if (tempCharacter == endCharacter) {
+        if (tempCharacter == endCharacter && destination->length == 0) {
             scriptBodyPos->index += 1;
             break;
         }
