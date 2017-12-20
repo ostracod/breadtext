@@ -819,14 +819,34 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
         if (isScriptNumberCharacter(tempFirstCharacter)) {
             scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
             scriptBodyPosSeekEndOfNumber(&tempScriptBodyPos);
+            int8_t tempCharacter = scriptBodyPosGetCharacter(&tempScriptBodyPos);
+            if (isScriptIdentifierCharacter(tempCharacter)) {
+                reportScriptError((int8_t *)"Malformed number.", scriptBodyPos->scriptBodyLine);
+                return expressionResult;
+            }
             int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
             int8_t tempText[tempLength + 1];
             copyData(tempText, getScriptBodyPosPointer(scriptBodyPos), tempLength);
             tempText[tempLength] = 0;
+            int8_t tempDecimalPointCount = 0;
+            int64_t index = 0;
+            while (index < tempLength) {
+                int8_t tempCharacter = tempText[index];
+                if (tempCharacter == '.') {
+                    tempDecimalPointCount += 1;
+                    if (tempDecimalPointCount > 1) {
+                        reportScriptError((int8_t *)"Malformed number.", scriptBodyPos->scriptBodyLine);
+                        return expressionResult;
+                    }
+                }
+                index += 1;
+            }
             double tempNumber;
-            sscanf((char *)tempText, "%lf", &tempNumber);
-            // TODO: Handle malformed numbers.
-            // TODO: Handle hexadecimal numbers.
+            int32_t tempResult = sscanf((char *)tempText, "%lf", &tempNumber);
+            if (tempResult < 1) {
+                reportScriptError((int8_t *)"Malformed number.", scriptBodyPos->scriptBodyLine);
+                return expressionResult;
+            }
             expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
             *(double *)&(expressionResult.value.data) = tempNumber;
             *scriptBodyPos = tempScriptBodyPos;
