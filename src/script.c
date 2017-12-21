@@ -114,7 +114,7 @@ void getScriptBodyValueList(vector_t *destination, scriptBodyPos_t *scriptBodyPo
             reportScriptError((int8_t *)"Unexpected end of expression list.", scriptBodyPos->scriptBodyLine);
             return;
         }
-        if (tempCharacter == endCharacter && destination->length == 0) {
+        if (tempCharacter == endCharacter && destination->length <= 0) {
             scriptBodyPos->index += 1;
             break;
         }
@@ -202,7 +202,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 reportScriptError((int8_t *)"Unexpected end of argument list.", &tempLine);
                 return output;
             }
-            if (tempCharacter == ')') {
+            if (tempCharacter == ')' && argumentList->length <= 0) {
                 tempScriptBodyPos.index += 1;
                 break;
             }
@@ -2125,6 +2125,10 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     tempBranch.line = tempScriptBodyLine;
     pushVectorElement(&scriptBranchStack, &tempBranch);
     evaluateScriptBodyAtLine(&tempScriptBodyLine);
+    scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+    if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
+        reportScriptErrorWithoutLine((int8_t *)"Missing end statement.");
+    }
 }
 
 scriptBody_t *importScriptHelper(int8_t *path) {

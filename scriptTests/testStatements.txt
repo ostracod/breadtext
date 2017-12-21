@@ -82,10 +82,17 @@ ASSERT_OUTPUT
 13
 END_TEST
 
-START_TEST "Bad if statement"
+START_TEST "Bad if statement 1"
 if 0 1
     testLog(1)
 end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad if statement 2"
+if 1
 RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
@@ -332,4 +339,99 @@ ASSERT_OUTPUT
 3
 2
 4
+END_TEST
+
+START_TEST "Function statement 2"
+dec value3 = 10
+func action(value1, value2)
+    testLog(value1)
+    testLog(value2)
+    dec value3 = 20
+    testLog(value3)
+end
+action(30, 40)
+testLog(value3)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+30
+40
+20
+10
+END_TEST
+
+START_TEST "Function statement 3"
+testLog(1)
+func action1()
+    testLog(2)
+    action2()
+    testLog(3)
+end
+testLog(4)
+func action2()
+    testLog(5)
+end
+testLog(6)
+action1()
+testLog(7)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+4
+6
+2
+5
+3
+7
+END_TEST
+
+START_TEST "Bad function statement 1"
+func
+    testLog(2)
+end
+action()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function statement 2"
+func action
+    testLog(2)
+end
+action()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function statement 3"
+func action(
+    testLog(2)
+end
+action()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function statement 4"
+func action(value, )
+    testLog(2)
+end
+action(10)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function statement 5"
+func action() bad
+    testLog(2)
+end
+action()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
 END_TEST
