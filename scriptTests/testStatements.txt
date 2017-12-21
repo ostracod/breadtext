@@ -480,6 +480,27 @@ ASSERT_OUTPUT
 10
 END_TEST
 
+START_TEST "Return statement 3"
+dec value3 = 10
+func action(value1, value2)
+    testLog(value1)
+    testLog(value2)
+    dec value3 = 20
+    testLog(value3)
+    ret
+    testLog(123)
+end
+action(30, 40)
+testLog(value3)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+30
+40
+20
+10
+END_TEST
+
 START_TEST "Bad return statement 1"
 func action()
     ret 1 2

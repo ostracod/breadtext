@@ -2051,7 +2051,12 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             if (scriptHasError) {
                 return false;
             }
-            int64_t index = scriptBranchStack.length - 1;
+            vector_t *tempScopeStack = &(scriptBodyLine->scriptBody->scopeStack);
+            int64_t index = tempScopeStack->length - 1;
+            scriptScope_t *tempScope = findVectorElement(tempScopeStack, index);
+            cleanUpScriptScope(tempScope);
+            removeVectorElement(tempScopeStack, index);
+            index = scriptBranchStack.length - 1;
             while (true) {
                 if (index < 0) {
                     reportScriptError((int8_t *)"Invalid return statement.", scriptBodyLine);
