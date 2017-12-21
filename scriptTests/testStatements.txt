@@ -105,3 +105,109 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Else statement"
+testLog(1)
+if 1
+    testLog(2)
+else
+    testLog(3)
+end
+testLog(4)
+if 0
+    testLog(5)
+else
+    testLog(6)
+end
+testLog(7)
+RUN_SCRIPT
+ASSERT_OUTPUT
+1
+2
+4
+6
+7
+END_TEST
+
+START_TEST "Bad else statement"
+else
+    testLog(1)
+end
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Else if statement"
+testLog(1)
+if 1
+    testLog(2)
+else if 1
+    testLog(3)
+else
+    testLog(4)
+end
+testLog(5)
+if 0
+    testLog(6)
+else if 1
+    testLog(7)
+else
+    testLog(8)
+end
+testLog(9)
+if 1
+    testLog(10)
+else if 0
+    testLog(11)
+else
+    testLog(12)
+end
+testLog(13)
+if 0
+    testLog(14)
+else if 0
+    testLog(15)
+else
+    testLog(16)
+end
+testLog(17)
+if 0
+    testLog(18)
+else if 0
+    testLog(19)
+else if 0
+    testLog(20)
+else if 0
+    testLog(21)
+else if 1
+    testLog(22)
+else
+    testLog(23)
+end
+testLog(24)
+RUN_SCRIPT
+ASSERT_OUTPUT
+1
+2
+5
+7
+9
+10
+13
+16
+17
+22
+24
+END_TEST
+
+START_TEST "Bad else if statement"
+else if 1
+    testLog(1)
+end
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST

@@ -1781,6 +1781,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     scriptBodyPosSkipWhitespace(&scriptBodyPos);
                     if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
                         expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                        assertEndOfLine(scriptBodyPos);
                         if (scriptHasError) {
                             return false;
                         }
@@ -1795,15 +1796,18 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                             return false;
                         }
                     } else {
+                        assertEndOfLine(scriptBodyPos);
+                        if (scriptHasError) {
+                            return false;
+                        }
                         currentBranch->shouldIgnore = false;
                         currentBranch->hasExecuted = true;
                     }
                 }
-                assertEndOfLine(scriptBodyPos);
-                if (scriptHasError) {
-                    return false;
-                }
                 return seekNextScriptBodyLine(scriptBodyLine);
+            } else {
+                reportScriptError((int8_t *)"Invalid else statement.", scriptBodyLine);
+                return false;
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
@@ -1892,9 +1896,12 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
-            assertEndOfLine(scriptBodyPos);
-            if (scriptHasError) {
-                return false;
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            if (!scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+                assertEndOfLine(scriptBodyPos);
+                if (scriptHasError) {
+                    return false;
+                }
             }
             if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
                 currentBranch->shouldIgnore = true;

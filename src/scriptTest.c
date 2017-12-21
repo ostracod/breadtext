@@ -133,6 +133,9 @@ int8_t processScriptTestCommand(int8_t *command) {
             fprintf(scriptTestResultFile, "ASSERTION FAILURE\nExpected: %s\nFound: %s\n", (char *)command, (char *)tempMessage);
             fflush(scriptTestResultFile);
             return false;
+        } else {
+            fprintf(scriptTestResultFile, "%s\n", (char *)command);
+            fflush(scriptTestResultFile);
         }
         return true;
     }
