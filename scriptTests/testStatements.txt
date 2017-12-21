@@ -517,3 +517,164 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Import statement 1"
+testLog(1)
+import "./scriptTestImport.btsl"
+    share value1, value2
+end
+testLog(2)
+testLog(value1)
+testLog(3)
+testLog(value2)
+testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+2
+10
+3
+20
+4
+END_TEST
+
+START_TEST "Import statement 2"
+testLog(1)
+import "./scriptTestImport.btsl"
+    share value1
+    share value2
+end
+testLog(2)
+testLog(value1)
+testLog(3)
+testLog(value2)
+testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+2
+10
+3
+20
+4
+END_TEST
+
+START_TEST "Bad import statement 1"
+import
+    share value1, value2
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad import statement 2"
+import 3
+    share value1, value2
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad import statement 3"
+import "./scriptTestImport.btsl" "bad"
+    share value1, value2
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad import statement 4"
+import "./scriptTestImport.btsl" 
+    share value1
+    testLog(1)
+    share value2
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad share statement 1"
+import "./scriptTestImport.btsl" 
+    share
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad share statement 2"
+import "./scriptTestImport.btsl" 
+    share value1,
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad share statement 2"
+import "./scriptTestImport.btsl" 
+    share value1 value2
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Greedy dirtbag statement"
+testLog(1)
+import "./scriptTestImport.btsl"
+    greedy dirtbag
+end
+testLog(2)
+testLog(value1)
+testLog(3)
+testLog(value2)
+testLog(4)
+testLog(value3)
+testLog(5)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+2
+10
+3
+20
+4
+30
+5
+END_TEST
+
+START_TEST "Bad greedy dirtbag statement 1"
+import "./scriptTestImport.btsl"
+    greedy
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad greedy dirtbag statement 2"
+import "./scriptTestImport.btsl"
+    greedy dirtbag bad
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad greedy dirtbag statement 2"
+dev value1 = 999
+import "./scriptTestImport.btsl"
+    greedy dirtbag
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
