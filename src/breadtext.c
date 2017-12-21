@@ -204,7 +204,15 @@ void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings) {
-    if (shouldUseBindings) {
+    if (isRecordingMacro && shouldUseMappings && shouldUseBindings) {
+        if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
+            stopRecordingMacro();
+        } else {
+            macroKeyList[macroKeyListLength] = key;
+            macroKeyListLength += 1;
+        }
+    }
+    if (shouldUseBindings && activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
         int8_t tempResult = invokeKeyBinding(key);
         if (tempResult) {
             return false;
@@ -212,14 +220,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
     }
     if (shouldUseMappings) {
         key = invokeKeyMapping(key);
-    }
-    if (isRecordingMacro) {
-        if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
-            stopRecordingMacro();
-        } else {
-            macroKeyList[macroKeyListLength] = key;
-            macroKeyListLength += 1;
-        }
     }
     if (isShowingNotification) {
         eraseNotification();
@@ -874,7 +874,7 @@ void playMacro() {
     macroIndex = 0;
     while (macroIndex < macroKeyListLength) {
         int32_t tempKey = macroKeyList[macroIndex];
-        handleKey(tempKey, false, false);
+        handleKey(tempKey, true, true);
         macroIndex += 1;
     }
     isPlayingMacro = false;
