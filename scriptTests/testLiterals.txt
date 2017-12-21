@@ -10,6 +10,20 @@ ASSERT_OUTPUT
 0.25
 END_TEST
 
+START_TEST "Bad number 1"
+testLog(1.2.3)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad number 2"
+testLog(1.2a)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
 START_TEST "Boolean literals"
 testLog(true)
 testLog(false)
@@ -26,6 +40,13 @@ ASSERT_OUTPUT
 (Null)
 END_TEST
 
+START_TEST "Bad identifier"
+testLog(kjehwfkjwe)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
 START_TEST "Character literals"
 testLog('a')
 testLog('\\')
@@ -37,51 +58,6 @@ ASSERT_OUTPUT
 92
 39
 10
-END_TEST
-
-START_TEST "String literals"
-testLog("Hello")
-testLog("One \" two")
-testLog("Three \\ four")
-RUN_SCRIPT
-ASSERT_OUTPUT
-Hello
-One " two
-Three \ four
-END_TEST
-
-START_TEST "List literals"
-testLog([10, 20, 30])
-testLog([])
-testLog(["One", "two"])
-testLog([10, [20, 30], 40])
-RUN_SCRIPT
-ASSERT_OUTPUT
-[10, 20, 30]
-[]
-[One, two]
-[10, [20, 30], 40]
-END_TEST
-
-START_TEST "Bad number 1"
-testLog(1.2.3)
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
-END_TEST
-
-START_TEST "Bad number 2"
-testLog(1.2a)
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
-END_TEST
-
-START_TEST "Bad identifier"
-testLog(kjehwfkjwe)
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
 END_TEST
 
 START_TEST "Bad character 1"
@@ -98,11 +74,35 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
+START_TEST "String literals"
+testLog("Hello")
+testLog("One \" two")
+testLog("Three \\ four")
+RUN_SCRIPT
+ASSERT_OUTPUT
+Hello
+One " two
+Three \ four
+END_TEST
+
 START_TEST "Bad string"
 testLog("One two)
 RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
+END_TEST
+
+START_TEST "List literals"
+testLog([10, 20, 30])
+testLog([])
+testLog(["One", "two"])
+testLog([10, [20, 30], 40])
+RUN_SCRIPT
+ASSERT_OUTPUT
+[10, 20, 30]
+[]
+[One, two]
+[10, [20, 30], 40]
 END_TEST
 
 START_TEST "Bad list 1"
