@@ -1823,6 +1823,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             return seekNextScriptBodyLine(scriptBodyLine);
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
             return seekNextScriptBodyLine(scriptBodyLine);
         }
@@ -1975,6 +1979,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 cleanUpScriptScope(tempScope);
                 removeVectorElement(tempScopeStack, index);
                 returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
+                return false;
+            }
+            if (currentBranch->type == SCRIPT_BRANCH_TYPE_ROOT) {
+                reportScriptError((int8_t *)"Invalid end statement.", scriptBodyLine);
                 return false;
             }
         }

@@ -40,3 +40,68 @@ RUN_SCRIPT
 ASSERT_OUTPUT
 3
 END_TEST
+
+START_TEST "If statement"
+testLog(1)
+if 1
+    testLog(2)
+    if 1
+        testLog(3)
+    end
+    testLog(4)
+    if 0
+        testLog(5)
+    end
+    testLog(6)
+end
+testLog(7)
+if 0
+    testLog(8)
+    if 1
+        testLog(9)
+    end
+    testLog(10)
+    if 0
+        testLog(11)
+    end
+    testLog(12)
+end
+testLog(13)
+RUN_SCRIPT
+ASSERT_OUTPUT
+1
+2
+3
+4
+6
+7
+13
+END_TEST
+
+START_TEST "Bad if statement"
+if 0 1
+    testLog(1)
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad end statement 1"
+if 0
+    testLog(1)
+end bad
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad end statement 2"
+if 0
+    testLog(1)
+end
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
