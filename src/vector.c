@@ -16,9 +16,9 @@ void createEmptyVector(vector_t *destination, int64_t elementSize) {
 void createVectorFromArray(vector_t *destination, int64_t elementSize, void *source, int64_t elementCount) {
     destination->elementSize = elementSize;
     if (elementCount <= 0) {
-        destination->dataSize = elementSize * elementCount;
-    } else {
         destination->dataSize = elementSize;
+    } else {
+        destination->dataSize = elementSize * elementCount;
     }
     destination->data = malloc(destination->dataSize);
     destination->length = elementCount;
