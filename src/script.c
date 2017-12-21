@@ -203,6 +203,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 return output;
             }
             if (tempCharacter == ')') {
+                tempScriptBodyPos.index += 1;
                 break;
             }
             if (index >= argumentList->length) {
@@ -232,6 +233,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
             if (tempCharacter == ',') {
                 tempScriptBodyPos.index += 1;
             } else if (tempCharacter == ')') {
+                tempScriptBodyPos.index += 1;
                 break;
             } else {
                 reportScriptError((int8_t *)"Bad argument list.", &tempLine);

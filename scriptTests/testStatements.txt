@@ -316,3 +316,20 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Function statement 1"
+testLog(1)
+func action()
+    testLog(2)
+end
+testLog(3)
+action()
+testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+3
+2
+4
+END_TEST
