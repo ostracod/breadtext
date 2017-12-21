@@ -211,3 +211,96 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "While statement"
+dec value = 0
+while value < 5
+    testLog(value)
+    value += 1
+end
+testLog("done")
+RUN_SCRIPT
+ASSERT_OUTPUT
+0
+1
+2
+3
+4
+done
+END_TEST
+
+START_TEST "Bad while statement"
+while 1 2
+    testLog(1)
+end
+end
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Break statement"
+dec value = 0
+while value < 5
+    if value == 3
+        break
+    end
+    testLog(value)
+    value += 1
+end
+testLog("done")
+RUN_SCRIPT
+ASSERT_OUTPUT
+0
+1
+2
+done
+END_TEST
+
+START_TEST "Bad break statement 1"
+while 1
+    break bad
+end
+RUN_SCRIPT
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad break statement 2"
+break
+RUN_SCRIPT
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Continue statement"
+dec value = 0
+while value < 5
+    value += 1
+    if value == 3
+        continue
+    end
+    testLog(value)
+end
+testLog("done")
+RUN_SCRIPT
+ASSERT_OUTPUT
+1
+2
+4
+5
+done
+END_TEST
+
+START_TEST "Bad continue statement 1"
+while 1
+    continue bad
+end
+RUN_SCRIPT
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad continue statement 2"
+continue
+RUN_SCRIPT
+ASSERT_OUTPUT
+END_TEST
+
