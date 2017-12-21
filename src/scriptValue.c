@@ -133,11 +133,22 @@ void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text) {
 
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {
     scriptBodyLine->number += 1;
+    int8_t tempIsEscaped = false;
     while (scriptBodyLine->index < scriptBodyLine->scriptBody->length) {
         int8_t tempCharacter = (scriptBodyLine->scriptBody->text)[scriptBodyLine->index];
         scriptBodyLine->index += 1;
-        if (tempCharacter == '\n') {
-            return true;
+        if (tempIsEscaped) {
+            if (tempCharacter == '\n') {
+                scriptBodyLine->number += 1;
+            }
+            tempIsEscaped = false;
+        } else {
+            if (tempCharacter == '\n') {
+                return true;
+            }
+            if (tempCharacter == '\\') {
+                tempIsEscaped = true;
+            }
         }
         if (tempCharacter == 0) {
             return false;
@@ -153,7 +164,14 @@ int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos) {
 void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos) {
     while (true) {
         int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
-        if (tempCharacter != ' ' && tempCharacter != '\t') {
+        if (tempCharacter == '\\') {
+            scriptBodyPos->index += 1;
+            tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+            if (tempCharacter != ' ' && tempCharacter != '\t' && tempCharacter != '\n') {
+                scriptBodyPos->index -= 1;
+                break;
+            }
+        } else if (tempCharacter != ' ' && tempCharacter != '\t') {
             break;
         }
         scriptBodyPos->index += 1;

@@ -29,3 +29,14 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Line continuation"
+dec\
+value \
+=       \
+3
+testLog(value)
+RUN_SCRIPT
+ASSERT_OUTPUT
+3
+END_TEST
