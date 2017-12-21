@@ -310,12 +310,16 @@ void deleteScriptHeapValue(scriptHeapValue_t *value) {
         cleanUpVector(tempVector);
         free(tempVector);
     }
+    endwin();
     if (tempType == SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION) {
         scriptCustomFunction_t *tempFunction = *(scriptCustomFunction_t **)&(value->data);
         deleteScriptCustomFunction(tempFunction);
+        printf("MARK A\n"); fflush(stdout);
         free(tempFunction);
+        printf("MARK B\n"); fflush(stdout);
     }
     free(value);
+    printf("MARK C\n"); fflush(stdout);
 }
 
 int8_t scriptValueIsInHeap(scriptValue_t *value) {

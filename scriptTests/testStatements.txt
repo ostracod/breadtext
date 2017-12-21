@@ -435,3 +435,69 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Return statement 1"
+testLog(1)
+func action()
+    testLog(2)
+    if 1
+        ret
+    end
+    testLog(3)
+end
+testLog(4)
+action()
+testLog(5)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+4
+2
+5
+END_TEST
+
+START_TEST "Return statement 2"
+testLog(1)
+func action()
+    testLog(2)
+    if 1
+        ret 10
+    end
+    testLog(3)
+end
+testLog(4)
+dec value = action()
+testLog(5)
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+4
+2
+5
+10
+END_TEST
+
+START_TEST "Bad return statement 1"
+testLog(1000)
+func test()
+    testLog(2000)
+end
+testLog(3000)
+test()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+1
+2
+3
+END_TEST
+
+START_TEST "Bad return statement 2"
+ret
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
