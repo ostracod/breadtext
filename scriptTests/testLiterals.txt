@@ -4,6 +4,7 @@ testLog(15)
 testLog(2.5)
 testLog(.25)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 15
 2.5
@@ -28,6 +29,7 @@ START_TEST "Boolean literals"
 testLog(true)
 testLog(false)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 0
@@ -36,6 +38,7 @@ END_TEST
 START_TEST "Null literal"
 testLog(null)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 (Null)
 END_TEST
@@ -53,6 +56,7 @@ testLog('\\')
 testLog('\'')
 testLog('\n')
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 97
 92
@@ -79,6 +83,7 @@ testLog("Hello")
 testLog("One \" two")
 testLog("Three \\ four")
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 Hello
 One " two
@@ -98,6 +103,7 @@ testLog([])
 testLog(["One", "two"])
 testLog([10, [20, 30], 40])
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 [10, 20, 30]
 []

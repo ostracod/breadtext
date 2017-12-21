@@ -91,6 +91,20 @@ int8_t processScriptTestCommand(int8_t *command) {
             }
             return true;
         }
+        if (strcmp((char *)(tempTermList[0]), "ASSERT_NO_ERROR") == 0) {
+            if (tempTermListLength != 1) {
+                fprintf(scriptTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            if (scriptHasError) {
+                failedTestCount += 1;
+                fprintf(scriptTestResultFile, "ASSERTION FAILURE\nScript has error.\n");
+                fflush(scriptTestResultFile);
+                return false;
+            }
+            return true;
+        }
         if (strcmp((char *)(tempTermList[0]), "PRESS_KEY") == 0) {
             if (tempTermListLength < 2) {
                 fprintf(scriptTestResultFile, "ERROR: Wrong number of arguments.\n%s\n", tempTermList[0]);

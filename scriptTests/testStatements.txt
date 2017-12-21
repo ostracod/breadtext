@@ -4,6 +4,7 @@ dec value
 value = 3
 testLog(value)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 3
 END_TEST
@@ -19,6 +20,7 @@ START_TEST "Variable initialization"
 dec value = 3
 testLog(value)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 3
 END_TEST
@@ -37,6 +39,7 @@ value \
 3
 testLog(value)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 3
 END_TEST
@@ -68,6 +71,7 @@ if 0
 end
 testLog(13)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 2
@@ -121,6 +125,7 @@ else
 end
 testLog(7)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 2
@@ -188,6 +193,7 @@ else
 end
 testLog(24)
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 2
@@ -220,6 +226,7 @@ while value < 5
 end
 testLog("done")
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 0
 1
@@ -250,6 +257,7 @@ while value < 5
 end
 testLog("done")
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 0
 1
@@ -262,12 +270,14 @@ while 1
     break bad
 end
 RUN_SCRIPT
+ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
 START_TEST "Bad break statement 2"
 break
 RUN_SCRIPT
+ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
@@ -282,6 +292,7 @@ while value < 5
 end
 testLog("done")
 RUN_SCRIPT
+ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 2
@@ -295,12 +306,13 @@ while 1
     continue bad
 end
 RUN_SCRIPT
+ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
 START_TEST "Bad continue statement 2"
 continue
 RUN_SCRIPT
+ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
-
