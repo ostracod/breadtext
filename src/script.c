@@ -53,8 +53,6 @@ void addScriptTestLogMessage(int8_t *text) {
 }
 
 void garbageCollectScriptHeapValues() {
-    endwin();
-    printf("GARBAGE COLLECTING\n"); fflush(stdout);
     // Mark all heap values for deletion.
     scriptHeapValue_t *tempHeapValue = firstHeapValue;
     while (tempHeapValue != NULL) {
@@ -80,7 +78,6 @@ void garbageCollectScriptHeapValues() {
     tempHeapValue = firstHeapValue;
     while (tempHeapValue != NULL) {
         scriptHeapValue_t *tempNextHeapValue = tempHeapValue->next;
-        printf("%d\n", tempHeapValue->type); fflush(stdout);
         if (tempHeapValue->isMarked) {
             deleteScriptHeapValue(tempHeapValue);
         }
@@ -674,7 +671,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     reportScriptErrorWithoutLine((int8_t *)"Bad argument type.");
                     return output;
                 }
-                endwin();
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempCommandNameValue.data);
                 vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
                 commandBinding_t *tempOldCommandBinding = findCommandBinding(tempText->data);
@@ -697,9 +693,6 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(tempStringValue.data);
                 vector_t *tempText = *(vector_t **)&(tempHeapValue->data);
                 addScriptTestLogMessage(tempText->data);
-                // TEST CODE.
-                endwin();
-                printf("%s\n", (char *)tempText->data); fflush(stdout);
                 break;
             }
             default:
@@ -1680,9 +1673,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     garbageCollectionDelay -= 1;
     if (garbageCollectionDelay <= 0) {
         garbageCollectScriptHeapValues();
-        //garbageCollectionDelay = 100;
-        // TEST CODE.
-        garbageCollectionDelay = 0;
+        garbageCollectionDelay = 100;
     }
     scriptBodyPos_t scriptBodyPos;
     scriptBodyPos.scriptBodyLine = scriptBodyLine;
@@ -1939,34 +1930,27 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"func")) {
-            endwin();
-            printf("MARK 1\n"); fflush(stdout);
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
             if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
                 reportScriptError((int8_t *)"Missing declaration name.", scriptBodyLine);
                 return false;
             }
-            printf("MARK 2\n"); fflush(stdout);
             scriptBodyPos_t tempScriptBodyPos;
             tempScriptBodyPos = scriptBodyPos;
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
-            printf("MARK 3\n"); fflush(stdout);
             int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
             int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
             int8_t tempName[tempLength + 1];
             copyData(tempName, tempText, tempLength);
             tempName[tempLength] = 0;
-            printf("MARK 4\n"); fflush(stdout);
             scriptVariable_t *tempVariable = scriptScopeFindVariable(localScriptScope, tempName);
             if (tempVariable == NULL) {
                 scriptVariable_t tempNewVariable = createEmptyScriptVariable(tempName);
                 tempVariable = scriptScopeAddVariable(localScriptScope, tempNewVariable);
             }
-            printf("MARK 5\n"); fflush(stdout);
             scriptCustomFunction_t *tempScriptFunction = malloc(sizeof(scriptCustomFunction_t));
             tempScriptFunction->scriptBodyLine = *scriptBodyLine;
-            printf("MARK 6\n"); fflush(stdout);
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
             tempHeapValue->type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
             *(scriptCustomFunction_t **)&(tempHeapValue->data) = tempScriptFunction;
@@ -1974,13 +1958,11 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             tempValue.type = SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION;
             *(scriptHeapValue_t **)&(tempValue.data) = tempHeapValue;
             tempVariable->value = tempValue;
-            printf("MARK 7\n"); fflush(stdout);
             scriptBranch_t tempBranch;
             tempBranch.type = SCRIPT_BRANCH_TYPE_FUNCTION;
             tempBranch.shouldIgnore = true;
             tempBranch.line = *scriptBodyLine;
             pushVectorElement(&scriptBranchStack, &tempBranch);
-            printf("MARK 8\n"); fflush(stdout);
             return seekNextScriptBodyLine(scriptBodyLine);
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
@@ -2223,8 +2205,10 @@ int8_t runScript(int8_t *path) {
 
 int8_t runScriptAsText(int8_t *text) {
     resetScriptError();
-    scriptBody_t *tempScriptBody = malloc(sizeof(scriptBody_t));
-    loadScriptBodyFromText(tempScriptBody, text);
+    scriptBody_t tempNewScriptBody;
+    loadScriptBodyFromText(&tempNewScriptBody, text);
+    pushVectorElement(&scriptBodyList, &tempNewScriptBody);
+    scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, scriptBodyList.length - 1);
     evaluateScriptBody(tempScriptBody);
     if (scriptHasError) {
         displayScriptError();

@@ -481,18 +481,13 @@ ASSERT_OUTPUT
 END_TEST
 
 START_TEST "Bad return statement 1"
-testLog(1000)
-func test()
-    testLog(2000)
+func action()
+    ret 1 2
 end
-testLog(3000)
-test()
+action()
 RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
-1
-2
-3
 END_TEST
 
 START_TEST "Bad return statement 2"
