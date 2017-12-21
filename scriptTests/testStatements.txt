@@ -1,0 +1,31 @@
+
+START_TEST "Variable declaration"
+dec value
+value = 3
+testLog(value)
+RUN_SCRIPT
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Bad variable declaration"
+dec value bad 
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Variable initialization"
+dec value = 3
+testLog(value)
+RUN_SCRIPT
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Bad variable initialization"
+dec value = 3 bad
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST

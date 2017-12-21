@@ -162,6 +162,14 @@ commandBinding_t *findCommandBinding(int8_t *commandName) {
     return NULL;
 }
 
+void assertEndOfLine(scriptBodyPos_t scriptBodyPos) {
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+    if (!characterIsEndOfScriptLine(tempCharacter)) {
+        reportScriptError((int8_t *)"Expected end of line.", scriptBodyPos.scriptBodyLine);
+    }
+}
+
 scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -229,6 +237,10 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 reportScriptError((int8_t *)"Bad argument list.", &tempLine);
                 return output;
             }
+        }
+        assertEndOfLine(tempScriptBodyPos);
+        if (scriptHasError) {
+            return output;
         }
         if (index < argumentList->length) {
             reportScriptErrorWithoutLine((int8_t *)"Not enough arguments.");
@@ -1718,6 +1730,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"greedy")) {
                 scriptBodyPosSkipWhitespace(&scriptBodyPos);
                 if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dirtbag")) {
+                    assertEndOfLine(scriptBodyPos);
+                    if (scriptHasError) {
+                        return false;
+                    }
                     int64_t index = 0;
                     while (index < tempScope->variableList.length) {
                         scriptVariable_t *tempSourceVariable = findVectorElement(&(tempScope->variableList), index);
@@ -1738,6 +1754,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
             return seekNextScriptBodyLine(scriptBodyLine);
         }
@@ -1778,6 +1798,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                         currentBranch->shouldIgnore = false;
                         currentBranch->hasExecuted = true;
                     }
+                }
+                assertEndOfLine(scriptBodyPos);
+                if (scriptHasError) {
+                    return false;
                 }
                 return seekNextScriptBodyLine(scriptBodyLine);
             }
@@ -1836,10 +1860,15 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 }
                 tempVariable->value = tempResult.value;
             }
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             return seekNextScriptBodyLine(scriptBodyLine);
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;
             }
@@ -1859,6 +1888,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
                 currentBranch->shouldIgnore = true;
                 return seekNextScriptBodyLine(scriptBodyLine);
@@ -1866,6 +1899,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;
             }
@@ -1920,6 +1954,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             return seekNextScriptBodyLine(scriptBodyLine);
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             if (currentBranch->type == SCRIPT_BRANCH_TYPE_IF) {
                 removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
                 return seekNextScriptBodyLine(scriptBodyLine);
@@ -1941,6 +1979,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"break")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             int64_t index = scriptBranchStack.length - 1;
             while (true) {
                 if (index < 0) {
@@ -1957,6 +1999,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             return seekNextScriptBodyLine(scriptBodyLine);
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"continue")) {
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             int64_t index = scriptBranchStack.length - 1;
             while (true) {
                 if (index < 0) {
@@ -1985,6 +2031,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             } else {
                 returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
             }
+            assertEndOfLine(scriptBodyPos);
+            if (scriptHasError) {
+                return false;
+            }
             int64_t index = scriptBranchStack.length - 1;
             while (true) {
                 if (index < 0) {
@@ -2003,6 +2053,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"import")) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;
             }
