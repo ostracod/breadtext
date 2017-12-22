@@ -16,6 +16,9 @@ void cleanUpVector(vector_t *vector);
 void setVectorLength(vector_t *vector, int64_t length);
 void getVectorElement(void *destination, vector_t *vector, int64_t index);
 void setVectorElement(vector_t *vector, int64_t index, void *source);
+// Please use findVectorElement VERY carefully.
+// The pointer will point to a bad location if the
+// vector is resized.
 void *findVectorElement(vector_t *vector, int64_t index);
 void insertVectorElement(vector_t *vector, int64_t index, void *source);
 void insertVectorElementArray(vector_t *vector, int64_t index, void *source, int64_t amount);

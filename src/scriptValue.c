@@ -105,30 +105,34 @@ scriptConstant_t scriptConstantSet[] = {
 
 scriptHeapValue_t *firstScriptHeapValue = NULL;
 
-int8_t loadScriptBody(scriptBody_t *destination, int8_t *path) {
+int8_t loadScriptBody(scriptBody_t **destination, int8_t *path) {
     FILE *tempFile = fopen((char *)path, "r");
     if (tempFile == NULL) {
         return false;
     }
-    destination->path = malloc(strlen((char *)path) + 1);
-    strcpy((char *)(destination->path), (char *)path);
+    scriptBody_t *tempScriptBody = malloc(sizeof(scriptBody_t));
+    tempScriptBody->path = malloc(strlen((char *)path) + 1);
+    strcpy((char *)(tempScriptBody->path), (char *)path);
     fseek(tempFile, 0, SEEK_END);
-    destination->length = ftell(tempFile);
-    destination->text = malloc(destination->length + 1);
+    tempScriptBody->length = ftell(tempFile);
+    tempScriptBody->text = malloc(tempScriptBody->length + 1);
     fseek(tempFile, 0, SEEK_SET);
-    fread(destination->text, 1, destination->length, tempFile);
-    (destination->text)[destination->length] = 0;
+    fread(tempScriptBody->text, 1, tempScriptBody->length, tempFile);
+    (tempScriptBody->text)[tempScriptBody->length] = 0;
     fclose(tempFile);
+    *destination = tempScriptBody;
     return true;
 }
 
-void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text) {
+void loadScriptBodyFromText(scriptBody_t **destination, int8_t *text) {
+    scriptBody_t *tempScriptBody = malloc(sizeof(scriptBody_t));
     int8_t tempPath[] = "/bupkis.btsl";
-    destination->path = malloc(strlen((char *)tempPath) + 1);
-    strcpy((char *)(destination->path), (char *)tempPath);
-    destination->length = strlen((char *)text);
-    destination->text = malloc(destination->length + 1);
-    strcpy((char *)(destination->text), (char *)text);
+    tempScriptBody->path = malloc(strlen((char *)tempPath) + 1);
+    strcpy((char *)(tempScriptBody->path), (char *)tempPath);
+    tempScriptBody->length = strlen((char *)text);
+    tempScriptBody->text = malloc(tempScriptBody->length + 1);
+    strcpy((char *)(tempScriptBody->text), (char *)text);
+    *destination = tempScriptBody;
 }
 
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine) {
@@ -373,7 +377,8 @@ void unmarkScriptScope(scriptScope_t *scope) {
 void unmarkScriptBody(scriptBody_t *body) {
     int64_t index = 0;
     while (index < body->scopeStack.length) {
-        scriptScope_t *tempScope = findVectorElement(&(body->scopeStack), index);
+        scriptScope_t *tempScope;
+        getVectorElement(&tempScope, &(body->scopeStack), index);
         unmarkScriptScope(tempScope);
         index += 1;
     }
@@ -514,16 +519,16 @@ int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t
     return false;
 }
 
-scriptScope_t createEmptyScriptScope() {
-    scriptScope_t output;
-    createEmptyVector(&(output.variableList), sizeof(scriptVariable_t));
+scriptScope_t *createEmptyScriptScope() {
+    scriptScope_t *output = malloc(sizeof(scriptScope_t));
+    createEmptyVector(&(output->variableList), sizeof(scriptVariable_t));
     return output;
 }
 
-scriptScope_t *scriptBodyAddScope(scriptBody_t *body, scriptScope_t scope) {
-    int32_t index = body->scopeStack.length;
-    pushVectorElement(&(body->scopeStack), &scope);
-    return findVectorElement(&(body->scopeStack), index);
+scriptScope_t *scriptBodyAddEmptyScope(scriptBody_t *body) {
+    scriptScope_t *output = createEmptyScriptScope();
+    pushVectorElement(&(body->scopeStack), &output);
+    return output;
 }
 
 scriptVariable_t createEmptyScriptVariable(int8_t *name) {
@@ -540,29 +545,37 @@ scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t 
     return findVectorElement(&(scope->variableList), index);
 }
 
-scriptVariable_t *scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
+int64_t scriptScopeFindVariableIndexWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
     int32_t index = 0;
     while (index < scope->variableList.length) {
         scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
         if (strlen((char *)(tempVariable->name)) == length) {
             if (equalData(tempVariable->name, name, length)) {
-                return tempVariable;
+                return index;
             }
         }
         index += 1;
     }
-    return NULL;
+    return -1;
+}
+
+int64_t scriptScopeFindVariableIndex(scriptScope_t *scope, int8_t *name) {
+    return scriptScopeFindVariableIndexWithNameLength(scope, name, strlen((char *)name));
 }
 
 scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
-    return scriptScopeFindVariableWithNameLength(scope, name, strlen((char *)name));
+    int64_t index = scriptScopeFindVariableIndex(scope, name);
+    if (index < 0) {
+        return NULL;
+    }
+    return findVectorElement(&(scope->variableList), index);
 }
 
 void cleanUpScriptVariable(scriptVariable_t *variable) {
     free(variable->name);
 }
 
-void cleanUpScriptScope(scriptScope_t *scope) {
+void deleteScriptScope(scriptScope_t *scope) {
     int64_t index = 0;
     while (index < scope->variableList.length) {
         scriptVariable_t *tempVariable = findVectorElement(&(scope->variableList), index);
@@ -570,8 +583,8 @@ void cleanUpScriptScope(scriptScope_t *scope) {
         index += 1;
     }
     cleanUpVector(&(scope->variableList));
+    free(scope);
 }
-
 
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2) {
     int8_t type1 = value1->type;

@@ -15,13 +15,15 @@
 #include "textCommand.h"
 
 #define DESTINATION_TYPE_NONE 0
-#define DESTINATION_TYPE_VALUE 1
-#define DESTINATION_TYPE_CHARACTER 2
+#define DESTINATION_TYPE_VARIABLE 1
+#define DESTINATION_TYPE_LIST 2
+#define DESTINATION_TYPE_STRING 3
 
 typedef struct expressionResult {
     scriptValue_t value;
     int8_t destinationType;
-    void *destination;
+    int64_t destinationIndex;
+    vector_t *destination;
 } expressionResult_t;
 
 vector_t scriptBodyList;
@@ -38,7 +40,7 @@ int32_t garbageCollectionDelay = 0;
 
 void initializeScriptingEnvironment() {
     firstHeapValue = NULL;
-    createEmptyVector(&scriptBodyList, sizeof(scriptBody_t));
+    createEmptyVector(&scriptBodyList, sizeof(scriptBody_t *));
     createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
     createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
@@ -62,7 +64,8 @@ void garbageCollectScriptHeapValues() {
     // Unmark all reachable values.
     int64_t index = 0;
     while (index < scriptBodyList.length) {
-        scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, index);
+        scriptBody_t *tempScriptBody;
+        getVectorElement(&tempScriptBody, &scriptBodyList, index);
         unmarkScriptBody(tempScriptBody);
         index += 1;
     }
@@ -192,8 +195,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 break;
             }
         }
-        scriptScope_t tempNewScope = createEmptyScriptScope();
-        scriptScope_t *tempScope = scriptBodyAddScope(tempLine.scriptBody, tempNewScope);
+        scriptScope_t *tempScope = scriptBodyAddEmptyScope(tempLine.scriptBody);
         int64_t index = 0;
         while (true) {
             scriptBodyPosSkipWhitespace(&tempScriptBodyPos);
@@ -720,16 +722,26 @@ int8_t escapeScriptCharacter(int8_t character) {
 }
 
 void storeExpressionResultValueInDestination(expressionResult_t *expressionResult, scriptBodyLine_t *scriptBodyLine) {
-    if (expressionResult->destinationType == DESTINATION_TYPE_VALUE) {
-        *(scriptValue_t *)(expressionResult->destination) = expressionResult->value;
-    } else if (expressionResult->destinationType == DESTINATION_TYPE_CHARACTER) {
+    if (expressionResult->destinationType == DESTINATION_TYPE_NONE) {
+        reportScriptError((int8_t *)"Invalid destination.", scriptBodyLine);
+        return;
+    }
+    if (expressionResult->destinationIndex < 0 || expressionResult->destinationIndex >= expressionResult->destination->length) {
+        reportScriptError((int8_t *)"Index out of range.", scriptBodyLine);
+        return;
+    }
+    if (expressionResult->destinationType == DESTINATION_TYPE_VARIABLE) {
+        scriptVariable_t *tempVariable = findVectorElement(expressionResult->destination, expressionResult->destinationIndex);
+        tempVariable->value = expressionResult->value;
+    } else if (expressionResult->destinationType == DESTINATION_TYPE_LIST) {
+        setVectorElement(expressionResult->destination, expressionResult->destinationIndex, &(expressionResult->value));
+    } else if (expressionResult->destinationType == DESTINATION_TYPE_STRING) {
         if (expressionResult->value.type == SCRIPT_VALUE_TYPE_NUMBER) {
-            *(int8_t *)(expressionResult->destination) = (int8_t)*(double *)&(expressionResult->value.data);
+            int8_t tempCharacter = (int8_t)*(double *)&(expressionResult->value.data);
+            setVectorElement(expressionResult->destination, expressionResult->destinationIndex, &tempCharacter);
         } else {
             reportScriptError((int8_t *)"Bad operand types.", scriptBodyLine);
         }
-    } else {
-        reportScriptError((int8_t *)"Invalid destination.", scriptBodyLine);
     }
 }
 
@@ -784,19 +796,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             case SCRIPT_OPERATOR_INCREMENT_PREFIX:
             {
                 if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                    if (tempResult.destinationType == DESTINATION_TYPE_VALUE) {
-                        scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
-                        *(double *)&(tempValue->data) += 1;
-                        expressionResult.value = *tempValue;
-                    } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
-                        int8_t *tempValue = (int8_t *)(tempResult.destination);
-                        *tempValue += 1;
-                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                        *(double *)&(expressionResult.value.data) = (double)*tempValue;
-                    } else {
-                        reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
-                        return expressionResult;
-                    }
+                    *(double *)&(tempResult.value.data) += 1;
+                    expressionResult.value = tempResult.value;
+                    storeExpressionResultValueInDestination(&tempResult, scriptBodyPos->scriptBodyLine);
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
                     return expressionResult;
@@ -806,19 +808,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             case SCRIPT_OPERATOR_DECREMENT_PREFIX:
             {
                 if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                    if (tempResult.destinationType == DESTINATION_TYPE_VALUE) {
-                        scriptValue_t *tempValue = (scriptValue_t *)(tempResult.destination);
-                        *(double *)&(tempValue->data) -= 1;
-                        expressionResult.value = *tempValue;
-                    } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
-                        int8_t *tempValue = (int8_t *)(tempResult.destination);
-                        *tempValue -= 1;
-                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                        *(double *)&(expressionResult.value.data) = (double)*tempValue;
-                    } else {
-                        reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
-                        return expressionResult;
-                    }
+                    *(double *)&(tempResult.value.data) -= 1;
+                    expressionResult.value = tempResult.value;
+                    storeExpressionResultValueInDestination(&tempResult, scriptBodyPos->scriptBodyLine);
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
                     return expressionResult;
@@ -878,20 +870,24 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
             int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
             int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
-            scriptVariable_t *tempVariable = scriptScopeFindVariableWithNameLength(localScriptScope, tempText, tempLength);
-            if (tempVariable != NULL) {
+            int64_t tempVariableIndex = scriptScopeFindVariableIndexWithNameLength(localScriptScope, tempText, tempLength);
+            if (tempVariableIndex >= 0) {
+                scriptVariable_t *tempVariable = findVectorElement(&(localScriptScope->variableList), tempVariableIndex);
                 expressionResult.value = tempVariable->value;
-                expressionResult.destinationType = DESTINATION_TYPE_VALUE;
-                expressionResult.destination = &(tempVariable->value);
+                expressionResult.destinationType = DESTINATION_TYPE_VARIABLE;
+                expressionResult.destinationIndex = tempVariableIndex;
+                expressionResult.destination = &(localScriptScope->variableList);
                 *scriptBodyPos = tempScriptBodyPos;
                 break;
             }
             if (localScriptScope != globalScriptScope) {
-                tempVariable = scriptScopeFindVariableWithNameLength(globalScriptScope, tempText, tempLength);
-                if (tempVariable != NULL) {
+                int64_t tempVariableIndex = scriptScopeFindVariableIndexWithNameLength(globalScriptScope, tempText, tempLength);
+                if (tempVariableIndex >= 0) {
+                    scriptVariable_t *tempVariable = findVectorElement(&(globalScriptScope->variableList), tempVariableIndex);
                     expressionResult.value = tempVariable->value;
-                    expressionResult.destinationType = DESTINATION_TYPE_VALUE;
-                    expressionResult.destination = &(tempVariable->value);
+                    expressionResult.destinationType = DESTINATION_TYPE_VARIABLE;
+                    expressionResult.destinationIndex = tempVariableIndex;
+                    expressionResult.destination = &(globalScriptScope->variableList);
                     *scriptBodyPos = tempScriptBodyPos;
                     break;
                 }
@@ -1081,12 +1077,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         reportScriptError((int8_t *)"Index out of range.", scriptBodyPos->scriptBodyLine);
                         return expressionResult;
                     }
-                    int8_t *tempLocation = (int8_t *)findVectorElement(tempText, index);
-                    int8_t tempCharacter = *tempLocation;
+                    int8_t tempCharacter;
+                    getVectorElement(&tempCharacter, tempText, index);
                     expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                     *(double *)&(expressionResult.value.data) = (double)tempCharacter;
-                    expressionResult.destinationType = DESTINATION_TYPE_CHARACTER;
-                    expressionResult.destination = tempLocation;
+                    expressionResult.destinationType = DESTINATION_TYPE_STRING;
+                    expressionResult.destinationIndex = index;
+                    expressionResult.destination = tempText;
                 } else if (tempType1 == SCRIPT_VALUE_TYPE_LIST) {
                     scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(expressionResult.value.data);
                     vector_t *tempList = *(vector_t **)&(tempHeapValue->data);
@@ -1094,11 +1091,12 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                         reportScriptError((int8_t *)"Index out of range.", scriptBodyPos->scriptBodyLine);
                         return expressionResult;
                     }
-                    scriptValue_t *tempLocation = (scriptValue_t *)findVectorElement(tempList, index);
-                    scriptValue_t tempValue = *tempLocation;
+                    scriptValue_t tempValue;
+                    getVectorElement(&tempValue, tempList, index);
                     expressionResult.value = tempValue;
-                    expressionResult.destinationType = DESTINATION_TYPE_VALUE;
-                    expressionResult.destination = tempLocation;
+                    expressionResult.destinationType = DESTINATION_TYPE_LIST;
+                    expressionResult.destinationIndex = index;
+                    expressionResult.destination = tempList;
                 } else {
                     reportScriptError((int8_t *)"Bad operand types.", scriptBodyPos->scriptBodyLine);
                     return expressionResult;
@@ -1121,16 +1119,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     case SCRIPT_OPERATOR_INCREMENT_POSTFIX:
                     {
                         if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                            if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
-                                scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
-                                *(double *)&(tempValue->data) += 1;
-                            } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
-                                int8_t *tempValue = (int8_t *)(expressionResult.destination);
-                                *tempValue += 1;
-                            } else {
-                                reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
-                                return expressionResult;
-                            }
+                            expressionResult_t tempResult = expressionResult;
+                            *(double *)&(tempResult.value.data) += 1;
+                            storeExpressionResultValueInDestination(&tempResult, scriptBodyPos->scriptBodyLine);
                         } else {
                             reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
                             return expressionResult;
@@ -1140,16 +1131,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     case SCRIPT_OPERATOR_DECREMENT_POSTFIX:
                     {
                         if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
-                            if (expressionResult.destinationType == DESTINATION_TYPE_VALUE) {
-                                scriptValue_t *tempValue = (scriptValue_t *)(expressionResult.destination);
-                                *(double *)&(tempValue->data) -= 1;
-                            } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
-                                int8_t *tempValue = (int8_t *)(expressionResult.destination);
-                                *tempValue -= 1;
-                            } else {
-                                reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
-                                return expressionResult;
-                            }
+                            expressionResult_t tempResult = expressionResult;
+                            *(double *)&(tempResult.value.data) -= 1;
+                            storeExpressionResultValueInDestination(&tempResult, scriptBodyPos->scriptBodyLine);
                         } else {
                             reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
                             return expressionResult;
@@ -1695,11 +1679,12 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     scriptBodyPosSkipWhitespace(&scriptBodyPos);
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     vector_t *currentScopeStack = &(currentBranch->line.scriptBody->scopeStack);
-    globalScriptScope = findVectorElement(currentScopeStack, 0);
-    localScriptScope = findVectorElement(currentScopeStack, currentScopeStack->length - 1);
+    getVectorElement(&globalScriptScope, currentScopeStack, 0);
+    getVectorElement(&localScriptScope, currentScopeStack, currentScopeStack->length - 1);
     if (currentBranch->type == SCRIPT_BRANCH_TYPE_IMPORT) {
         if (!currentBranch->shouldIgnore) {
-            scriptScope_t *tempScope = findVectorElement(&(currentBranch->importScriptBody->scopeStack), 0);
+            scriptScope_t *tempScope;
+            getVectorElement(&tempScope, &(currentBranch->importScriptBody->scopeStack), 0);
             if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"share")) {
                 while (true) {
                     scriptBodyPosSkipWhitespace(&scriptBodyPos);
@@ -1997,8 +1982,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
                 vector_t *tempScopeStack = &(scriptBodyLine->scriptBody->scopeStack);
                 int64_t index = tempScopeStack->length - 1;
-                scriptScope_t *tempScope = findVectorElement(tempScopeStack, index);
-                cleanUpScriptScope(tempScope);
+                scriptScope_t *tempScope;
+                getVectorElement(&tempScope, tempScopeStack, index);
+                deleteScriptScope(tempScope);
                 removeVectorElement(tempScopeStack, index);
                 returnValue->type = SCRIPT_VALUE_TYPE_MISSING;
                 return false;
@@ -2067,8 +2053,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             }
             vector_t *tempScopeStack = &(scriptBodyLine->scriptBody->scopeStack);
             int64_t index = tempScopeStack->length - 1;
-            scriptScope_t *tempScope = findVectorElement(tempScopeStack, index);
-            cleanUpScriptScope(tempScope);
+            scriptScope_t *tempScope;
+            getVectorElement(&tempScope, tempScopeStack, index);
+            deleteScriptScope(tempScope);
             removeVectorElement(tempScopeStack, index);
             index = scriptBranchStack.length - 1;
             while (true) {
@@ -2100,6 +2087,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                 tempBranch.shouldIgnore = false;
                 tempBranch.line = *scriptBodyLine;
                 tempBranch.importScriptBody = importScript(tempText->data);
+                if (scriptHasError) {
+                    return false;
+                }
                 pushVectorElement(&scriptBranchStack, &tempBranch);
                 return seekNextScriptBodyLine(scriptBodyLine);
             } else {
@@ -2130,9 +2120,26 @@ scriptValue_t evaluateScriptBodyAtLine(scriptBodyLine_t *scriptBodyLine) {
     return output;
 }
 
+void debugPrintAroundPointer(int8_t *pointer) {
+    endwin();
+    pointer -= 15;
+    int8_t tempOffset = 0;
+    while (tempOffset < 30) {
+        int32_t tempValue = (uint8_t)*pointer;
+        printf("%d ", tempValue);
+        if (tempValue >= 32 && tempValue <= 126) {
+            printf("(%c) ", (char)tempValue);
+        }
+        pointer += 1;
+        tempOffset += 1;
+    }
+    printf("\n");
+    fflush(stdout);
+}
+
 void evaluateScriptBody(scriptBody_t *scriptBody) {
-    createEmptyVector(&(scriptBody->scopeStack), sizeof(scriptScope_t));
-    scriptBodyAddScope(scriptBody, createEmptyScriptScope());
+    createEmptyVector(&(scriptBody->scopeStack), sizeof(scriptScope_t *));
+    scriptBodyAddEmptyScope(scriptBody);
     scriptBodyLine_t tempScriptBodyLine;
     tempScriptBodyLine.scriptBody = scriptBody;
     tempScriptBodyLine.index = 0;
@@ -2146,6 +2153,7 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
         reportScriptErrorWithoutLine((int8_t *)"Missing end statement.");
+        return;
     }
     removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
 }
@@ -2154,20 +2162,19 @@ scriptBody_t *importScriptHelper(int8_t *path) {
     int32_t index = 0;
     while (index < scriptBodyList.length) {
         scriptBody_t *tempScriptBody;
-        tempScriptBody = findVectorElement(&scriptBodyList, index);
+        getVectorElement(&tempScriptBody, &scriptBodyList, index);
         if (strcmp((char *)(tempScriptBody->path), (char *)path) == 0) {
             return tempScriptBody;
         }
         index += 1;
     }
-    scriptBody_t tempNewScriptBody;
-    int8_t tempResult = loadScriptBody(&tempNewScriptBody, path);
+    scriptBody_t *tempScriptBody;
+    int8_t tempResult = loadScriptBody(&tempScriptBody, path);
     if (!tempResult) {
         reportScriptErrorWithoutLine((int8_t *)"Import file missing.");
         return NULL;
     }
-    pushVectorElement(&scriptBodyList, &tempNewScriptBody);
-    scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, scriptBodyList.length - 1);
+    pushVectorElement(&scriptBodyList, &tempScriptBody);
     evaluateScriptBody(tempScriptBody);
     return tempScriptBody;
 }
@@ -2225,10 +2232,9 @@ int8_t runScript(int8_t *path) {
 
 int8_t runScriptAsText(int8_t *text) {
     resetScriptError();
-    scriptBody_t tempNewScriptBody;
-    loadScriptBodyFromText(&tempNewScriptBody, text);
-    pushVectorElement(&scriptBodyList, &tempNewScriptBody);
-    scriptBody_t *tempScriptBody = findVectorElement(&scriptBodyList, scriptBodyList.length - 1);
+    scriptBody_t *tempScriptBody;
+    loadScriptBodyFromText(&tempScriptBody, text);
+    pushVectorElement(&scriptBodyList, &tempScriptBody);
     evaluateScriptBody(tempScriptBody);
     if (scriptHasError) {
         displayScriptError();

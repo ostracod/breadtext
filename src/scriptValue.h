@@ -191,8 +191,8 @@ typedef struct commandBinding {
 
 scriptHeapValue_t *firstHeapValue;
 
-int8_t loadScriptBody(scriptBody_t *destination, int8_t *path);
-void loadScriptBodyFromText(scriptBody_t *destination, int8_t *text);
+int8_t loadScriptBody(scriptBody_t **destination, int8_t *path);
+void loadScriptBodyFromText(scriptBody_t **destination, int8_t *text);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);
 int8_t scriptBodyPosGetCharacter(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSkipWhitespace(scriptBodyPos_t *scriptBodyPos);
@@ -221,14 +221,15 @@ scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);
 scriptValue_t convertScriptValueToNumber(scriptValue_t value);
-scriptScope_t createEmptyScriptScope();
-scriptScope_t *scriptBodyAddScope(scriptBody_t *body, scriptScope_t scope);
+scriptScope_t *createEmptyScriptScope();
+scriptScope_t *scriptBodyAddEmptyScope(scriptBody_t *body);
 scriptVariable_t createEmptyScriptVariable(int8_t *name);
 scriptVariable_t *scriptScopeAddVariable(scriptScope_t *scope, scriptVariable_t variable);
-scriptVariable_t *scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length);
+int64_t scriptScopeFindVariableIndexWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length);
+int64_t scriptScopeFindVariableIndex(scriptScope_t *scope, int8_t *name);
 scriptVariable_t *scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
 void cleanUpScriptVariable(scriptVariable_t *variable);
-void cleanUpScriptScope(scriptScope_t *scope);
+void deleteScriptScope(scriptScope_t *scope);
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2);
 int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2);
 scriptValue_t copyScriptValue(scriptValue_t *value);
