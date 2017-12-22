@@ -96,3 +96,82 @@ ASSERT_OUTPUT
 1
 1
 END_TEST
+
+START_TEST "copy"
+dec value1 = "hello"
+dec value2 = copy(value1)
+dec value3 = [10, 20, 30]
+dec value4 = copy(value3)
+testLog(value2)
+testLog(value1 === value2)
+testLog(value4)
+testLog(value3 === value4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+hello
+0
+[10, 20, 30]
+0
+END_TEST
+
+START_TEST "str"
+dec value1 = str(3)
+dec value2 = str("hello")
+dec value3 = str([10, 20, 30])
+testLog(value1)
+testLog(isStr(value1))
+testLog(value2)
+testLog(isStr(value2))
+testLog(value3)
+testLog(isStr(value3))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+1
+hello
+1
+[10, 20, 30]
+1
+END_TEST
+
+START_TEST "num"
+dec value1 = num(3)
+dec value2 = num("5")
+dec value3 = num("bad")
+testLog(value1)
+testLog(isNum(value1))
+testLog(value2)
+testLog(isNum(value2))
+testLog(value3 === null)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+1
+5
+1
+1
+END_TEST
+
+START_TEST "floor"
+testLog(floor(3))
+testLog(floor(3.2))
+testLog(floor(3.5))
+testLog(floor(3.8))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+3
+3
+3
+END_TEST
+
+START_TEST "Bad floor"
+floor([])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
