@@ -1280,3 +1280,93 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Index operator"
+dec value1 = "abcde"
+dec value2 = [10, 20, 30, 40, 50]
+testLog(value1[2])
+testLog(value2[2])
+value1[2] = 'X'
+value2[2] = 999
+testLog(value1)
+testLog(value2)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+99
+30
+abXde
+[10, 20, 999, 40, 50]
+END_TEST
+
+START_TEST "Invalid index operator 1"
+dec value = 5
+value[2]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 2"
+dec value = "abcde"
+value[-1]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 3"
+dec value = "abcde"
+value[5]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 4"
+dec value = [10, 20, 30, 40, 50]
+value[-1]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 5"
+dec value = [10, 20, 30, 40, 50]
+value[5]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 6"
+dec value = [10, 20, 30, 40, 50]
+value["soap"]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 7"
+dec value = [10, 20, 30, 40, 50]
+value[
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 8"
+dec value = [10, 20, 30, 40, 50]
+value[2
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Invalid index operator 9"
+dec value = [10, 20, 30, 40, 50]
+value[2 5]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
