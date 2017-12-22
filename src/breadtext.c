@@ -674,11 +674,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     setShouldUseSystemClipboard(true);
                     break;
                 }
-                case 'v':
-                {
-                    highlightLineContents();
-                    break;
-                }
                 case 'V':
                 {
                     enterBeginningOfCommand((int8_t *)"gotoLine ");
@@ -801,6 +796,11 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case 'E':
                 {
                     promptCharacterAndHighlightEnclosureInclusive();
+                    break;
+                }
+                case 'v':
+                {
+                    highlightLineContents();
                     break;
                 }
                 case ' ':

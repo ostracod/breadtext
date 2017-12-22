@@ -93,7 +93,7 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
         }
         setTextPosIndex(&cursorTextPos, index);
     }
-    if (isHighlighting) {
+    if (isHighlighting && activityMode != HIGHLIGHT_LINE_MODE) {
         if (line == highlightTextPos.line) {
             int64_t index = getTextPosIndex(&highlightTextPos);
             index += tempOffset;
@@ -165,7 +165,7 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
         }
         setTextPosIndex(&cursorTextPos, index);
     }
-    if (isHighlighting) {
+    if (isHighlighting && activityMode != HIGHLIGHT_LINE_MODE) {
         if (line == highlightTextPos.line) {
             int64_t index = getTextPosIndex(&highlightTextPos);
             index += tempOffset;
