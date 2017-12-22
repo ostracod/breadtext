@@ -438,3 +438,243 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Boolean AND operator"
+testLog(0 && 0)
+testLog(1 && 0)
+testLog(0 && 1)
+testLog(1 && 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+0
+1
+END_TEST
+
+START_TEST "Bad boolean AND operator 1"
+[] && 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean AND operator 2"
+1 && []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean AND assignment operator"
+dec value
+value = 0
+value &&= 0
+testLog(value)
+value = 1
+value &&= 0
+testLog(value)
+value = 0
+value &&= 1
+testLog(value)
+value = 1
+value &&= 1
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+0
+1
+END_TEST
+
+START_TEST "Bad boolean AND assignment operator 1"
+3 &&= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean AND assignment operator 2"
+dec value = 1
+value &&= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean AND assignment operator 3"
+dec value = []
+value &&= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean OR operator"
+testLog(0 || 0)
+testLog(1 || 0)
+testLog(0 || 1)
+testLog(1 || 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+1
+1
+END_TEST
+
+START_TEST "Bad boolean OR operator 1"
+[] || 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean OR operator 2"
+1 || []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean OR assignment operator"
+dec value
+value = 0
+value ||= 0
+testLog(value)
+value = 1
+value ||= 0
+testLog(value)
+value = 0
+value ||= 1
+testLog(value)
+value = 1
+value ||= 1
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+1
+1
+END_TEST
+
+START_TEST "Bad boolean OR assignment operator 1"
+3 ||= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean OR assignment operator 2"
+dec value = 1
+value ||= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean OR assignment operator 3"
+dec value = []
+value ||= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean XOR operator"
+testLog(0 ^^ 0)
+testLog(1 ^^ 0)
+testLog(0 ^^ 1)
+testLog(1 ^^ 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+1
+0
+END_TEST
+
+START_TEST "Bad boolean XOR operator 1"
+[] ^^ 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean XOR operator 2"
+1 ^^ []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean XOR assignment operator"
+dec value
+value = 0
+value ^^= 0
+testLog(value)
+value = 1
+value ^^= 0
+testLog(value)
+value = 0
+value ^^= 1
+testLog(value)
+value = 1
+value ^^= 1
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+1
+0
+END_TEST
+
+START_TEST "Bad boolean XOR assignment operator 1"
+3 ^^= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean XOR assignment operator 2"
+dec value = 1
+value ^^= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad boolean XOR assignment operator 3"
+dec value = []
+value ^^= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Boolean NOT operator"
+testLog(!0)
+testLog(!1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+0
+END_TEST
+
+START_TEST "Bad boolean NOT operator"
+![]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
