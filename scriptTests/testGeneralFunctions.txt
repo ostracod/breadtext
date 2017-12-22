@@ -175,3 +175,161 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "(Kagamine) len"
+testLog(len("hello"))
+testLog(len([1, 2, 3]))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+5
+3
+END_TEST
+
+START_TEST "Bad len"
+len(3)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "ins"
+dec value1 = "hello"
+dec value2 = [10, 20, 30]
+ins(value1, 2, 'X')
+ins(value2, 1, 997)
+testLog(value1)
+testLog(value2)
+ins(value1, 0, 'Y')
+ins(value2, 0, 998)
+testLog(value1)
+testLog(value2)
+ins(value1, 7, 'Z')
+ins(value2, 5, 999)
+testLog(value1)
+testLog(value2)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+heXllo
+[10, 997, 20, 30]
+YheXllo
+[998, 10, 997, 20, 30]
+YheXlloZ
+[998, 10, 997, 20, 30, 999]
+END_TEST
+
+START_TEST "Bad ins 1"
+dec value = 3
+ins(value, 0, 1)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 2"
+dec value = "hello"
+ins(value, "bad", 1)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 3"
+dec value = "hello"
+ins(value, 1, [])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 4"
+dec value = "hello"
+ins(value, -1, 'X')
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 5"
+dec value = "hello"
+ins(value, 6, 'X')
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 6"
+dec value = [10, 20, 30]
+ins(value, -1, 999)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad ins 7"
+dec value = [10, 20, 30]
+ins(value, 4, 999)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "rem"
+dec value1 = "abcde"
+dec value2 = [10, 20, 30, 40, 50]
+rem(value1, 2)
+rem(value2, 2)
+testLog(value1)
+testLog(value2)
+rem(value1, 0)
+rem(value2, 0)
+testLog(value1)
+testLog(value2)
+rem(value1, 2)
+rem(value2, 2)
+testLog(value1)
+testLog(value2)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+abde
+[10, 20, 40, 50]
+bde
+[20, 40, 50]
+bd
+[20, 40]
+END_TEST
+
+START_TEST "Bad rem 1"
+dec value = 3
+rem(value, 0)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad rem 2"
+dec value = "hello"
+rem(value, "bad")
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad rem 3"
+dec value = "hello"
+rem(value, -1)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad rem 4"
+dec value = "hello"
+rem(value, 5)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
