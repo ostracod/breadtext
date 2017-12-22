@@ -43,6 +43,14 @@ ASSERT_OUTPUT
 (Null)
 END_TEST
 
+START_TEST "Constant"
+testLog(KEY_SPACE)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+32
+END_TEST
+
 START_TEST "Bad identifier"
 testLog(kjehwfkjwe)
 RUN_SCRIPT
