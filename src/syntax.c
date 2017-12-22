@@ -24,6 +24,11 @@ void removeAllSyntax() {
         free(keywordList);
         keywordList = NULL;
     }
+    textLine_t *tempTextLine = getLeftmostTextLine(rootTextLine);
+    while (tempTextLine != NULL) {
+        eraseSyntaxHighlighting(&(tempTextLine->textAllocation));
+        tempTextLine = getNextTextLine(tempTextLine);
+    }
     hasFoundSyntaxFile = false;
 }
 
