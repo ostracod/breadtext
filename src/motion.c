@@ -554,7 +554,9 @@ int8_t gotoNextTermHelper() {
         if (tempEndIndex > tempStartIndex) {
             tempEndIndex -= 1;
         }
+        eraseLineNumber();
         cursorTextPos.line = tempStartTextPos.line;
+        displayLineNumber();
         setTextPosIndex(&cursorTextPos, tempStartIndex);
         highlightTextPos.line = tempEndTextPos.line;
         setTextPosIndex(&highlightTextPos, tempEndIndex);
@@ -602,7 +604,9 @@ int8_t gotoPreviousTermHelper() {
         if (tempEndIndex > tempStartIndex) {
             tempEndIndex -= 1;
         }
+        eraseLineNumber();
         cursorTextPos.line = tempStartTextPos.line;
+        displayLineNumber();
         setTextPosIndex(&cursorTextPos, tempStartIndex);
         highlightTextPos.line = tempEndTextPos.line;
         setTextPosIndex(&highlightTextPos, tempEndIndex);
