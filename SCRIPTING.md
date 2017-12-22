@@ -297,7 +297,7 @@ end
 bindCommand("isPrime", primalityCommand)
 ```
 
-
+For more example scripts, please see [this directory](exampleScripts).
 
 
 

@@ -1,0 +1,45 @@
+
+func isInMandelbrot(posX, posY)
+    dec firstPosX = posX
+    dec firstPosY = posY
+    dec count = 0
+    while count < 20
+        dec nextPosX = posX * posX - posY * posY
+        dec nextPosY = 2 * posX * posY
+        nextPosX += firstPosX
+        nextPosY += firstPosY
+        posX = nextPosX
+        posY = nextPosY
+        if posX < -3 || posX > 3 || posY < -3 || posY > 3
+            ret false
+        end
+        count += 1
+    end
+    ret true
+end
+
+func drawMandelbrot(argList)
+    setMode(MODE_TEXT_ENTRY)
+    dec windowWidth = 80
+    dec windowHeight = 30
+    dec offsetX = 0
+    dec offsetY = 0
+    while offsetY < windowHeight
+        dec posX = (offsetX / windowWidth - 0.7) * 3
+        dec posY = (offsetY / windowHeight - 0.5) * 2
+        if isInMandelbrot(posX, posY)
+            pressKey('O')
+        else
+            pressKey('.')
+        end
+        offsetX += 1
+        if offsetX >= windowWidth
+            pressKey(KEY_NEWLINE)
+            offsetX = 0
+            offsetY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("mandelbrot", drawMandelbrot)
