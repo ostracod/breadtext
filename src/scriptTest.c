@@ -117,6 +117,8 @@ int8_t processScriptTestCommand(int8_t *command) {
                 int32_t tempKey;
                 if (strcmp((char *)tempName, "NEWLINE") == 0) {
                     tempKey = '\n';
+                } else if (strcmp((char *)tempName, "ESC") == 0) {
+                    tempKey = 27;
                 } else {
                     tempKey = tempName[0];
                 }

@@ -266,3 +266,129 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "runCommand"
+pressKey('t')
+pressKey('a')
+pressKey('b')
+pressKey(KEY_NEWLINE)
+pressKey('c')
+pressKey('d')
+pressKey(KEY_ESCAPE)
+runCommand("gotoLine", [1])
+testLog(getCursorLineIndex())
+runCommand("replace", ["ab", "XY"])
+testLog(getLineContents(0))
+dec value = runCommand("get", ["colorScheme"])
+testLog(isNum(value))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+XY
+1
+END_TEST
+
+START_TEST "Bad runCommand 1"
+runCommand([], [1])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad runCommand 2"
+runCommand("get", 3)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "bindKey"
+func action()
+    testLog(1)
+    ret true
+end
+bindKey('7', action)
+RUN_SCRIPT
+PRESS_KEY 7
+PRESS_KEY 7
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+END_TEST
+
+START_TEST "Bad bindKey"
+func action()
+    testLog(1)
+    ret true
+end
+bindKey([], action)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "mapKey"
+func action()
+    testLog(getLineContents(0))
+    ret true
+end
+bindKey('7', action)
+mapKey('3', 'a', MODE_TEXT_ENTRY)
+RUN_SCRIPT
+PRESS_KEY t 1 2 3 4 5 ESC
+PRESS_KEY 7
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+12a45
+END_TEST
+
+START_TEST "Bad mapKey 1"
+mapKey([], 'a', MODE_TEXT_ENTRY)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad mapKey 2"
+mapKey('3', [], MODE_TEXT_ENTRY)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad mapKey 3"
+mapKey('3', 'a', [])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "bindCommand"
+func action(argList)
+    dec value = num(argList[0]) + num(argList[1])
+    testLog(value)
+    ret value
+end
+bindCommand("findSum", action)
+testLog(runCommand("findSum", [3, 5]) + 1)
+RUN_SCRIPT
+PRESS_KEY / f i n d S u m " " 1 0 " " 2 0 NEWLINE
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+8
+9
+30
+END_TEST
+
+START_TEST "Bad bindCommand"
+func action(argList)
+    testLog(argList[0])
+    ret null
+end
+bindCommand([], action)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
