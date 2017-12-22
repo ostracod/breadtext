@@ -1172,3 +1172,111 @@ ASSERT_OUTPUT
 1
 1
 END_TEST
+
+START_TEST "Increment operator"
+dec value1 = 5
+dec value2 = "abc"
+testLog(value1++)
+testLog(value1)
+testLog((value2[1])++)
+testLog(value2[1])
+testLog(++value1)
+testLog(value1)
+testLog(++(value2[1]))
+testLog(value2[1])
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+5
+6
+98
+99
+7
+7
+100
+100
+END_TEST
+
+START_TEST "Bad increment operator 1"
+5++
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad increment operator 2"
+++5
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad increment operator 3"
+dec value = []
+value++
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad increment operator 3"
+dec value = []
+++value
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Decrement operator"
+dec value1 = 5
+dec value2 = "abc"
+testLog(value1--)
+testLog(value1)
+testLog((value2[1])--)
+testLog(value2[1])
+testLog(--value1)
+testLog(value1)
+testLog(--(value2[1]))
+testLog(value2[1])
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+5
+4
+98
+97
+3
+3
+96
+96
+END_TEST
+
+START_TEST "Bad decrement operator 1"
+5--
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad decrement operator 2"
+--5
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad decrement operator 3"
+dec value = []
+value--
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad decrement operator 3"
+dec value = []
+--value
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST

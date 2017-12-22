@@ -791,7 +791,11 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
                         int8_t *tempValue = (int8_t *)(tempResult.destination);
                         *tempValue += 1;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         *(double *)&(expressionResult.value.data) = (double)*tempValue;
+                    } else {
+                        reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
+                        return expressionResult;
                     }
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
@@ -809,7 +813,11 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                     } else if (tempResult.destinationType == DESTINATION_TYPE_CHARACTER) {
                         int8_t *tempValue = (int8_t *)(tempResult.destination);
                         *tempValue -= 1;
+                        expressionResult.value.type = SCRIPT_VALUE_TYPE_NUMBER;
                         *(double *)&(expressionResult.value.data) = (double)*tempValue;
+                    } else {
+                        reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
+                        return expressionResult;
                     }
                 } else {
                     reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
@@ -1119,6 +1127,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                             } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
                                 int8_t *tempValue = (int8_t *)(expressionResult.destination);
                                 *tempValue += 1;
+                            } else {
+                                reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
+                                return expressionResult;
                             }
                         } else {
                             reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
@@ -1135,6 +1146,9 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
                             } else if (expressionResult.destinationType == DESTINATION_TYPE_CHARACTER) {
                                 int8_t *tempValue = (int8_t *)(expressionResult.destination);
                                 *tempValue -= 1;
+                            } else {
+                                reportScriptError((int8_t *)"Invalid destination.", scriptBodyPos->scriptBodyLine);
+                                return expressionResult;
                             }
                         } else {
                             reportScriptError((int8_t *)"Bad operand type.", scriptBodyPos->scriptBodyLine);
