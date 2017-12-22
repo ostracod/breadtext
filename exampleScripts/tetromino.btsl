@@ -1,0 +1,245 @@
+
+dec boardWidth = 10
+dec boardHeight = 24
+
+dec blockCharacter = 'O'
+dec emptyCharacter = '.'
+
+dec score = 0
+
+dec tetrominoPosX
+dec tetrominoPosY
+dec tetromino
+
+dec tetrominoSet = [\
+[[0, 1], [1, 1], [2, 1], [3, 1]],\
+[[1, 1], [2, 1], [1, 2], [2, 2]],\
+[[1, 0], [1, 1], [1, 2], [2, 2]],\
+[[2, 0], [2, 1], [2, 2], [1, 2]],\
+[[0, 2], [1, 2], [1, 1], [2, 1]],\
+[[1, 1], [2, 1], [2, 2], [3, 2]],\
+[[0, 2], [1, 2], [2, 2], [1, 1]]\
+]
+
+func writeText(text)
+    dec index = 0
+    while index < len(text)
+        pressKey(text[index])
+        index += 1
+    end
+end
+
+func setUpBoard()
+    setCursorPos(0, 0)
+    while getCursorLineIndex() < boardHeight
+        pressKey(emptyCharacter)
+        if getCursorCharIndex() >= boardWidth
+            pressKey(KEY_NEWLINE)
+        end
+    end
+    writeText("SCORE: 0")
+    pressKey(KEY_NEWLINE)
+end
+
+func drawScore()
+    setCursorPos(0, boardHeight)
+    setMode(MODE_COMMAND)
+    pressKey(']')
+    pressKey(KEY_LEFT)
+    pressKey('w')
+    pressKey('D')
+    writeText(str(score))
+end
+
+func copyTetromino(tetromino)
+    dec output = []
+    dec index = 0
+    while index < len(tetromino)
+        dec pos = tetromino[index]
+        ins(output, index, copy(pos))
+        index += 1
+    end
+    ret output
+end
+
+func selectNextTetromino()
+    dec index = floor(rand() * len(tetrominoSet))
+    tetromino = tetrominoSet[index]
+    tetromino = copyTetromino(tetromino)
+end
+
+func drawBlock(posX, posY, isEmpty)
+    setCursorPos(posX + 1, posY)
+    pressKey(KEY_BACKSPACE)
+    if isEmpty
+        pressKey(emptyCharacter)
+    else
+        pressKey(blockCharacter)
+    end
+end
+
+func blockIsEmpty(posX, posY)
+    if posX < 0 || posX >= boardWidth || posY < 0 || posY >= boardHeight
+        ret false
+    end
+    dec text = getLineContents(posY)
+    dec character = text[posX]
+    ret (character == emptyCharacter)
+end
+
+func drawTetromino(isEmpty)
+    dec index = 0
+    while index < len(tetromino)
+        dec offset = tetromino[index]
+        dec posX = tetrominoPosX + offset[0]
+        dec posY = tetrominoPosY + offset[1]
+        drawBlock(posX, posY, isEmpty)
+        index += 1
+    end
+end
+
+func tetrominoHasCollision()
+    dec index = 0
+    while index < len(tetromino)
+        dec offset = tetromino[index]
+        dec posX = tetrominoPosX + offset[0]
+        dec posY = tetrominoPosY + offset[1]
+        if !blockIsEmpty(posX, posY)
+            ret true
+        end
+        index += 1
+    end
+    ret false
+end
+
+func moveTetromino(offsetX, offsetY)
+    dec lastPosX = tetrominoPosX
+    dec lastPosY = tetrominoPosY
+    drawTetromino(true)
+    tetrominoPosX += offsetX
+    tetrominoPosY += offsetY
+    if tetrominoHasCollision()
+        tetrominoPosX = lastPosX
+        tetrominoPosY = lastPosY
+        drawTetromino(false)
+        ret false
+    end
+    drawTetromino(false)
+    ret true
+end
+
+func rotateTetromino()
+    dec lastTetromino = copyTetromino(tetromino)
+    drawTetromino(true)
+    dec index = 0
+    while index < len(tetromino)
+        dec pos = tetromino[index]
+        dec posX = pos[0]
+        dec posY = pos[1]
+        pos[0] = 3 - posY
+        pos[1] = posX
+        index += 1
+    end
+    if tetrominoHasCollision()
+        tetromino = lastTetromino
+    end
+    drawTetromino(false)
+end
+
+func lineIsFull(posY)
+    dec text = getLineContents(posY)
+    dec index = 0
+    while index < len(text)
+        dec character = text[index]
+        if character == emptyCharacter
+            ret false
+        end
+        index += 1
+    end
+    ret true
+end
+
+func clearLine(posY)
+    setMode(MODE_COMMAND)
+    setCursorPos(0, posY)
+    pressKey('H')
+    pressKey('d')
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec count = 0
+    while count < boardWidth
+        pressKey(emptyCharacter)
+        count += 1
+    end
+    pressKey(KEY_NEWLINE)
+    score += 1
+    drawScore()
+end
+
+func clearLines()
+    dec posY = 0
+    while posY < boardHeight
+        if lineIsFull(posY)
+            clearLine(posY)
+        end
+        posY += 1
+    end
+end
+
+func playTetrominoGame(argList)
+    setMode(MODE_TEXT_ENTRY)
+    setUpBoard()
+    while true
+        tetrominoPosX = 3
+        tetrominoPosY = 0
+        selectNextTetromino()
+        if tetrominoHasCollision()
+            setMode(MODE_COMMAND)
+            setCursorPos(0, boardHeight)
+            pressKey('o')
+            writeText("YOU DIED!!!")
+            break
+        end
+        drawTetromino(false)
+        dec shouldBreak = false
+        while true
+            setCursorPos(0, 0)
+            dec key = promptKey()
+            if key == KEY_LEFT
+                moveTetromino(-1, 0)
+            end
+            if key == KEY_RIGHT
+                moveTetromino(1, 0)
+            end
+            if key == KEY_DOWN
+                dec result = moveTetromino(0, 1)
+                if !result
+                    break
+                end
+            end
+            if key == KEY_UP
+                rotateTetromino()
+            end
+            if key == KEY_SPACE
+                while true
+                    dec result = moveTetromino(0, 1)
+                    if !result
+                        break
+                    end
+                end
+                break
+            end
+            if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+                shouldBreak = true
+                break
+            end
+        end
+        if shouldBreak
+            break
+        end
+        clearLines()
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("tetromino", playTetrominoGame)
