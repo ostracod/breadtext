@@ -2147,6 +2147,7 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
         reportScriptErrorWithoutLine((int8_t *)"Missing end statement.");
     }
+    removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
 }
 
 scriptBody_t *importScriptHelper(int8_t *path) {
