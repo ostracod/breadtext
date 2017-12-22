@@ -1256,6 +1256,13 @@ int main(int argc, const char *argv[]) {
     gettimeofday(&timeValue, NULL);
     srand((unsigned)(timeValue.tv_sec * 1000 + timeValue.tv_usec / 1000));
     
+    // Start up the random number generator.
+    rand();
+    rand();
+    rand();
+    rand();
+    rand();
+    
     #ifdef __APPLE__
         applicationPlatform = PLATFORM_MAC;
     #else

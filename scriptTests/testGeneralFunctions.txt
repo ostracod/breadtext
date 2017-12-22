@@ -176,6 +176,46 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
+START_TEST "rand"
+dec hasFoundDifference = false
+dec count = 0
+while count < 10
+    dec value1 = rand()
+    dec value2 = rand()
+    if value1 != value2
+        hasFoundDifference = true
+    end
+    testLog(value1 >= 0 && value1 < 1)
+    testLog(value2 >= 0 && value2 < 1)
+    count += 1
+end
+testLog(hasFoundDifference)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+END_TEST
+
 START_TEST "(Kagamine) len"
 testLog(len("hello"))
 testLog(len([1, 2, 3]))

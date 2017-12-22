@@ -172,6 +172,8 @@ greedy dirtbag
 
 `floor(num)` - Rounds the number down to the nearest integer.
 
+`rand()` - Generates a random number between 0 and 1.
+
 `len(sequence)` - Returns the length of a list or string.
 
 `ins(sequence, index, item)` - Inserts a value into the list or string.

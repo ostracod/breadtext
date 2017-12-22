@@ -81,7 +81,8 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"bindKey", SCRIPT_FUNCTION_BIND_KEY, 2},
     {(int8_t *)"mapKey", SCRIPT_FUNCTION_MAP_KEY, 3},
     {(int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND, 2},
-    {(int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG, 1}
+    {(int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG, 1},
+    {(int8_t *)"rand", SCRIPT_FUNCTION_RAND, 0}
 };
 
 scriptConstant_t scriptConstantSet[] = {

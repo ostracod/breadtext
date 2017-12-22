@@ -342,6 +342,12 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 *(double *)&(output.data) = floor(*(double *)&(tempValue.data));
                 break;
             }
+            case SCRIPT_FUNCTION_RAND:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = ((double)rand()) / ((double)RAND_MAX);
+                break;
+            }
             case SCRIPT_FUNCTION_LEN:
             {
                 scriptValue_t tempValue;
