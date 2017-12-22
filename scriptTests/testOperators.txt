@@ -1082,10 +1082,14 @@ testLog(1 == 1)
 testLog(1 == 2)
 testLog("bread" == "bread")
 testLog("bread" == "text")
+testLog([1, 2, 3] == [1, 2, 3])
+testLog([1, 2, 3] == [10, 20, 30])
 testLog("bread" == 1)
 RUN_SCRIPT
 ASSERT_NO_ERROR
 ASSERT_OUTPUT
+1
+0
 1
 0
 1
@@ -1098,6 +1102,8 @@ testLog(1 != 1)
 testLog(1 != 2)
 testLog("bread" != "bread")
 testLog("bread" != "text")
+testLog([1, 2, 3] != [1, 2, 3])
+testLog([1, 2, 3] != [10, 20, 30])
 testLog("bread" != 1)
 RUN_SCRIPT
 ASSERT_NO_ERROR
@@ -1105,6 +1111,64 @@ ASSERT_OUTPUT
 0
 1
 0
+1
+0
+1
+1
+END_TEST
+
+START_TEST "Identical operator"
+dec value1 = "bread"
+dec value2 = value1
+dec value3 = [1, 2, 3]
+dec value4 = value3
+testLog(1 === 1)
+testLog(1 === 2)
+testLog(value1 === value2)
+testLog("bread" === "bread")
+testLog("bread" === "text")
+testLog(value3 === value4)
+testLog([1, 2, 3] === [1, 2, 3])
+testLog([1, 2, 3] === [10, 20, 30])
+testLog("bread" === 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+0
+1
+0
+0
+1
+0
+0
+0
+END_TEST
+
+START_TEST "Not identical operator"
+dec value1 = "bread"
+dec value2 = value1
+dec value3 = [1, 2, 3]
+dec value4 = value3
+testLog(1 !== 1)
+testLog(1 !== 2)
+testLog(value1 !== value2)
+testLog("bread" !== "bread")
+testLog("bread" !== "text")
+testLog(value3 !== value4)
+testLog([1, 2, 3] !== [1, 2, 3])
+testLog([1, 2, 3] !== [10, 20, 30])
+testLog("bread" !== 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+0
+1
+1
+0
+1
 1
 1
 END_TEST
