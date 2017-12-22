@@ -678,3 +678,297 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
+START_TEST "Bitwise AND operator"
+testLog(3 & 5)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+END_TEST
+
+START_TEST "Bad bitwise AND operator 1"
+[] & 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise AND operator 2"
+1 & []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise AND assignment operator"
+dec value
+value = 3
+value &= 5
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+END_TEST
+
+START_TEST "Bad bitwise AND assignment operator 1"
+3 &= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise AND assignment operator 2"
+dec value = 1
+value &= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise AND assignment operator 3"
+dec value = []
+value &= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise OR operator"
+testLog(3 | 5)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+7
+END_TEST
+
+START_TEST "Bad bitwise OR operator 1"
+[] | 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise OR operator 2"
+1 | []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise OR assignment operator"
+dec value
+value = 3
+value |= 5
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+7
+END_TEST
+
+START_TEST "Bad bitwise OR assignment operator 1"
+3 |= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise OR assignment operator 2"
+dec value = 1
+value |= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise OR assignment operator 3"
+dec value = []
+value |= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise XOR operator"
+testLog(3 ^ 5)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+6
+END_TEST
+
+START_TEST "Bad bitwise XOR operator 1"
+[] ^ 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise XOR operator 2"
+1 ^ []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise XOR assignment operator"
+dec value
+value = 3
+value ^= 5
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+6
+END_TEST
+
+START_TEST "Bad bitwise XOR assignment operator 1"
+3 ^= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise XOR assignment operator 2"
+dec value = 1
+value ^= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitwise XOR assignment operator 3"
+dec value = []
+value ^= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitwise NOT operator"
+testLog((~1) & 3)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+2
+END_TEST
+
+START_TEST "Bad bitwise NOT operator"
+~[]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitshift left operator"
+testLog(6 << 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+12
+END_TEST
+
+START_TEST "Bad bitshift left operator 1"
+[] << 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift left operator 2"
+1 << []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitshift left assignment operator"
+dec value
+value = 6
+value <<= 1
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+12
+END_TEST
+
+START_TEST "Bad bitshift left assignment operator 1"
+3 <<= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift left assignment operator 2"
+dec value = 1
+value <<= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift left assignment operator 3"
+dec value = []
+value <<= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitshift right operator"
+testLog(6 >> 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Bad bitshift right operator 1"
+[] >> 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift right operator 2"
+1 >> []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bitshift right assignment operator"
+dec value
+value = 6
+value >>= 1
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Bad bitshift right assignment operator 1"
+3 >>= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift right assignment operator 2"
+dec value = 1
+value >>= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad bitshift right assignment operator 3"
+dec value = []
+value >>= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
