@@ -122,7 +122,7 @@ int8_t processScriptTestCommand(int8_t *command) {
                 } else {
                     tempKey = tempName[0];
                 }
-                handleKey(tempKey, true, true);
+                handleKey(tempKey, true, true, true);
                 refresh();
                 sleepMilliseconds(1);
                 index += 1;

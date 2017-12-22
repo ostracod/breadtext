@@ -84,7 +84,7 @@ int8_t checkTextBufferHygiene();
 void addNonconsecutiveEscapeSequenceFrame();
 void promptSingleCharacter();
 void handleResize();
-int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings);
+int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings, int8_t shouldRecordInMacro);
 void resetApplication();
 int8_t isTesting();
 

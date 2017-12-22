@@ -85,7 +85,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
                     return false;
                 }
             }
-            handleKey(tempKey, false, false);
+            handleKey(tempKey, false, false, true);
             refresh();
             sleepMilliseconds(1);
             index += 1;

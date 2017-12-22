@@ -458,7 +458,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     return output;
                 }
                 int32_t tempKey = (int32_t)*(double *)&(tempValue.data);
-                handleKey(tempKey, false, false);
+                handleKey(tempKey, false, false, false);
                 break;
             }
             case SCRIPT_FUNCTION_GET_MODE:

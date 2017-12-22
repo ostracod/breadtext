@@ -234,7 +234,7 @@ void runFuzzTest() {
     int64_t keyPressCount = 0;
     while (keyPressCount < 20000) {
         fuzzKey_t *tempFuzzKey = getNextFuzzKey();
-        handleKey(tempFuzzKey->key, false, false);
+        handleKey(tempFuzzKey->key, false, false, true);
         keyPressCount += 1;
     }
 }

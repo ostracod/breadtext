@@ -203,8 +203,8 @@ void playMacro();
 void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
-int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings) {
-    if (isRecordingMacro && shouldUseMappings && shouldUseBindings) {
+int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings, int8_t shouldRecordInMacro) {
+    if (isRecordingMacro && shouldRecordInMacro) {
         if (macroKeyListLength >= MAXIMUM_MACRO_LENGTH) {
             stopRecordingMacro();
         } else {
@@ -476,37 +476,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case '}':
                 {
                     moveCursorToEndOfFile();
-                    break;
-                }
-                case 'h':
-                {
-                    highlightTextPos = cursorTextPos;
-                    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
-                    break;
-                }
-                case 'H':
-                {
-                    setActivityMode(HIGHLIGHT_LINE_MODE);
-                    break;
-                }
-                case 'w':
-                {
-                    highlightWord();
-                    break;
-                }
-                case 'W':
-                {
-                    promptAndHighlightWordByDelimiter();
-                    break;
-                }
-                case 'e':
-                {
-                    promptCharacterAndHighlightEnclosureExclusive();
-                    break;
-                }
-                case 'E':
-                {
-                    promptCharacterAndHighlightEnclosureInclusive();
                     break;
                 }
                 case 'c':
@@ -795,56 +764,129 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     setMark(7);
                     break;
                 }
+                default:
+                {
+                    break;
+                }
             }
         }
         if (activityMode == COMMAND_MODE) {
-            if (key == ' ') {
-                insertCharacterBeforeCursor(key, true);
-            }
-            if (key == '\'') {
-                promptAndInsertCharacterAfterCursor();
-            }
-            if (key == '"') {
-                promptAndInsertCharacterBeforeCursor();
-            }
-            if (key == '.') {
-                promptAndReplaceCharacterUnderCursor();
-            }
-            if (key == '+') {
-                incrementNumberUnderCursor();
-            }
-            if (key == '-') {
-                decrementNumberUnderCursor();
-            }
-            if (key == '_') {
-                toggleBooleanLiteral();
-            }
-            if (key == ';') {
-                toggleSemicolonAtEndOfLine();
-            }
-            if (key == '\\') {
-                insertLineAfterCursor();
-            }
-            if (key == '|') {
-                insertLineBeforeCursor();
-            }
-            if (key == 'o') {
-                insertAndEditLineAfterCursor();
-            }
-            if (key == 'O') {
-                insertAndEditLineBeforeCursor();
-            }
-            if (key == '9') {
-                selectUntilBeginningOfLineExclusive();
-            }
-            if (key == '(') {
-                selectUntilBeginningOfLineInclusive();
-            }
-            if (key == '0') {
-                selectUntilEndOfLineExclusive();
-            }
-            if (key == ')') {
-                selectUntilEndOfLineInclusive();
+            switch (key) {
+                case 'h':
+                {
+                    highlightTextPos = cursorTextPos;
+                    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
+                    break;
+                }
+                case 'H':
+                {
+                    setActivityMode(HIGHLIGHT_LINE_MODE);
+                    break;
+                }
+                case 'w':
+                {
+                    highlightWord();
+                    break;
+                }
+                case 'W':
+                {
+                    promptAndHighlightWordByDelimiter();
+                    break;
+                }
+                case 'e':
+                {
+                    promptCharacterAndHighlightEnclosureExclusive();
+                    break;
+                }
+                case 'E':
+                {
+                    promptCharacterAndHighlightEnclosureInclusive();
+                    break;
+                }
+                case ' ':
+                {
+                    insertCharacterBeforeCursor(key, true);
+                    break;
+                }
+                case '\'':
+                {
+                    promptAndInsertCharacterAfterCursor();
+                    break;
+                }
+                case '"':
+                {
+                    promptAndInsertCharacterBeforeCursor();
+                    break;
+                }
+                case '.':
+                {
+                    promptAndReplaceCharacterUnderCursor();
+                    break;
+                }
+                case '+':
+                {
+                    incrementNumberUnderCursor();
+                    break;
+                }
+                case '-':
+                {
+                    decrementNumberUnderCursor();
+                    break;
+                }
+                case '_':
+                {
+                    toggleBooleanLiteral();
+                    break;
+                }
+                case ';':
+                {
+                    toggleSemicolonAtEndOfLine();
+                    break;
+                }
+                case '\\':
+                {
+                    insertLineAfterCursor();
+                    break;
+                }
+                case '|':
+                {
+                    insertLineBeforeCursor();
+                    break;
+                }
+                case 'o':
+                {
+                    insertAndEditLineAfterCursor();
+                    break;
+                }
+                case 'O':
+                {
+                    insertAndEditLineBeforeCursor();
+                    break;
+                }
+                case '9':
+                {
+                    selectUntilBeginningOfLineExclusive();
+                    break;
+                }
+                case '(':
+                {
+                    selectUntilBeginningOfLineInclusive();
+                    break;
+                }
+                case '0':
+                {
+                    selectUntilEndOfLineExclusive();
+                    break;
+                }
+                case ')':
+                {
+                    selectUntilEndOfLineInclusive();
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
         }
     }
@@ -874,7 +916,7 @@ void playMacro() {
     macroIndex = 0;
     while (macroIndex < macroKeyListLength) {
         int32_t tempKey = macroKeyList[macroIndex];
-        handleKey(tempKey, true, true);
+        handleKey(tempKey, true, true, false);
         macroIndex += 1;
     }
     isPlayingMacro = false;
@@ -1361,7 +1403,7 @@ int main(int argc, const char *argv[]) {
         #endif
         
         int32_t tempKey = getch();
-        int8_t tempResult = handleKey(tempKey, true, true);
+        int8_t tempResult = handleKey(tempKey, true, true, true);
         if (tempResult) {
             break;
         }
