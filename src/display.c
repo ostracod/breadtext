@@ -286,6 +286,8 @@ textPos_t *getLastHighlightTextPos() {
 
 // Returns the next Y position.
 int64_t displayTextLine(int64_t posY, textLine_t *line) {
+    lastDisplayCursorTextPos = cursorTextPos;
+    lastDisplayHighlightTextPos = highlightTextPos;
     if (line->textAllocation.syntaxHighlighting == NULL) {
         generateSyntaxHighlighting(&(line->textAllocation));
     }
@@ -658,3 +660,13 @@ int8_t scrollCursorOntoScreen() {
     }
     return false;
 }
+
+void redrawHighlightLines() {
+    if (highlightTextPos.line == cursorTextPos.line) {
+        displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
+        displayCursor();
+    } else {
+        displayAllTextLines();
+    }
+}
+

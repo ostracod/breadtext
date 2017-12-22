@@ -98,18 +98,24 @@ void setActivityMode(int8_t mode) {
             scrollCursorOntoScreen();
         }
     }
-    int8_t tempOldIsHighlighting = isHighlighting;
-    isHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_STATIC_MODE || activityMode == HIGHLIGHT_LINE_MODE);
+    int8_t tempNextIsHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_STATIC_MODE || activityMode == HIGHLIGHT_LINE_MODE);
     if (activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
-        if (isHighlighting || tempOldIsHighlighting) {
-            if (highlightTextPos.line == cursorTextPos.line) {
-                displayTextLine(getTextLinePosY(cursorTextPos.line), cursorTextPos.line);
-                displayCursor();
-            } else {
-                displayAllTextLines();
-            }
+        if (isHighlighting) {
+            textPos_t tempCursorTextPos = cursorTextPos;
+            textPos_t tempHighlightTextPos = highlightTextPos;
+            cursorTextPos = lastDisplayCursorTextPos;
+            highlightTextPos = lastDisplayHighlightTextPos;
+            isHighlighting = false;
+            redrawHighlightLines();
+            cursorTextPos = tempCursorTextPos;
+            highlightTextPos = tempHighlightTextPos;
+        }
+        isHighlighting = tempNextIsHighlighting;
+        if (isHighlighting) {
+            redrawHighlightLines();
         }
     }
+    isHighlighting = tempNextIsHighlighting;
     if (activityMode == HELP_MODE || previousActivityMode == HELP_MODE) {
         redrawEverything();
     } else if (activityMode == TEXT_COMMAND_MODE) {
@@ -478,6 +484,42 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     moveCursorToEndOfFile();
                     break;
                 }
+                case 'h':
+                {
+                    highlightTextPos = cursorTextPos;
+                    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
+                    break;
+                }
+                case 'H':
+                {
+                    setActivityMode(HIGHLIGHT_LINE_MODE);
+                    break;
+                }
+                case 'w':
+                {
+                    highlightWord();
+                    break;
+                }
+                case 'W':
+                {
+                    promptAndHighlightWordByDelimiter();
+                    break;
+                }
+                case 'e':
+                {
+                    promptCharacterAndHighlightEnclosureExclusive();
+                    break;
+                }
+                case 'E':
+                {
+                    promptCharacterAndHighlightEnclosureInclusive();
+                    break;
+                }
+                case 'v':
+                {
+                    highlightLineContents();
+                    break;
+                }
                 case 'c':
                 {
                     copySelection();
@@ -767,42 +809,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
         }
         if (activityMode == COMMAND_MODE) {
             switch (key) {
-                case 'h':
-                {
-                    highlightTextPos = cursorTextPos;
-                    setActivityMode(HIGHLIGHT_CHARACTER_MODE);
-                    break;
-                }
-                case 'H':
-                {
-                    setActivityMode(HIGHLIGHT_LINE_MODE);
-                    break;
-                }
-                case 'w':
-                {
-                    highlightWord();
-                    break;
-                }
-                case 'W':
-                {
-                    promptAndHighlightWordByDelimiter();
-                    break;
-                }
-                case 'e':
-                {
-                    promptCharacterAndHighlightEnclosureExclusive();
-                    break;
-                }
-                case 'E':
-                {
-                    promptCharacterAndHighlightEnclosureInclusive();
-                    break;
-                }
-                case 'v':
-                {
-                    highlightLineContents();
-                    break;
-                }
                 case ' ':
                 {
                     insertCharacterBeforeCursor(key, true);
@@ -1238,6 +1244,8 @@ int8_t initializeApplication() {
     searchTermLength = 0;
     searchRegexIsEmpty = true;
     searchTermIsRegex = false;
+    lastDisplayCursorTextPos = cursorTextPos;
+    lastDisplayHighlightTextPos = highlightTextPos;
     setColorScheme(0);
     int8_t index = 0;
     while (index < MARK_AMOUNT) {

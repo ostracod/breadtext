@@ -52,6 +52,8 @@ int8_t isShowingNotification;
 int32_t notificationTextLength;
 int8_t isHighlighting;
 textPos_t highlightTextPos;
+textPos_t lastDisplayCursorTextPos;
+textPos_t lastDisplayHighlightTextPos;
 int8_t textCommandBuffer[1000];
 int32_t helpScroll;
 int8_t *filePath;
