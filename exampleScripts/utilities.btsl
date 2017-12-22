@@ -1,0 +1,31 @@
+
+func writeText(text)
+    dec index = 0
+    while index < len(text)
+        pressKey(text[index])
+        index += 1
+    end
+end
+
+func toggleCase(argList)
+    dec text = getSelectionContents()
+    pressKey('D')
+    dec index = 0
+    while index < len(text)
+        dec character = text[index]
+        if character == '_'
+            index += 1
+            character = text[index]
+            character += 'A' - 'a'
+        else if character >= 'A' && character <= 'Z'
+            character += 'a' - 'A'
+            pressKey('_')
+        end
+        pressKey(character)
+        index += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("toggleCase", toggleCase)
+

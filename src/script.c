@@ -2298,7 +2298,9 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     if (tempCommandBinding == NULL) {
         return false;
     }
-    setActivityMode(COMMAND_MODE);
+    if (activityMode == TEXT_COMMAND_MODE) {
+        setActivityMode(PREVIOUS_MODE);
+    }
     vector_t *tempArgumentList = malloc(sizeof(vector_t));
     createEmptyVector(tempArgumentList, sizeof(scriptValue_t));
     int64_t index = 1;
