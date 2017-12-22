@@ -1370,3 +1370,147 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Function invocation statement 1"
+testLog(1)
+func action()
+    testLog(2)
+end
+testLog(3)
+action()
+testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+3
+2
+4
+END_TEST
+
+START_TEST "Function invocation statement 2"
+testLog(1)
+func action(value1, value2)
+    testLog(2)
+end
+testLog(3)
+action(10, 20)
+testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+3
+2
+4
+END_TEST
+
+START_TEST "Bad function invocation statement 1"
+5()
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 2"
+func action()
+    testLog(1)
+end
+action(5)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 3"
+func action(value1, value2)
+    testLog(1)
+end
+action(5)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 4"
+func action(value1, value2)
+    testLog(1)
+end
+action(
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 5"
+func action(value1, value2)
+    testLog(1)
+end
+action(5, 
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 6"
+func action(value1, value2)
+    testLog(1)
+end
+action(5, )
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad function invocation statement 7"
+func action(value1, value2)
+    testLog(1)
+end
+action(5, 5 5)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Order of operations"
+testLog(10 - 2 - 1)
+testLog(2 * 3 + 4)
+testLog(2 + 3 * 4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+7
+10
+14
+END_TEST
+
+START_TEST "Parentheses"
+testLog(2 * (3 + 4))
+testLog((2 + 3) * 4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+14
+20
+END_TEST
+
+START_TEST "Bad parentheses 1"
+(
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad parentheses 2"
+(10
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad parentheses 3"
+(10 20)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
