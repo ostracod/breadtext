@@ -1,0 +1,440 @@
+
+START_TEST "Bad binary operator 1"
+1 &&
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad binary operator 2"
+&& 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad unary operator"
+!
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Assignment operator 1"
+dec value
+value = 10
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+10
+END_TEST
+
+START_TEST "Assignment operator 2"
+dec value = [1, 2, 3]
+value[1] = 10
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+[1, 10, 3]
+END_TEST
+
+START_TEST "Assignment operator 3"
+dec value = "abc"
+value[1] = 'X'
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+aXc
+END_TEST
+
+START_TEST "Bad assignment operator"
+1 = 3
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Addition operator 1"
+dec value
+value = 1 + 2
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Addition operator 2"
+dec value
+value = "Bread" + "Text"
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+BreadText
+END_TEST
+
+START_TEST "Bad addition operator 1"
+1 + []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition operator 2"
+[] + 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition operator 3"
+"text" + 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition operator 4"
+1 + "text"
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Addition assignment operator 1"
+dec value = 1
+value += 2
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+3
+END_TEST
+
+START_TEST "Addition assignment operator 2"
+dec value = "Bread"
+value += "Text"
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+BreadText
+END_TEST
+
+START_TEST "Bad addition assignment operator 1"
+1 += 2
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition assignment operator 2"
+dec value = 1
+value += []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition assignment operator 3"
+dec value = []
+value += 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition assignment operator 4"
+dec value = 1
+value += "text"
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad addition assignment operator 5"
+dec value = "text"
+value += 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Subtraction operator"
+dec value
+value = 10 - 4
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+6
+END_TEST
+
+START_TEST "Bad subtraction operator 1"
+[] - 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad subtraction operator 2"
+1 - []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Negation operator"
+dec value
+value = -6
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+-6
+END_TEST
+
+START_TEST "Bad negation operator"
+-[]
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Subtraction assignment operator"
+dec value = 10
+value -= 4
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+6
+END_TEST
+
+START_TEST "Bad subtraction assignment operator 1"
+3 -= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad subtraction assignment operator 2"
+dec value = 1
+value -= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad subtraction assignment operator 3"
+dec value = []
+value -= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Multiplication operator"
+dec value
+value = 10 * 4
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+40
+END_TEST
+
+START_TEST "Bad multiplication operator 1"
+[] * 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad multiplication operator 2"
+1 * []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Multiplication assignment operator"
+dec value = 10
+value *= 4
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+40
+END_TEST
+
+START_TEST "Bad multiplication assignment operator 1"
+3 *= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad multiplication assignment operator 2"
+dec value = 1
+value *= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad multiplication assignment operator 3"
+dec value = []
+value *= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Division operator"
+dec value
+value = 8 / 2
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+4
+END_TEST
+
+START_TEST "Bad division operator 1"
+[] / 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad division operator 2"
+1 / []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad division operator 3"
+1 / 0
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Division assignment operator"
+dec value = 8
+value /= 2
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+4
+END_TEST
+
+START_TEST "Bad division assignment operator 1"
+3 /= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad division assignment operator 2"
+dec value = 1
+value /= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad division assignment operator 3"
+dec value = []
+value /= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad division assignment operator 4"
+dec value = 1
+value /= 0
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Modulus operator"
+dec value
+value = 12 % 5
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+2
+END_TEST
+
+START_TEST "Bad modulus operator 1"
+[] % 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad modulus operator 2"
+1 % []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad modulus operator 3"
+1 % 0
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Modulus assignment operator"
+dec value = 12
+value %= 5
+testLog(value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+2
+END_TEST
+
+START_TEST "Bad modulus assignment operator 1"
+3 %= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad modulus assignment operator 2"
+dec value = 1
+value %= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad modulus assignment operator 3"
+dec value = []
+value %= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad modulus assignment operator 4"
+dec value = 1
+value %= 0
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
