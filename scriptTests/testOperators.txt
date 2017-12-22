@@ -972,3 +972,139 @@ RUN_SCRIPT
 ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
+
+START_TEST "Less than operator"
+testLog(1 < 2)
+testLog(1 < 1)
+testLog(2 < 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+0
+0
+END_TEST
+
+START_TEST "Bad less than operator 1"
+[] < 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad less than operator 2"
+1 < []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Greater than operator"
+testLog(1 > 2)
+testLog(1 > 1)
+testLog(2 > 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+1
+END_TEST
+
+START_TEST "Bad greater than operator 1"
+[] > 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad greater than operator 2"
+1 > []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Less than or equal operator"
+testLog(1 <= 2)
+testLog(1 <= 1)
+testLog(2 <= 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+0
+END_TEST
+
+START_TEST "Bad less than or equal operator 1"
+[] <= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad less than or equal operator 2"
+1 <= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Greater than or equal operator"
+testLog(1 >= 2)
+testLog(1 >= 1)
+testLog(2 >= 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+1
+END_TEST
+
+START_TEST "Bad greater than or equal operator 1"
+[] >= 1
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad greater than or equal operator 2"
+1 >= []
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Equal operator"
+testLog(1 == 1)
+testLog(1 == 2)
+testLog("bread" == "bread")
+testLog("bread" == "text")
+testLog("bread" == 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+0
+1
+0
+0
+END_TEST
+
+START_TEST "Not equal operator"
+testLog(1 != 1)
+testLog(1 != 2)
+testLog("bread" != "bread")
+testLog("bread" != "text")
+testLog("bread" != 1)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+0
+1
+1
+END_TEST
