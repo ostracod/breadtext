@@ -17,6 +17,7 @@ If you find any bugs, please report them on GitHub.
 * Stay lightweight and fast
 * Offer intuitive, ergonomic controls
 * Use the system-wide clipboard by default
+* Configurable through scripting
 * Bread
 
 ## Installation
@@ -173,6 +174,6 @@ shouldUseHardTabs 0
 indentationWidth 4
 ```
 
-## BreadText Scripting Language.
+## BreadText Scripting Language
 
-For scripting documentation, please consult [this page](./SCRIPTING.md).
+For scripting documentation, please consult [this page](SCRIPTING.md).
