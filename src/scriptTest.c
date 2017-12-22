@@ -114,7 +114,12 @@ int8_t processScriptTestCommand(int8_t *command) {
             int32_t index = 1;
             while (index < tempTermListLength) {
                 int8_t *tempName = tempTermList[index];
-                int32_t tempKey = tempName[0];
+                int32_t tempKey;
+                if (strcmp((char *)tempName, "NEWLINE") == 0) {
+                    tempKey = '\n';
+                } else {
+                    tempKey = tempName[0];
+                }
                 handleKey(tempKey, true, true);
                 refresh();
                 sleepMilliseconds(1);

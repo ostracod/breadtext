@@ -1,0 +1,56 @@
+
+START_TEST "pressKey"
+pressKey('t')
+pressKey('a')
+pressKey('b')
+pressKey('c')
+pressKey(KEY_ESCAPE)
+testLog(getLineContents(0))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+abc
+END_TEST
+
+START_TEST "Bad pressKey"
+pressKey([])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "getMode"
+pressKey('t')
+testLog(getMode() == MODE_TEXT_ENTRY)
+pressKey(KEY_ESCAPE)
+testLog(getMode() == MODE_COMMAND)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+END_TEST
+
+START_TEST "setMode"
+setMode(MODE_TEXT_ENTRY)
+testLog(getMode() == MODE_TEXT_ENTRY)
+pressKey('a')
+pressKey('b')
+pressKey('c')
+setMode(MODE_COMMAND)
+testLog(getMode() == MODE_COMMAND)
+testLog(getLineContents(0))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+abc
+END_TEST
+
+START_TEST "Bad setMode"
+setMode([])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
