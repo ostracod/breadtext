@@ -1,0 +1,98 @@
+
+START_TEST "Bad argument count 1"
+testLog(isNum())
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad argument count 2"
+testLog(isNum(1, 2, 3))
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "isNum"
+func action()
+    testLog(1)
+end
+testLog(isNum(null))
+testLog(isNum(3))
+testLog(isNum("hello"))
+testLog(isNum([1, 2, 3]))
+testLog(isNum(testLog))
+testLog(isNum(action))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+0
+0
+0
+0
+END_TEST
+
+START_TEST "isStr"
+func action()
+    testLog(1)
+end
+testLog(isStr(null))
+testLog(isStr(3))
+testLog(isStr("hello"))
+testLog(isStr([1, 2, 3]))
+testLog(isStr(testLog))
+testLog(isStr(action))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+1
+0
+0
+0
+END_TEST
+
+START_TEST "isList"
+func action()
+    testLog(1)
+end
+testLog(isList(null))
+testLog(isList(3))
+testLog(isList("hello"))
+testLog(isList([1, 2, 3]))
+testLog(isList(testLog))
+testLog(isList(action))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+0
+1
+0
+0
+END_TEST
+
+START_TEST "isFunc"
+func action()
+    testLog(1)
+end
+testLog(isFunc(null))
+testLog(isFunc(3))
+testLog(isFunc("hello"))
+testLog(isFunc([1, 2, 3]))
+testLog(isFunc(testLog))
+testLog(isFunc(action))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+0
+0
+0
+1
+1
+END_TEST
