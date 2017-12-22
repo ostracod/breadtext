@@ -17,7 +17,7 @@ If you find any bugs, please report them on GitHub.
 * Stay lightweight and fast
 * Offer intuitive, ergonomic controls
 * Use the system-wide clipboard by default
-* Configurable through scripting
+* Allow extending functionality through scripting
 * Bread
 
 ## Installation
