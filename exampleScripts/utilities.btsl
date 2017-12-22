@@ -29,3 +29,10 @@ end
 
 bindCommand("toggleCase", toggleCase)
 
+func measureLine(argList)
+    dec text = getLineContents(getCursorLineIndex())
+    notifyUser("Length: " + str(len(text)))
+end
+
+bindCommand("measureLine", measureLine)
+
