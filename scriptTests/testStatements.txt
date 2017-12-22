@@ -1,4 +1,16 @@
 
+START_TEST "Comments"
+testLog(1)
+testLog(2) # Comment.
+#testLog(3)
+    #testLog(4)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+2
+END_TEST
+
 START_TEST "Variable declaration"
 dec value
 value = 3
