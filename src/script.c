@@ -1019,8 +1019,13 @@ expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t pre
             expressionResult.value.type = SCRIPT_VALUE_TYPE_NULL;
             break;
         }
-        reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
-        return expressionResult;
+        if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            reportScriptError((int8_t *)"Unknown identifier.", scriptBodyPos->scriptBodyLine);
+            return expressionResult;
+        } else {
+            reportScriptError((int8_t *)"Unknown expression type.", scriptBodyPos->scriptBodyLine);
+            return expressionResult;
+        }
     }
     while (true) {
         int8_t hasProcessedOperator = false;
@@ -2152,7 +2157,7 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     evaluateScriptBodyAtLine(&tempScriptBodyLine);
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
-        reportScriptErrorWithoutLine((int8_t *)"Missing end statement.");
+        reportScriptError((int8_t *)"Missing end statement.", &tempScriptBodyLine);
         return;
     }
     removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
