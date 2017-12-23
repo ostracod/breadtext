@@ -702,6 +702,46 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     promptAndReverseGoToCharacterInclusive();
                     break;
                 }
+                case '\\':
+                {
+                    insertLineAfterCursor();
+                    break;
+                }
+                case '|':
+                {
+                    insertLineBeforeCursor();
+                    break;
+                }
+                case 'o':
+                {
+                    insertAndEditLineAfterCursor();
+                    break;
+                }
+                case 'O':
+                {
+                    insertAndEditLineBeforeCursor();
+                    break;
+                }
+                case '9':
+                {
+                    selectUntilBeginningOfLineExclusive();
+                    break;
+                }
+                case '(':
+                {
+                    selectUntilBeginningOfLineInclusive();
+                    break;
+                }
+                case '0':
+                {
+                    selectUntilEndOfLineExclusive();
+                    break;
+                }
+                case ')':
+                {
+                    selectUntilEndOfLineInclusive();
+                    break;
+                }
                 case '`':
                 {
                     scrollCursorOntoScreen();
@@ -853,46 +893,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case ';':
                 {
                     toggleSemicolonAtEndOfLine();
-                    break;
-                }
-                case '\\':
-                {
-                    insertLineAfterCursor();
-                    break;
-                }
-                case '|':
-                {
-                    insertLineBeforeCursor();
-                    break;
-                }
-                case 'o':
-                {
-                    insertAndEditLineAfterCursor();
-                    break;
-                }
-                case 'O':
-                {
-                    insertAndEditLineBeforeCursor();
-                    break;
-                }
-                case '9':
-                {
-                    selectUntilBeginningOfLineExclusive();
-                    break;
-                }
-                case '(':
-                {
-                    selectUntilBeginningOfLineInclusive();
-                    break;
-                }
-                case '0':
-                {
-                    selectUntilEndOfLineExclusive();
-                    break;
-                }
-                case ')':
-                {
-                    selectUntilEndOfLineInclusive();
                     break;
                 }
                 default:
