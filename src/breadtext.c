@@ -63,6 +63,11 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
         }
         index += 1;
     }
+    if (hasLastDisplayHighlight) {
+        if (lineToBeDeleted == lastDisplayCursorTextPos.line || lineToBeDeleted == lastDisplayHighlightTextPos.line) {
+            hasLastDisplayHighlight = false;
+        }
+    }
 }
 
 void addNonconsecutiveEscapeSequenceFrame() {
@@ -100,7 +105,7 @@ void setActivityMode(int8_t mode) {
     }
     int8_t tempNextIsHighlighting = (activityMode == HIGHLIGHT_CHARACTER_MODE || activityMode == HIGHLIGHT_STATIC_MODE || activityMode == HIGHLIGHT_LINE_MODE);
     if (activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
-        if (isHighlighting) {
+        if (isHighlighting && hasLastDisplayHighlight) {
             textPos_t tempCursorTextPos = cursorTextPos;
             textPos_t tempHighlightTextPos = highlightTextPos;
             cursorTextPos = lastDisplayCursorTextPos;
@@ -113,6 +118,7 @@ void setActivityMode(int8_t mode) {
         isHighlighting = tempNextIsHighlighting;
         if (isHighlighting) {
             redrawHighlightLines();
+            hasLastDisplayHighlight = true;
         }
     }
     isHighlighting = tempNextIsHighlighting;
@@ -1244,6 +1250,7 @@ int8_t initializeApplication() {
     searchTermLength = 0;
     searchRegexIsEmpty = true;
     searchTermIsRegex = false;
+    hasLastDisplayHighlight = false;
     lastDisplayCursorTextPos = cursorTextPos;
     lastDisplayHighlightTextPos = highlightTextPos;
     setColorScheme(0);

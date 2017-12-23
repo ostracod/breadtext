@@ -52,6 +52,7 @@ int8_t isShowingNotification;
 int32_t notificationTextLength;
 int8_t isHighlighting;
 textPos_t highlightTextPos;
+int8_t hasLastDisplayHighlight;
 textPos_t lastDisplayCursorTextPos;
 textPos_t lastDisplayHighlightTextPos;
 int8_t textCommandBuffer[1000];
