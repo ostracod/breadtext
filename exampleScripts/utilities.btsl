@@ -167,3 +167,41 @@ func sortLines(argList)
 end
 
 bindCommand("sortLines", sortLines)
+
+func stateBeerCount(count)
+    if count == 0
+        ret "No bottles of beer"
+    end
+    dec pluralization
+    if count == 1
+        pluralization = ""
+    else
+        pluralization = "s"
+    end
+    ret str(count) + " bottle" + pluralization + " of beer"
+end
+
+func beer(argList)
+    setMode(MODE_TEXT_ENTRY)
+    dec count = 99
+    while true
+        dec shouldBreak = false
+        writeText(stateBeerCount(count) + " on the wall\n")
+        writeText(stateBeerCount(count) + "\n")
+        if count > 0
+            writeText("Take one down, pass it around\n")
+            count -= 1
+        else
+            writeText("Go to the store, by some more\n")
+            count = 99
+            shouldBreak = true
+        end
+        writeText(stateBeerCount(count) + " on the wall\n\n")
+        if shouldBreak
+            break
+        end
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("beer", beer)
