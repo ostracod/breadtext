@@ -832,11 +832,11 @@ void moveTextDown(int32_t amount) {
 }
 
 void moveCursorToVisibleText() {
-    eraseCursor();
-    cursorTextPos.line = topTextLine;
-    cursorTextPos.row = topTextLineRow;
-    cursorTextPos.column = 0;
-    displayCursor();
+    textPos_t tempTextPos;
+    tempTextPos.line = topTextLine;
+    tempTextPos.row = topTextLineRow;
+    tempTextPos.column = 0;
+    moveCursor(&tempTextPos);
 }
 
 void promptAndGoToCharacterExclusive() {
