@@ -65,3 +65,105 @@ func fizzBuzz(argList)
 end
 
 bindCommand("fizzBuzz", fizzBuzz)
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func getSubstring(text, startIndex, endIndex)
+    dec output = ""
+    dec index = startIndex
+    while index < endIndex
+        pushElement(output, text[index])
+        index += 1
+    end
+    ret output
+end
+
+func compareText(text1, text2)
+    dec index = 0
+    while true
+        if index >= len(text1)
+            if index >= len(text2)
+                ret 0
+            else
+                ret -1
+            end
+        end
+        if index >= len(text2)
+            ret 1
+        end
+        dec character1 = text1[index]
+        dec character2 = text2[index]
+        if character1 < character2
+            ret -1
+        end
+        if character1 > character2
+            ret 1
+        end
+        index += 1
+    end
+end
+
+func removeLowestComparisonString(textList)
+    dec lowestText = null
+    dec lowestIndex = null
+    dec index = 0
+    while index < len(textList)
+        dec text = textList[index]
+        if lowestText === null
+            lowestText = text
+            lowestIndex = index
+        else
+            if compareText(text, lowestText) < 0
+                lowestText = text
+                lowestIndex = index
+            end
+        end
+        index += 1
+    end
+    rem(textList, lowestIndex)
+    ret lowestText
+end
+
+func sortLines(argList)
+    dec contents = getSelectionContents()
+    dec lineList = []
+    dec startIndex = 0
+    dec endIndex = 0
+    dec index = 0
+    while true
+        dec shouldAddLine = false
+        dec isAtEnd = (index >= len(contents))
+        if isAtEnd
+            endIndex = index
+            shouldAddLine = true
+        else
+            dec character = contents[index]
+            if character == '\n'
+                endIndex = index
+                shouldAddLine = true
+            end
+        end
+        if shouldAddLine
+            dec line = getSubstring(contents, startIndex, endIndex)
+            pushElement(lineList, line)
+            startIndex = endIndex + 1
+        end
+        if isAtEnd
+            break
+        end
+        index += 1
+    end
+    pressKey('D')
+    dec index = 0
+    while len(lineList) > 0
+        dec line = removeLowestComparisonString(lineList)
+        writeText(line)
+        pressKey(KEY_NEWLINE)
+        index += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("sortLines", sortLines)
