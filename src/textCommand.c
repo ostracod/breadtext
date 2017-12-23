@@ -75,7 +75,7 @@ int8_t compileRegexes() {
 
 void insertTextCommandCharacter(int8_t character) {
     int8_t index = strlen((char *)textCommandBuffer);
-    if (index >= sizeof(textCommandBuffer) - 1) {
+    if (index >= sizeof(textCommandBuffer) - 1 || index + 2 >= windowWidth) {
         return;
     }
     eraseTextCommandCursor();
