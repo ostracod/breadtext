@@ -36,3 +36,32 @@ end
 
 bindCommand("measureLine", measureLine)
 
+func fizzBuzz(argList)
+    setMode(MODE_TEXT_ENTRY)
+    dec amount
+    if len(argList) == 1
+        amount = num(argList[0])
+    else
+        amount = 100
+    end
+    dec number = 1
+    while number <= amount
+        dec shouldWriteNumber = true
+        if number % 3 == 0
+            writeText("FIZZ")
+            shouldWriteNumber = false
+        end
+        if number % 5 == 0
+            writeText("BUZZ")
+            shouldWriteNumber = false
+        end
+        if shouldWriteNumber
+            writeText(str(number))
+        end
+        pressKey(KEY_NEWLINE)
+        number += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("fizzBuzz", fizzBuzz)
