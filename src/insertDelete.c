@@ -475,6 +475,7 @@ void insertLineAfterCursor() {
 
 void insertAndEditLineBeforeCursor() {
     insertLineBeforeCursor();
+    setActivityMode(TEXT_ENTRY_MODE);
     eraseCursor();
     cursorTextPos.line = getPreviousTextLine(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
@@ -483,11 +484,11 @@ void insertAndEditLineBeforeCursor() {
     if (!tempResult) {
         displayCursor();
     }
-    setActivityMode(TEXT_ENTRY_MODE);
 }
 
 void insertAndEditLineAfterCursor() {
     insertLineAfterCursor();
+    setActivityMode(TEXT_ENTRY_MODE);
     eraseCursor();
     cursorTextPos.line = getNextTextLine(cursorTextPos.line);
     setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
@@ -496,7 +497,6 @@ void insertAndEditLineAfterCursor() {
     if (!tempResult) {
         displayCursor();
     }
-    setActivityMode(TEXT_ENTRY_MODE);
 }
 
 
