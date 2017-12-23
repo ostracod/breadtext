@@ -25,6 +25,7 @@ void selectUntilBeginningOfLineInclusive();
 void selectUntilBeginningOfLineExclusive();
 void selectUntilEndOfLineInclusive();
 void selectUntilEndOfLineExclusive();
+void fixLineSelection();
 
 // SELECTION_HEADER_FILE
 #endif

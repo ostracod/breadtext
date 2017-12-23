@@ -9,6 +9,7 @@
 #include "display.h"
 #include "history.h"
 #include "insertDelete.h"
+#include "selection.h"
 #include "indentation.h"
 #include "breadtext.h"
 
@@ -93,7 +94,7 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
         }
         setTextPosIndex(&cursorTextPos, index);
     }
-    if (isHighlighting && activityMode != HIGHLIGHT_LINE_MODE) {
+    if (isHighlighting) {
         if (line == highlightTextPos.line) {
             int64_t index = getTextPosIndex(&highlightTextPos);
             index += tempOffset;
@@ -165,7 +166,7 @@ void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
         }
         setTextPosIndex(&cursorTextPos, index);
     }
-    if (isHighlighting && activityMode != HIGHLIGHT_LINE_MODE) {
+    if (isHighlighting) {
         if (line == highlightTextPos.line) {
             int64_t index = getTextPosIndex(&highlightTextPos);
             index += tempOffset;
@@ -206,6 +207,7 @@ void increaseSelectionIndentationLevel() {
     if (tempIsSingleLine) {
         int64_t tempOldRowCount = getTextLineRowCount(tempLine);
         increaseTextLineIndentationLevelHelper(tempLine, true);
+        fixLineSelection();
         int64_t tempNewRowCount = getTextLineRowCount(tempLine);
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
@@ -224,6 +226,7 @@ void increaseSelectionIndentationLevel() {
             }
             tempLine = getNextTextLine(tempLine);
         }
+        fixLineSelection();
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
             displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempStartTextPos->line), tempStartTextPos->line);
@@ -254,6 +257,7 @@ void decreaseSelectionIndentationLevel() {
     if (tempIsSingleLine) {
         int64_t tempOldRowCount = getTextLineRowCount(tempLine);
         decreaseTextLineIndentationLevelHelper(tempLine, true);
+        fixLineSelection();
         int64_t tempNewRowCount = getTextLineRowCount(tempLine);
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
@@ -272,6 +276,7 @@ void decreaseSelectionIndentationLevel() {
             }
             tempLine = getNextTextLine(tempLine);
         }
+        fixLineSelection();
         int8_t tempResult = scrollCursorOntoScreen();
         if (!tempResult) {
             displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempStartTextPos->line), tempStartTextPos->line);

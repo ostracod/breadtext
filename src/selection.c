@@ -746,3 +746,13 @@ void selectUntilEndOfLineExclusive() {
     }
     selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
+
+void fixLineSelection() {
+    if (activityMode != HIGHLIGHT_LINE_MODE) {
+        return;
+    }
+    textPos_t *tempFirstTextPos = getFirstHighlightTextPos();
+    textPos_t *tempLastTextPos = getLastHighlightTextPos();
+    setTextPosIndex(tempFirstTextPos, 0);
+    setTextPosIndex(tempLastTextPos, tempLastTextPos->line->textAllocation.length);
+}

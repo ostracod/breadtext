@@ -440,6 +440,7 @@ void toggleSelectionComment() {
         }
         tempLine = getNextTextLine(tempLine);
     }
+    fixLineSelection();
     displayAllTextLines();
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
