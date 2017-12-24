@@ -37,6 +37,7 @@ vector_t keyBindingList;
 vector_t keyMappingList;
 vector_t commandBindingList;
 int32_t garbageCollectionDelay = 0;
+int32_t scriptExecutionDepth = 0;
 
 void initializeScriptingEnvironment() {
     firstHeapValue = NULL;
@@ -55,6 +56,18 @@ void cleanUpScriptBranchStack() {
 
 void cleanUpAfterRunningScript() {
     cleanUpScriptBranchStack();
+}
+
+void incrementScriptExecutionDepth() {
+    scriptExecutionDepth += 1;
+}
+
+void decrementScriptExecutionDepth() {
+    scriptExecutionDepth -= 1;
+    if (scriptExecutionDepth <= 0) {
+        scriptExecutionDepth = 0;
+        cleanUpAfterRunningScript();
+    }
 }
 
 void addScriptTestLogMessage(int8_t *text) {
@@ -2131,6 +2144,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
 }
 
 scriptValue_t evaluateScriptBodyAtLine(scriptBodyLine_t *scriptBodyLine) {
+    incrementScriptExecutionDepth();
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
     while (true) {
@@ -2139,6 +2153,7 @@ scriptValue_t evaluateScriptBodyAtLine(scriptBodyLine_t *scriptBodyLine) {
             break;
         }
     }
+    decrementScriptExecutionDepth();
     return output;
 }
 
@@ -2160,6 +2175,7 @@ void debugPrintAroundPointer(int8_t *pointer) {
 }
 
 void evaluateScriptBody(scriptBody_t *scriptBody) {
+    incrementScriptExecutionDepth();
     createEmptyVector(&(scriptBody->scopeStack), sizeof(scriptScope_t *));
     scriptBodyAddEmptyScope(scriptBody);
     scriptBodyLine_t tempScriptBodyLine;
@@ -2178,9 +2194,10 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
         reportScriptError((int8_t *)"Missing end statement.", &tempScriptBodyLine);
-        return;
+    } else {
+        removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     }
-    removeVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
+    decrementScriptExecutionDepth();
 }
 
 scriptBody_t *importScriptHelper(int8_t *path) {
@@ -2252,7 +2269,6 @@ int8_t runScript(int8_t *path) {
     if (scriptHasError) {
         displayScriptError();
     }
-    cleanUpAfterRunningScript();
     return !scriptHasError;
 }
 
@@ -2265,7 +2281,6 @@ int8_t runScriptAsText(int8_t *text) {
     if (scriptHasError) {
         displayScriptError();
     }
-    cleanUpAfterRunningScript();
     return !scriptHasError;
 }
 
@@ -2298,7 +2313,6 @@ int8_t invokeKeyBinding(int32_t key) {
         index += 1;
     }
     cleanUpVector(&tempArgumentList);
-    cleanUpAfterRunningScript();
     return output;
 }
 
@@ -2344,6 +2358,5 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     if (destination != NULL) {
         *destination = tempResult;
     }
-    cleanUpAfterRunningScript();
     return true;
 }
