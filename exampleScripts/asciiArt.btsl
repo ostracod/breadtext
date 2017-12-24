@@ -1,0 +1,92 @@
+
+dec characterArtSet = [\
+" _ |_|| |",\
+" _ |_)|_)",\
+" _| |_",\
+" _ | \\|_/",\
+" _|_|_",\
+" _|_| ",\
+" _ | _|_|",\
+"   |_|| |",\
+" ||",\
+" _ |_|",\
+"   |_/| \\",\
+"  | |_",\
+"    |\\/||  |",\
+"    |\\ || \\|",\
+" _ | ||_|",\
+" _ |_)|  ",\
+" _ | ||_\\",\
+" _ |_)| \\",\
+" __(_ __)",\
+"___ |  | ",\
+"   | ||_|",\
+"   | /|/ ",\
+"    |  ||/\\|",\
+"  \\//\\",\
+"   |_| _|",\
+"__ //_"\
+]
+
+dec startLineIndex
+
+func writeCharacter(lineOffset, character)
+    dec lineIndex = startLineIndex + lineOffset
+    dec line = getLineContents(lineIndex)
+    setCursorPos(len(line), lineIndex)
+    pressKey(character)
+end
+
+func addSpaces()
+    writeCharacter(0, ' ')
+    writeCharacter(1, ' ')
+    writeCharacter(2, ' ')
+end
+
+func drawBigCharacter(character)
+    dec characterArt = characterArtSet[character - 'A']
+    dec width = floor(len(characterArt) / 3)
+    dec offsetX = 0
+    dec offsetY = 0
+    while offsetY < 3
+        dec character = characterArt[offsetX + offsetY * width]
+        writeCharacter(offsetY, character)
+        offsetX += 1
+        if offsetX >= width
+            offsetX = 0
+            offsetY += 1
+        end
+    end
+end
+
+func asciiArt(argList)
+    dec text = argList[0]
+    setMode(MODE_TEXT_ENTRY)
+    startLineIndex = getCursorLineIndex()
+    pressKey(KEY_NEWLINE)
+    pressKey(KEY_NEWLINE)
+    pressKey(KEY_NEWLINE)
+    dec index = 0
+    while index < len(text)
+        dec bigCharacter = text[index]
+        if index > 0
+            addSpaces()
+        end
+        if bigCharacter >= 'a' && bigCharacter <= 'z'
+            bigCharacter += 'A' - 'a'
+        end
+        if bigCharacter >= 'A' && bigCharacter <= 'Z'
+            drawBigCharacter(bigCharacter)
+        end
+        if bigCharacter == ' '
+            addSpaces()
+            addSpaces()
+        end
+        index += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("asciiArt", asciiArt)
+
+
