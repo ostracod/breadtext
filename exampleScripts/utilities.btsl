@@ -1,5 +1,6 @@
 
 func writeText(text)
+    text = str(text)
     dec index = 0
     while index < len(text)
         pressKey(text[index])
@@ -205,3 +206,54 @@ func beer(argList)
 end
 
 bindCommand("beer", beer)
+
+func betterModulus(number1, number2)
+    if number1 >= 0
+        ret number1 % number2
+    else
+        dec result = number1 % number2
+        if result == 0
+            ret 0
+        end
+        ret result + number2
+    end
+end
+
+func addToSelectionLetters(offset)
+    dec text = getSelectionContents()
+    pressKey('D')
+    dec index = 0
+    while index < len(text)
+        dec character = text[index]
+        if character >= 'a' && character <= 'z'
+            character -= 'a'
+            character += offset
+            character = betterModulus(character, 26)
+            character += 'a'
+        end
+        if character >= 'A' && character <= 'Z'
+            character -= 'A'
+            character += offset
+            character = betterModulus(character, 26)
+            character += 'A'
+        end
+        pressKey(character)
+        index += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+func encode(argList)
+    dec key = num(argList[0])
+    addToSelectionLetters(key)
+end
+
+bindCommand("encode", encode)
+
+func decode(argList)
+    dec key = num(argList[0])
+    addToSelectionLetters(-key)
+end
+
+bindCommand("decode", decode)
+

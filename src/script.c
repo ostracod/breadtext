@@ -48,6 +48,15 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
 }
 
+void cleanUpScriptBranchStack() {
+    cleanUpVector(&scriptBranchStack);
+    createEmptyVector(&scriptBranchStack, sizeof(scriptBranch_t));
+}
+
+void cleanUpAfterRunningScript() {
+    cleanUpScriptBranchStack();
+}
+
 void addScriptTestLogMessage(int8_t *text) {
     int8_t *tempText = malloc(strlen((char *)text) + 1);
     strcpy((char *)tempText, (char *)text);
@@ -2163,6 +2172,9 @@ void evaluateScriptBody(scriptBody_t *scriptBody) {
     tempBranch.line = tempScriptBodyLine;
     pushVectorElement(&scriptBranchStack, &tempBranch);
     evaluateScriptBodyAtLine(&tempScriptBodyLine);
+    if (scriptHasError) {
+        return;
+    }
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
     if (currentBranch->type != SCRIPT_BRANCH_TYPE_ROOT) {
         reportScriptError((int8_t *)"Missing end statement.", &tempScriptBodyLine);
@@ -2240,6 +2252,7 @@ int8_t runScript(int8_t *path) {
     if (scriptHasError) {
         displayScriptError();
     }
+    cleanUpAfterRunningScript();
     return !scriptHasError;
 }
 
@@ -2252,6 +2265,7 @@ int8_t runScriptAsText(int8_t *text) {
     if (scriptHasError) {
         displayScriptError();
     }
+    cleanUpAfterRunningScript();
     return !scriptHasError;
 }
 
@@ -2284,6 +2298,7 @@ int8_t invokeKeyBinding(int32_t key) {
         index += 1;
     }
     cleanUpVector(&tempArgumentList);
+    cleanUpAfterRunningScript();
     return output;
 }
 
@@ -2329,5 +2344,6 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     if (destination != NULL) {
         *destination = tempResult;
     }
+    cleanUpAfterRunningScript();
     return true;
 }
