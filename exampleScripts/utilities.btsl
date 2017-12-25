@@ -257,3 +257,35 @@ end
 
 bindCommand("decode", decode)
 
+func factor(argList)
+    dec number
+    if len(argList) >= 1
+        number = num(argList[0])
+    else
+        number = num(getSelectionContents())
+    end
+    dec output = ""
+    dec uniqueFactorCount = 0
+    dec factor = 2
+    while factor <= number
+        dec exponent = 0
+        while number % factor == 0
+            number /= factor
+            exponent += 1
+        end
+        if exponent > 0
+            if uniqueFactorCount > 0
+                output += " * "
+            end
+            output += str(factor)
+            if exponent > 1
+                output += "^" + str(exponent)
+            end
+            uniqueFactorCount += 1
+        end
+        factor += 1
+    end
+    notifyUser(output)
+end
+
+bindCommand("factor", factor)
