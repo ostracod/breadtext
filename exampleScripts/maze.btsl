@@ -1,0 +1,119 @@
+
+dec boardWidth = 20
+dec boardHeight = 10
+
+dec playerPosX
+dec playerPosY
+
+dec offsetSet = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+
+func generateCell()
+    while true
+        dec posX
+        dec posY
+        while true
+            posX = floor(rand() * boardWidth)
+            posY = floor(rand() * boardHeight)
+            setCursorPos(posX * 2 + 1, posY * 2 + 1)
+            dec character = getSelectionContents()[0]
+            if character == '.'
+                break
+            end
+        end
+        dec offset = offsetSet[floor(rand() * len(offsetSet))]
+        dec offsetX = offset[0]
+        dec offsetY = offset[1]
+        dec pos2X = posX + offsetX
+        dec pos2Y = posY + offsetY
+        if pos2X < 0 || pos2X >= boardWidth || pos2Y < 0 || pos2Y >= boardHeight
+            continue
+        end
+        setCursorPos(pos2X * 2 + 1, pos2Y * 2 + 1)
+        dec character = getSelectionContents()[0]
+        if character == '.'
+            continue
+        end
+        setCursorPos(posX * 2 + 1 + offsetX, posY * 2 + 1 + offsetY)
+        pressKey('.')
+        pressKey(' ')
+        setCursorPos(posX * 2 + 1, posY * 2 + 1)
+        pressKey('.')
+        pressKey(' ')
+        break
+    end
+end
+
+func generateMaze()
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec posX = 0
+    dec posY = 0
+    while posY < boardHeight * 2 + 1
+        if posX % 2 == 1 && posY % 2 == 1
+            pressKey('.')
+        else
+            pressKey('O')
+        end
+        posX += 1
+        if posX >= boardWidth * 2 + 1
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+    setCursorPos(1, 1)
+    pressKey('.')
+    pressKey(' ')
+    dec remainingCount = boardWidth * boardHeight - 1
+    while remainingCount > 0
+        generateCell()
+        remainingCount -= 1
+    end
+end
+
+func movePlayer(offsetX, offsetY)
+    setCursorPos(playerPosX + offsetX, playerPosY + offsetY)
+    dec character = getSelectionContents()[0]
+    if character == 'O'
+        ret
+    end
+    playerPosX += offsetX
+    playerPosY += offsetY
+end
+
+func playMazeGame(argList)
+    generateMaze()
+    playerPosX = 1
+    playerPosY = 1
+    setCursorPos(playerPosX, playerPosY)
+    pressKey('.')
+    pressKey('X')
+    while true
+        setCursorPos(0, 0)
+        dec key = promptKey()
+        setCursorPos(playerPosX, playerPosY)
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        pressKey('.')
+        pressKey(' ')
+        if key == KEY_LEFT
+            movePlayer(-1, 0)
+        end
+        if key == KEY_RIGHT
+            movePlayer(1, 0)
+        end
+        if key == KEY_UP
+            movePlayer(0, -1)
+        end
+        if key == KEY_DOWN
+            movePlayer(0, 1)
+        end
+        setCursorPos(playerPosX, playerPosY)
+        pressKey('.')
+        pressKey('X')
+    end
+end
+
+bindCommand("maze", playMazeGame)
