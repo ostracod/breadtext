@@ -660,6 +660,7 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 keyBinding_t tempKeyBinding;
                 tempKeyBinding.key = tempKey;
                 tempKeyBinding.callback = tempCallbackValue;
+                lockScriptValue(&(tempKeyBinding.callback));
                 pushVectorElement(&keyBindingList, &tempKeyBinding);
                 break;
             }
@@ -709,9 +710,12 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                     tempNewCommandBinding.commandName = malloc(tempText->length);
                     strcpy((char *)(tempNewCommandBinding.commandName), (char *)(tempText->data));
                     tempNewCommandBinding.callback = tempCallbackValue;
+                    lockScriptValue(&(tempNewCommandBinding.callback));
                     pushVectorElement(&commandBindingList, &tempNewCommandBinding);
                 } else {
+                    unlockScriptValue(&(tempOldCommandBinding->callback));
                     tempOldCommandBinding->callback = tempCallbackValue;
+                    lockScriptValue(&(tempOldCommandBinding->callback));
                 }
                 break;
             }
@@ -2240,6 +2244,23 @@ scriptBody_t *importScript(int8_t *path) {
     return output;
 }
 
+void lockAllBindings() {
+    int64_t index = 0;
+    while (index < keyBindingList.length) {
+        keyBinding_t tempKeyBinding;
+        getVectorElement(&tempKeyBinding, &keyBindingList, index);
+        lockScriptValue(&(tempKeyBinding.callback));
+        index += 1;
+    }
+    index = 0;
+    while (index < commandBindingList.length) {
+        commandBinding_t tempCommandBinding;
+        getVectorElement(&tempCommandBinding, &commandBindingList, index);
+        lockScriptValue(&(tempCommandBinding.callback));
+        index += 1;
+    }
+}
+
 void resetScriptError() {
     scriptHasError = false;
     scriptErrorLine.number = -1;
@@ -2251,6 +2272,7 @@ void displayScriptError() {
         tempHeapValue->lockDepth = 0;
         tempHeapValue = tempHeapValue->next;
     }
+    lockAllBindings();
     int8_t tempText[1000];
     if (scriptErrorLine.number < 0) {
         sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
