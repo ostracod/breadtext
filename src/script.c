@@ -1816,6 +1816,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
                     scriptBodyPosSkipWhitespace(&scriptBodyPos);
                     if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
                         expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+                        if (scriptHasError) {
+                            return false;
+                        }
                         assertEndOfLine(scriptBodyPos);
                         if (scriptHasError) {
                             return false;
@@ -1911,6 +1914,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
             assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;
@@ -1945,6 +1951,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
             assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;
@@ -2110,6 +2119,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"import")) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             expressionResult_t tempResult = evaluateExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
             assertEndOfLine(scriptBodyPos);
             if (scriptHasError) {
                 return false;

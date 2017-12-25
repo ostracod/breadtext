@@ -92,10 +92,10 @@ func playMazeGame(argList)
     while true
         setCursorPos(0, 0)
         dec key = promptKey()
-        setCursorPos(playerPosX, playerPosY)
         if key == 'q' || key == 'Q' || key == KEY_ESCAPE
             break
         end
+        setCursorPos(playerPosX, playerPosY)
         pressKey('.')
         pressKey(' ')
         if key == KEY_LEFT
