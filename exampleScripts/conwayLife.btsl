@@ -1,0 +1,116 @@
+
+dec boardWidth = 40
+dec boardHeight = 20
+dec boardSize = boardWidth * boardHeight
+
+dec lastBoard
+dec nextBoard
+
+func resetBoard()
+    lastBoard = []
+    nextBoard = []
+    dec index = 0
+    while index < boardSize
+        ins(lastBoard, index, floor(rand() * 2))
+        ins(nextBoard, index, 0)
+        index += 1
+    end
+end
+
+func eraseBoard()
+    setMode(MODE_COMMAND)
+    setCursorPos(0, 0)
+    dec posY = 0
+    while posY < boardHeight
+        pressKey('H')
+        pressKey('d')
+        posY += 1
+    end
+    setMode(MODE_TEXT_ENTRY)
+end
+
+func drawBoard()
+    setCursorPos(0, 0)
+    dec index = 0
+    dec posX = 0
+    dec posY = 0
+    while index < boardSize
+        dec value = lastBoard[index]
+        if value
+            pressKey('O')
+        else
+            pressKey('.')
+        end
+        index += 1
+        posX += 1
+        if posX >= boardWidth
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+end
+
+func getBoardValue(posX, posY)
+    if posX < 0 || posX >= boardWidth || posY < 0 || posY >= boardHeight
+        ret 0
+    end
+    ret lastBoard[posX + posY * boardWidth]
+end
+
+func advanceBoard()
+    dec index = 0
+    dec posX = 0
+    dec posY = 0
+    while index < boardSize
+        dec value = lastBoard[index]
+        dec total = 0
+        total += getBoardValue(posX - 1, posY - 1)
+        total += getBoardValue(posX, posY - 1)
+        total += getBoardValue(posX + 1, posY - 1)
+        total += getBoardValue(posX - 1, posY)
+        total += getBoardValue(posX + 1, posY)
+        total += getBoardValue(posX - 1, posY + 1)
+        total += getBoardValue(posX, posY + 1)
+        total += getBoardValue(posX + 1, posY + 1)
+        if value
+            if total != 2 && total != 3
+                value = 0
+            end
+        else
+            if total == 3
+                value = 1
+            end
+        end
+        nextBoard[index] = value
+        index += 1
+        posX += 1
+        if posX >= boardWidth
+            posX = 0
+            posY += 1
+        end
+    end
+    dec tempBoard = lastBoard
+    lastBoard = nextBoard
+    nextBoard = tempBoard
+end
+
+func conwayLife(argList)
+    setMode(MODE_TEXT_ENTRY)
+    resetBoard()
+    drawBoard()
+    while true
+        dec key = promptKey()
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        advanceBoard()
+        eraseBoard()
+        drawBoard()
+    end
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("conwayLife", conwayLife)
+
+
