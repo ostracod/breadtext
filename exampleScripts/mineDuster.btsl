@@ -1,0 +1,211 @@
+
+dec boardWidth = 30
+dec boardHeight = 15
+dec boardSize = boardWidth * boardHeight
+
+dec mineAmount = 50
+dec mineTile = '*'
+dec emptyTile = '.'
+
+dec coveredTileCount
+dec hasDied
+
+dec cursorPosX
+dec cursorPosY
+
+dec boardTop
+dec boardBottom
+
+func posIsInBoard(posX, posY)
+    ret posX >= 0 && posX < boardWidth && posY >= 0 && posY < boardHeight
+end
+
+func getBoardIndex(posX, posY)
+    ret posX + posY * boardWidth
+end
+
+func getBoardTile(board, posX, posY, fallback)
+    if !posIsInBoard(posX, posY)
+        ret fallback
+    end
+    dec index = getBoardIndex(posX, posY)
+    ret board[index]
+end
+
+func setBoardTile(board, posX, posY, tile)
+    if !posIsInBoard(posX, posY)
+        ret
+    end
+    dec index = getBoardIndex(posX, posY)
+    board[index] = tile
+end
+
+func incrementTileNumber(posX, posY)
+    dec tile = getBoardTile(boardBottom, posX, posY, '-')
+    if tile == '-'
+        ret
+    end
+    if tile == emptyTile
+        tile = '1'
+    else if tile != mineTile
+        tile += 1
+    end
+    setBoardTile(boardBottom, posX, posY, tile)
+end
+
+func applyFunctionToNeighbors(handle, posX, posY)
+    handle(posX - 1, posY - 1)
+    handle(posX, posY - 1)
+    handle(posX + 1, posY - 1)
+    handle(posX - 1, posY)
+    handle(posX + 1, posY)
+    handle(posX - 1, posY + 1)
+    handle(posX, posY + 1)
+    handle(posX + 1, posY + 1)
+end
+
+func placeMine(posX, posY)
+    setBoardTile(boardBottom, posX, posY, mineTile)
+    applyFunctionToNeighbors(incrementTileNumber, posX, posY)
+end
+
+func drawBoard(board)
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec index = 0
+    dec posX = 0
+    dec posY = 0
+    while index < boardSize
+        dec character = board[index]
+        pressKey(character)
+        index += 1
+        posX += 1
+        if posX >= boardWidth
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+end
+
+func eraseBoard()
+    setCursorPos(0, 0)
+    dec posY = 0
+    while posY < boardHeight
+        pressKey('H')
+        pressKey('d')
+        posY += 1
+    end
+end
+
+func generateBoard()
+    boardTop = ""
+    boardBottom = ""
+    coveredTileCount = 0
+    dec index = 0
+    while index < boardSize
+        ins(boardTop, index, '?')
+        ins(boardBottom, index, emptyTile)
+        coveredTileCount += 1
+        index += 1
+    end
+    drawBoard(boardTop)
+    dec mineCount = 0
+    while mineCount < mineAmount
+        dec posX = floor(rand() * boardWidth)
+        dec posY = floor(rand() * boardHeight)
+        dec tile = getBoardTile(boardBottom, posX, posY, emptyTile)
+        if tile != mineTile
+            placeMine(posX, posY)
+            mineCount += 1
+        end
+    end
+end
+
+func moveCursor(offsetX, offsetY)
+    dec posX = cursorPosX + offsetX
+    dec posY = cursorPosY + offsetY
+    if !posIsInBoard(posX, posY)
+        ret
+    end
+    cursorPosX = posX
+    cursorPosY = posY
+end
+
+func toggleCursorFlag()
+    dec tile = getBoardTile(boardTop, cursorPosX, cursorPosY, ' ')
+    if tile == ' '
+        ret
+    end
+    if tile == '?'
+        tile = 'F'
+    else if tile == 'F'
+        tile = '?'
+    end
+    setBoardTile(boardTop, cursorPosX, cursorPosY, tile)
+    pressKey('.')
+    pressKey(tile)
+end
+
+func clearBoardTile(posX, posY)
+    dec tileTop = getBoardTile(boardTop, posX, posY, '-')
+    if tileTop != '?'
+        ret
+    end
+    setBoardTile(boardTop, posX, posY, ' ')
+    coveredTileCount -= 1
+    dec tileBottom = getBoardTile(boardBottom, posX, posY, '-')
+    setCursorPos(posX, posY)
+    pressKey('.')
+    pressKey(tileBottom)
+    if tileBottom == mineTile
+        hasDied = true
+    end
+    if tileBottom == emptyTile
+        applyFunctionToNeighbors(clearBoardTile, posX, posY)
+    end
+end
+
+func mineDuster(argList)
+    generateBoard()
+    hasDied = false
+    cursorPosX = 0
+    cursorPosY = 0
+    while true
+        setCursorPos(cursorPosX, cursorPosY)
+        dec key = promptKey()
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        if key == KEY_LEFT
+            moveCursor(-1, 0)
+        end
+        if key == KEY_RIGHT
+            moveCursor(1, 0)
+        end
+        if key == KEY_UP
+            moveCursor(0, -1)
+        end
+        if key == KEY_DOWN
+            moveCursor(0, 1)
+        end
+        if key == 'f'
+            toggleCursorFlag()
+        end
+        if key == KEY_SPACE
+            clearBoardTile(cursorPosX, cursorPosY)
+            if hasDied
+                eraseBoard()
+                drawBoard(boardBottom)
+                notifyUser("YOU DIED!!!")
+                break
+            else if coveredTileCount <= mineAmount
+                notifyUser("YOU WIN!!!")
+                break
+            end
+        end
+    end
+end
+
+bindCommand("mineDuster", mineDuster)
