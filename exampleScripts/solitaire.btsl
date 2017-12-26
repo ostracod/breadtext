@@ -42,6 +42,7 @@ dec tableau
 dec cursorPos
 dec selectionPos
 
+dec boardHeight = 23
 dec suitCharacterSet = ['s', 'c', 'H', 'D']
 
 func pushElement(sequence, element)
@@ -174,20 +175,34 @@ func convertCardPosToCharPos(cardPos)
     end
 end
 
+func eraseTableauPile(index)
+    dec cardPos = [CARD_POS_TYPE_TABLEAU, index, 0]
+    dec pileIndex = 0
+    while pileIndex < boardHeight
+        cardPos[CARD_POS_PILE_INDEX] = pileIndex
+        dec pos = convertCardPosToCharPos(cardPos)
+        eraseCard(pos[0] + 1, pos[1], card)
+        pileIndex += 1
+    end
+end
+
+func drawTableauPile(index)
+    dec cardPos = [CARD_POS_TYPE_TABLEAU, index, 0]
+    dec pile = tableau[index]
+    dec pileIndex = 0
+    while pileIndex < len(pile)
+        dec card = pile[pileIndex]
+        cardPos[CARD_POS_PILE_INDEX] = pileIndex
+        dec pos = convertCardPosToCharPos(cardPos)
+        drawCard(pos[0] + 1, pos[1], card)
+        pileIndex += 1
+    end
+end
+
 func drawTableau()
-    dec cardPos = [CARD_POS_TYPE_TABLEAU, 0, 0]
     dec index = 0
     while index < 7
-        dec pile = tableau[index]
-        dec pileIndex = 0
-        while pileIndex < len(pile)
-            dec card = pile[pileIndex]
-            cardPos[CARD_POS_INDEX] = index
-            cardPos[CARD_POS_PILE_INDEX] = pileIndex
-            dec pos = convertCardPosToCharPos(cardPos)
-            drawCard(pos[0] + 1, pos[1], card)
-            pileIndex += 1
-        end
+        drawTableauPile(index)
         index += 1
     end
 end
@@ -348,7 +363,7 @@ func solitaire(argList)
     setCursorPos(0, 0)
     dec posX = 0
     dec posY = 0
-    while posY < 23
+    while posY < boardHeight
         pressKey(' ')
         posX += 1
         if posX >= 35
