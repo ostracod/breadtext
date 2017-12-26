@@ -327,12 +327,28 @@ func moveCursor(offsetX, offsetY)
             end
         end
         if offsetY < 0
-            # TODO: Scroll up through pile if possible.
-            if index < 3
-                cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_DECK
-            else
-                cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_FOUNDATION
-                cursorPos[CARD_POS_INDEX] = index - 3
+            dec hasMoved = false
+            if pileIndex > 0
+                dec pile = tableau[index]
+                dec card = pile[pileIndex - 1]
+                if card[CARD_IS_VISIBLE]
+                    cursorPos[CARD_POS_PILE_INDEX] = pileIndex - 1
+                    hasMoved = true
+                end
+            end
+            if !hasMoved
+                if index < 3
+                    cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_DECK
+                else
+                    cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_FOUNDATION
+                    cursorPos[CARD_POS_INDEX] = index - 3
+                end
+            end
+        end
+        if offsetY > 0
+            dec pile = tableau[index]
+            if pileIndex < len(pile) - 1
+                cursorPos[CARD_POS_PILE_INDEX] = pileIndex + 1
             end
         end
     else if type == CARD_POS_TYPE_DECK
@@ -386,11 +402,35 @@ func setSelection()
 end
 
 func canPlaceCardOnTableauCard(sourceCard, destinationCard)
+    if sourceCard === null || destinationCard === null
+        ret false
+    end
     dec sourceValue = sourceCard[CARD_VALUE]
     dec sourceSuit = sourceCard[CARD_SUIT]
     dec destinationValue = destinationCard[CARD_VALUE]
     dec destinationSuit = destinationCard[CARD_SUIT]
     ret (destinationValue == sourceValue + 1 && (sourceSuit > 1 ^^ destinationSuit > 1))
+end
+
+func canPlaceCardOnFoundationCard(sourceCard, destinationCard)
+    if sourceCard === null
+        ret false
+    end
+    dec sourceValue = sourceCard[CARD_VALUE]
+    if destinationCard === null
+        ret (sourceValue == 1)
+    end
+    dec destinationValue = destinationCard[CARD_VALUE]
+    ret (destinationValue == sourceValue - 1)
+end
+
+func flipOverTableauPileCard(index)
+    dec pile = tableau[index]
+    if len(pile) <= 0
+        ret
+    end
+    dec card = pile[len(pile) - 1]
+    card[CARD_IS_VISIBLE] = true
 end
 
 func moveSelectionToCursor()
@@ -414,17 +454,22 @@ func moveSelectionToCursor()
                     rem(selectionPile, selectionPileIndex)
                     pushElement(cursorPile, card)
                 end
-                eraseTableauPile(selectionIndex)
-                drawTableauPile(selectionIndex)
                 eraseTableauPile(cursorIndex)
                 drawTableauPile(cursorIndex)
             end
         end
         if cursorType == CARD_POS_TYPE_FOUNDATION
-            if count == 1
-                
+            if count == 1 && cursorIndex == selectionCard[CARD_SUIT] \
+                    && canPlaceCardOnFoundationCard(selectionCard, cursorCard)
+                rem(selectionPile, selectionPileIndex)
+                dec cursorPile = foundations[cursorIndex]
+                pushElement(cursorPile, selectionCard)
+                drawFoundations()
             end
         end
+        flipOverTableauPileCard(selectionIndex)
+        eraseTableauPile(selectionIndex)
+        drawTableauPile(selectionIndex)
     end
     selectionPos = null
 end
