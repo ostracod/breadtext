@@ -159,14 +159,33 @@ func drawCard(posX, posY, card)
     drawText(posX, posY, text)
 end
 
+func convertCardPosToCharPos(cardPos)
+    dec type = cardPos[CARD_POS_TYPE]
+    dec index = cardPos[CARD_POS_INDEX]
+    dec pileIndex = cardPos[CARD_POS_PILE_INDEX]
+    if type == CARD_POS_TYPE_DECK
+        ret [0, 1]
+    end
+    if type == CARD_POS_TYPE_TABLEAU
+        ret [index * 5, 5 + pileIndex]
+    end
+    if type == CARD_POS_TYPE_FOUNDATION
+        ret [15 + index * 5, 3]
+    end
+end
+
 func drawTableau()
+    dec cardPos = [CARD_POS_TYPE_TABLEAU, 0, 0]
     dec index = 0
     while index < 7
         dec pile = tableau[index]
         dec pileIndex = 0
         while pileIndex < len(pile)
             dec card = pile[pileIndex]
-            drawCard(index * 5 + 1, pileIndex + 5, card)
+            cardPos[CARD_POS_INDEX] = index
+            cardPos[CARD_POS_PILE_INDEX] = pileIndex
+            dec pos = convertCardPosToCharPos(cardPos)
+            drawCard(pos[0] + 1, pos[1], card)
             pileIndex += 1
         end
         index += 1
@@ -197,35 +216,21 @@ func drawDeck()
 end
 
 func drawFoundations()
+    dec cardPos = [CARD_POS_TYPE_FOUNDATION, 0, 0]
     dec index = 0
     while index < 4
         dec pile = foundations[index]
-        dec posX = 16 + index * 5
-        dec posY = 3
+        cardPos[CARD_POS_INDEX] = index
+        dec pos = convertCardPosToCharPos(cardPos)
         if len(pile) <= 0
             dec text = "( )"
             text[1] = suitCharacterSet[index]
-            drawText(posX, posY, text)
+            drawText(pos[0] + 1, pos[1], text)
         else
             dec card = pile[len(pile) - 1]
-            drawCard(posX, posY, card)
+            drawCard(pos[0] + 1, pos[1], card)
         end
         index += 1
-    end
-end
-
-func convertCardPosToCharPos(cardPos)
-    dec type = cardPos[CARD_POS_TYPE]
-    dec index = cardPos[CARD_POS_INDEX]
-    dec pileIndex = cardPos[CARD_POS_PILE_INDEX]
-    if type == CARD_POS_TYPE_DECK
-        ret [0, 1]
-    end
-    if type == CARD_POS_TYPE_TABLEAU
-        ret [index * 5, 5 + pileIndex]
-    end
-    if type == CARD_POS_TYPE_FOUNDATION
-        ret [15 + index * 5, 3]
     end
 end
 
