@@ -419,11 +419,18 @@ func setSelection()
 end
 
 func canPlaceCardOnTableauCard(sourceCard, destinationCard)
+    dec sourceValue = sourceCard[CARD_VALUE]
+    dec sourceSuit = sourceCard[CARD_SUIT]
+    if sourceCard !== null
+        sourceValue = sourceCard[CARD_VALUE]
+        sourceSuit = sourceCard[CARD_SUIT]
+        if destinationCard === null && sourceValue === 13
+            ret true
+        end
+    end
     if sourceCard === null || destinationCard === null
         ret false
     end
-    dec sourceValue = sourceCard[CARD_VALUE]
-    dec sourceSuit = sourceCard[CARD_SUIT]
     dec destinationValue = destinationCard[CARD_VALUE]
     dec destinationSuit = destinationCard[CARD_SUIT]
     ret (destinationValue == sourceValue + 1 && (sourceSuit > 1 ^^ destinationSuit > 1))
@@ -448,6 +455,14 @@ func flipOverTableauPileCard(index)
     end
     dec card = pile[len(pile) - 1]
     card[CARD_IS_VISIBLE] = true
+end
+
+func removeDeckCard()
+    rem(deck, deckIndex)
+    deckIndex -= 1
+    if deckIndex < deckStartIndex
+        deckStartIndex = deckIndex
+    end
 end
 
 func moveSelectionToCursor()
@@ -492,11 +507,7 @@ func moveSelectionToCursor()
         if cursorType == CARD_POS_TYPE_TABLEAU
             if canPlaceCardOnTableauCard(selectionCard, cursorCard)
                 dec cursorPile = tableau[cursorIndex]
-                rem(deck, deckIndex)
-                deckIndex -= 1
-                if deckIndex < deckStartIndex
-                    deckStartIndex = deckIndex
-                end
+                removeDeckCard()
                 pushElement(cursorPile, selectionCard)
                 eraseTableauPile(cursorIndex)
                 drawTableauPile(cursorIndex)
@@ -505,7 +516,7 @@ func moveSelectionToCursor()
         if cursorType == CARD_POS_TYPE_FOUNDATION
             if cursorIndex == selectionCard[CARD_SUIT] \
                     && canPlaceCardOnFoundationCard(selectionCard, cursorCard)
-                rem(deck, deckIndex)
+                removeDeckCard()
                 dec cursorPile = foundations[cursorIndex]
                 pushElement(cursorPile, selectionCard)
                 drawFoundations()
