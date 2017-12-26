@@ -1,0 +1,364 @@
+
+# Card structure:
+# [value, suit, isVisible]
+
+# Card values:
+# 1 = ace
+# 2 through 10 = number
+# 11 = jack
+# 12 = queen
+# 13 = king
+
+# Card suits:
+# 0 = spade
+# 1 = club
+# 2 = heart
+# 3 = diamond
+
+# Card position structure:
+# [type, index, pileIndex]
+
+# Card position types:
+# 0 = deck
+# 1 = tableau
+# 2 = foundation
+
+dec CARD_VALUE = 0
+dec CARD_SUIT = 1
+dec CARD_IS_VISIBLE = 2
+
+dec CARD_POS_TYPE = 0
+dec CARD_POS_INDEX = 1
+dec CARD_POS_PILE_INDEX = 2
+
+dec CARD_POS_TYPE_DECK = 0
+dec CARD_POS_TYPE_TABLEAU = 1
+dec CARD_POS_TYPE_FOUNDATION = 2
+
+dec deck
+dec deckIndex
+dec foundations
+dec tableau
+dec cursorPos
+dec selectionPos
+
+dec suitCharacterSet = ['s', 'c', 'H', 'D']
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func popElement(sequence)
+    dec index = len(sequence) - 1
+    dec output = sequence[index]
+    rem(sequence, index)
+    ret output
+end
+
+func populateDeck()
+    dec cardList = []
+    dec value = 1
+    dec suit = 0
+    while suit < 4
+        pushElement(cardList, [value, suit, true])
+        value += 1
+        if value > 13
+            value = 0
+            suit += 1
+        end
+    end
+    while len(cardList) > 0
+        dec index = floor(rand() * len(cardList))
+        dec card = cardList[index]
+        rem(cardList, index)
+        pushElement(deck, card)
+    end
+end
+
+func seekBeginningOfDeck()
+    deckIndex = 0
+    while deckIndex < 2
+        if deckIndex >= len(deck) - 1
+            break
+        end
+        deckIndex += 1
+    end
+end
+
+func seekNextDeckCard()
+    deckIndex += 3
+    if deckIndex >= len(deck)
+        seekBeginningOfDeck()
+    end
+end
+
+func dealTableau()
+    dec count = 0
+    while count < 7
+        dec index = count
+        while index < 7
+            dec pile = tableau[index]
+            dec card = popElement(deck)
+            pushElement(pile, card)
+            index += 1
+        end
+        count += 1
+    end
+    dec index = 0
+    while index < 7
+        dec pile = tableau[index]
+        dec pileIndex = 0
+        while pileIndex < len(pile)
+            dec card = pile[pileIndex]
+            card[CARD_IS_VISIBLE] = (pileIndex >= len(pile) - 1)
+            pileIndex += 1
+        end
+        index += 1
+    end
+end
+
+func drawText(posX, posY, text)
+    dec index = 0
+    while index < len(text)
+        dec character = text[index]
+        setCursorPos(posX + index, posY)
+        pressKey('.')
+        pressKey(character)
+        index += 1
+    end
+end
+
+func eraseCard(posX, posY)
+    drawText(posX, posY, "   ")
+end
+
+func drawCard(posX, posY, card)
+    dec isVisible = card[CARD_IS_VISIBLE]
+    if !isVisible
+        drawText(posX, posY, "???")
+        ret
+    end
+    dec value = card[CARD_VALUE]
+    dec suit = card[CARD_SUIT]
+    dec text = "   "
+    text[2] = suitCharacterSet[suit]
+    if value == 1
+        text[1] = 'A'
+    else if value >= 2 && value <= 9
+        text[1] = '0' + value
+    else if value == 10
+        text[0] = '1'
+        text[1] = '0'
+    else if value == 11
+        text[1] = 'J'
+    else if value == 12
+        text[1] = 'Q'
+    else if value == 13
+        text[1] = 'K'
+    end
+    drawText(posX, posY, text)
+end
+
+func drawTableau()
+    dec index = 0
+    while index < 7
+        dec pile = tableau[index]
+        dec pileIndex = 0
+        while pileIndex < len(pile)
+            dec card = pile[pileIndex]
+            drawCard(index * 5 + 1, pileIndex + 5, card)
+            pileIndex += 1
+        end
+        index += 1
+    end
+end
+
+func eraseDeck()
+    drawText(1, 0, "   ")
+    drawText(1, 1, "   ")
+    drawText(1, 2, "   ")
+    drawText(1, 3, "   ")
+end
+
+func drawDeck()
+    dec index = deckIndex
+    dec count = 0
+    while index >= 0 && count < 3
+        dec card = deck[index]
+        drawCard(1, 1 + count, card)
+        index -= 1
+        count += 1
+    end
+    if deckIndex < len(deck) - 1
+        drawText(1, 0, "???")
+    else
+        drawText(1, 0, "---")
+    end
+end
+
+func drawFoundations()
+    dec index = 0
+    while index < 4
+        dec pile = foundations[index]
+        dec posX = 16 + index * 5
+        dec posY = 3
+        if len(pile) <= 0
+            dec text = "( )"
+            text[1] = suitCharacterSet[index]
+            drawText(posX, posY, text)
+        else
+            dec card = pile[len(pile) - 1]
+            drawCard(posX, posY, card)
+        end
+        index += 1
+    end
+end
+
+func convertCardPosToCharPos(cardPos)
+    dec type = cardPos[CARD_POS_TYPE]
+    dec index = cardPos[CARD_POS_INDEX]
+    dec pileIndex = cardPos[CARD_POS_PILE_INDEX]
+    if type == CARD_POS_TYPE_DECK
+        ret [0, 1]
+    end
+    if type == CARD_POS_TYPE_TABLEAU
+        ret [index * 5, 5 + pileIndex]
+    end
+    if type == CARD_POS_TYPE_FOUNDATION
+        ret [15 + index * 5, 3]
+    end
+end
+
+func moveCursorToFirstVisibleCard()
+    dec type = cursorPos[CARD_POS_TYPE]
+    dec index = cursorPos[CARD_POS_INDEX]
+    if type != CARD_POS_TYPE_TABLEAU
+        ret
+    end
+    dec pile = tableau[index]
+    dec pileIndex = 0
+    while pileIndex < len(pile) - 1
+        dec card = pile[pileIndex]
+        if card[CARD_IS_VISIBLE]
+            break
+        end
+        pileIndex += 1
+    end
+    cursorPos[CARD_POS_PILE_INDEX] = pileIndex
+end
+
+func moveCursor(offsetX, offsetY)
+    dec type = cursorPos[CARD_POS_TYPE]
+    dec index = cursorPos[CARD_POS_INDEX]
+    dec pileIndex = cursorPos[CARD_POS_PILE_INDEX]
+    if type == CARD_POS_TYPE_TABLEAU
+        if offsetX < 0
+            if index > 0
+                cursorPos[CARD_POS_INDEX] = index - 1
+                moveCursorToFirstVisibleCard()
+            end
+        end
+        if offsetX > 0
+            if index < 6
+                cursorPos[CARD_POS_INDEX] = index + 1
+                moveCursorToFirstVisibleCard()
+            end
+        end
+        if offsetY < 0
+            # TODO: Scroll up through pile if possible.
+            if index < 3
+                cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_DECK
+            else
+                cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_FOUNDATION
+                cursorPos[CARD_POS_INDEX] = index - 3
+            end
+        end
+    else if type == CARD_POS_TYPE_DECK
+        if offsetX > 0
+            cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_FOUNDATION
+            cursorPos[CARD_POS_INDEX] = 0
+        end
+        if offsetY > 0
+            cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_TABLEAU
+            cursorPos[CARD_POS_INDEX] = 0
+            moveCursorToFirstVisibleCard()
+        end
+    else if type == CARD_POS_TYPE_FOUNDATION
+        if offsetX < 0
+            if index > 0
+                index -= 1
+                cursorPos[CARD_POS_INDEX] = index
+            else
+                cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_DECK
+            end
+        end
+        if offsetX > 0
+            if index < 3
+                index += 1
+                cursorPos[CARD_POS_INDEX] = index
+            end
+        end
+        if offsetY > 0
+            cursorPos[CARD_POS_TYPE] = CARD_POS_TYPE_TABLEAU
+            cursorPos[CARD_POS_INDEX] = index + 3
+            moveCursorToFirstVisibleCard()
+        end
+    end
+end
+
+func solitaire(argList)
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec posX = 0
+    dec posY = 0
+    while posY < 23
+        pressKey(' ')
+        posX += 1
+        if posX >= 35
+            pressKey(KEY_NEWLINE)
+            setMode(MODE_COMMAND)
+            # Remove indentation.
+            pressKey('h')
+            pressKey('[')
+            pressKey('d')
+            setMode(MODE_TEXT_ENTRY)
+            posX = 0
+            posY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+    deck = []
+    foundations = [[], [], [], []]
+    tableau = [[], [], [], [], [], [], []]
+    cursorPos = [CARD_POS_TYPE_TABLEAU, 0, 0]
+    selectionPos = null
+    populateDeck()
+    seekBeginningOfDeck()
+    dealTableau()
+    drawTableau()
+    drawDeck()
+    drawFoundations()
+    while true
+        dec pos = convertCardPosToCharPos(cursorPos)
+        setCursorPos(pos[0] + 1, pos[1])
+        dec key = promptKey()
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        if key == KEY_LEFT
+            moveCursor(-1, 0)
+        end
+        if key == KEY_RIGHT
+            moveCursor(1, 0)
+        end
+        if key == KEY_UP
+            moveCursor(0, -1)
+        end
+        if key == KEY_DOWN
+            moveCursor(0, 1)
+        end
+    end
+end
+
+bindCommand("solitaire", solitaire)
+
