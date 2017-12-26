@@ -5,7 +5,7 @@ dec boardHeight = 24
 dec blockCharacter = 'O'
 dec emptyCharacter = '.'
 
-dec score = 0
+dec score
 
 dec tetrominoPosX
 dec tetrominoPosY
@@ -188,6 +188,7 @@ end
 
 func playTetrominoGame(argList)
     setMode(MODE_TEXT_ENTRY)
+    score = 0
     setUpBoard()
     while true
         tetrominoPosX = 3

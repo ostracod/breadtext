@@ -1,0 +1,207 @@
+
+dec boardWidth = 8
+dec boardHeight = 4
+
+dec blokCharacterSet = "+-*/"
+dec emptyCharacter = '.'
+
+dec currentBlokCharacter
+dec currentBlokWidth
+dec currentBlokPosX
+
+dec score
+dec hasLost
+
+func writeText(text)
+    dec index = 0
+    while index < len(text)
+        pressKey(text[index])
+        index += 1
+    end
+end
+
+func drawScore()
+    setCursorPos(0, boardHeight + 1)
+    setMode(MODE_COMMAND)
+    pressKey(']')
+    pressKey(KEY_LEFT)
+    pressKey('w')
+    pressKey('D')
+    writeText(str(score))
+    setMode(MODE_COMMAND)
+end
+
+func generateNextBlok()
+    dec index = floor(rand() * (len(blokCharacterSet) + 1))
+    if index >= len(blokCharacterSet)
+        index = 0
+    end
+    currentBlokCharacter = blokCharacterSet[index]
+    currentBlokWidth = 1 + floor(rand() * 2)
+    currentBlokPosX = 3
+end
+
+func drawCurrentBlok()
+    dec text = getLineContents(0)
+    dec length = len(text)
+    if length > 0
+        setCursorPos(len(text) - 1, 0)
+        pressKey('h')
+        pressKey('[')
+        pressKey('D')
+    else
+        setCursorPos(0, 0)
+        setMode(MODE_TEXT_ENTRY)
+    end
+    while getCursorCharIndex() < currentBlokPosX
+        pressKey(' ')
+    end
+    dec count = 0
+    while count < currentBlokWidth
+        pressKey(currentBlokCharacter)
+        count += 1
+    end
+    setMode(MODE_COMMAND)
+end
+
+func moveBlok(offsetX)
+    dec posX = currentBlokPosX + offsetX
+    if posX < 0 || posX + currentBlokWidth > boardWidth
+        ret
+    end
+    currentBlokPosX = posX
+end
+
+func getBlok(posX, posY)
+    dec text = getLineContents(posY + 1)
+    ret text[posX]
+end
+
+func setBlok(posX, posY, character)
+    setCursorPos(posX, posY + 1)
+    pressKey('.')
+    pressKey(character)
+end
+
+func currentBlokHasCollision(posY)
+    dec offsetX = 0
+    while offsetX < currentBlokWidth
+        dec character = getBlok(currentBlokPosX + offsetX, posY)
+        if character != emptyCharacter
+            ret true
+        end
+        offsetX += 1
+    end
+    ret false
+end
+
+func clearLine(posY)
+    dec streakPosX = -1
+    dec streakCount = 0
+    dec streakCharacter = 'x'
+    dec posX = 0
+    while true
+        dec isAtEnd = (posX >= boardWidth)
+        dec character = 'x'
+        dec shouldEndStreak = false
+        if isAtEnd
+            shouldEndStreak = true
+        else
+            character = getBlok(posX, posY)
+            if character != streakCharacter
+                shouldEndStreak = true
+            end
+        end
+        if shouldEndStreak
+            if streakCount >= 3 && streakCharacter != emptyCharacter
+                dec offsetX = 0
+                while offsetX < streakCount
+                    setBlok(streakPosX + offsetX, posY, emptyCharacter)
+                    score += 1
+                    offsetX += 1
+                end
+                drawScore()
+            end
+            streakPosX = posX
+            streakCount = 1
+            streakCharacter = character
+        else
+            streakCount += 1
+        end
+        if isAtEnd
+            break
+        end
+        posX += 1
+    end
+end
+
+func dropBlok()
+    dec posY = 0
+    while posY < boardHeight
+        if currentBlokHasCollision(posY)
+            break
+        end
+        posY += 1
+    end
+    posY -= 1
+    if posY < 0
+        hasLost = true
+        setCursorPos(0, boardHeight + 1)
+        pressKey('o')
+        writeText("BLOK OVERFLOW!!!")
+        setMode(MODE_COMMAND)
+        ret
+    end
+    dec offsetX = 0
+    while offsetX < currentBlokWidth
+        setBlok(currentBlokPosX + offsetX, posY, currentBlokCharacter)
+        offsetX += 1
+    end
+    clearLine(posY)
+    generateNextBlok()
+end
+
+func sovietBlok(argList)
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    pressKey(KEY_NEWLINE)
+    dec posX = 0
+    dec posY = 0
+    while posY < boardHeight
+        pressKey(emptyCharacter)
+        posX += 1
+        if posX >= boardWidth
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+    writeText("SCORE: 0")
+    pressKey(KEY_NEWLINE)
+    setMode(MODE_COMMAND)
+    score = 0
+    hasLost = false
+    generateNextBlok()
+    while true
+        drawCurrentBlok()
+        setCursorPos(0, 0)
+        dec key = promptKey()
+        if key == KEY_LEFT
+            moveBlok(-1)
+        end
+        if key == KEY_RIGHT
+            moveBlok(1)
+        end
+        if key == KEY_DOWN
+            dropBlok()
+            if hasLost
+                break
+            end
+        end
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+    end
+end
+
+bindCommand("sovietBlok", sovietBlok)
