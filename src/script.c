@@ -777,11 +777,18 @@ void storeExpressionResultValueInDestination(expressionResult_t *expressionResul
     }
 }
 
+void updateGlobalAndLocalScopes(scriptBody_t *scriptBody) {
+    vector_t *currentScopeStack = &(scriptBody->scopeStack);
+    getVectorElement(&globalScriptScope, currentScopeStack, 0);
+    getVectorElement(&localScriptScope, currentScopeStack, currentScopeStack->length - 1);
+}
+
 expressionResult_t evaluateExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     expressionResult_t expressionResult;
     expressionResult.value.type = SCRIPT_VALUE_TYPE_MISSING;
     expressionResult.destinationType = DESTINATION_TYPE_NONE;
     expressionResult.destination = NULL;
+    updateGlobalAndLocalScopes(scriptBodyPos->scriptBodyLine->scriptBody);
     while (true) {
         scriptBodyPosSkipWhitespace(scriptBodyPos);
         scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_TYPE_UNARY_PREFIX);
@@ -1717,9 +1724,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
     scriptBodyPos.index = scriptBodyLine->index;
     scriptBodyPosSkipWhitespace(&scriptBodyPos);
     scriptBranch_t *currentBranch = findVectorElement(&scriptBranchStack, scriptBranchStack.length - 1);
-    vector_t *currentScopeStack = &(currentBranch->line.scriptBody->scopeStack);
-    getVectorElement(&globalScriptScope, currentScopeStack, 0);
-    getVectorElement(&localScriptScope, currentScopeStack, currentScopeStack->length - 1);
+    updateGlobalAndLocalScopes(scriptBodyLine->scriptBody);
     if (currentBranch->type == SCRIPT_BRANCH_TYPE_IMPORT) {
         if (!currentBranch->shouldIgnore) {
             scriptScope_t *tempScope;

@@ -1524,3 +1524,24 @@ ASSERT_OUTPUT
 1
 -1
 END_TEST
+
+START_TEST "Changing scopes"
+func getResult1(one)
+    one + 1
+    ret false
+end
+func getResult2(one, two)
+    one + two
+    ret false
+end
+dec value = true
+testLog(getResult1(1) || value)
+testLog(getResult2(1, 2) || value)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+1
+END_TEST
+
+
