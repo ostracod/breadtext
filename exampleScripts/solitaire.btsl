@@ -37,6 +37,7 @@ dec CARD_POS_TYPE_FOUNDATION = 2
 
 dec deck
 dec deckIndex
+dec deckStartIndex
 dec foundations
 dec tableau
 dec cursorPos
@@ -77,6 +78,7 @@ func populateDeck()
 end
 
 func seekBeginningOfDeck()
+    deckStartIndex = 0
     deckIndex = 0
     while deckIndex < 2
         if deckIndex >= len(deck) - 1
@@ -87,9 +89,15 @@ func seekBeginningOfDeck()
 end
 
 func seekNextDeckCard()
-    deckIndex += 3
-    if deckIndex >= len(deck)
+    if deckIndex < 0 || deckIndex >= len(deck) - 1
         seekBeginningOfDeck()
+        ret
+    end
+    deckStartIndex = deckIndex + 1
+    dec count = 0
+    while deckIndex < len(deck) - 1 && count < 3
+        deckIndex += 1
+        count += 1    
     end
 end
 
@@ -170,7 +178,13 @@ func convertCardPosToCharPos(cardPos)
     dec index = cardPos[CARD_POS_INDEX]
     dec pileIndex = cardPos[CARD_POS_PILE_INDEX]
     if type == CARD_POS_TYPE_DECK
-        ret [0, 1]
+        dec posY
+        if deckIndex >= 0
+            posY = 3 - (deckIndex - deckStartIndex)
+        else
+            posY = 3
+        end
+        ret [0, posY]
     end
     if type == CARD_POS_TYPE_TABLEAU
         ret [index * 5, 5 + pileIndex]
@@ -259,11 +273,14 @@ end
 func drawDeck()
     dec index = deckIndex
     dec count = 0
-    while index >= 0 && count < 3
+    while index >= 0 && index >= deckStartIndex
         dec card = deck[index]
-        drawCard(1, 1 + count, card)
+        drawCard(1, 3 - (deckIndex - deckStartIndex) + count, card)
         index -= 1
         count += 1
+    end
+    if count == 0
+        drawText(1, 3, "---")
     end
     if deckIndex < len(deck) - 1
         drawText(1, 0, "???")
@@ -471,6 +488,23 @@ func moveSelectionToCursor()
         eraseTableauPile(selectionIndex)
         drawTableauPile(selectionIndex)
     end
+    if selectionType == CARD_POS_TYPE_DECK
+        if cursorType == CARD_POS_TYPE_TABLEAU
+            if canPlaceCardOnTableauCard(selectionCard, cursorCard)
+                dec cursorPile = tableau[cursorIndex]
+                rem(deck, deckIndex)
+                deckIndex -= 1
+                if deckIndex < deckStartIndex
+                    deckStartIndex = deckIndex
+                end
+                pushElement(cursorPile, selectionCard)
+                eraseTableauPile(cursorIndex)
+                drawTableauPile(cursorIndex)
+            end
+            eraseDeck()
+            drawDeck()
+        end
+    end
     selectionPos = null
 end
 
@@ -531,6 +565,11 @@ func solitaire(argList)
             else
                 moveSelectionToCursor()
             end
+        end
+        if key == 'f'
+            seekNextDeckCard()
+            eraseDeck()
+            drawDeck()
         end
     end
 end
