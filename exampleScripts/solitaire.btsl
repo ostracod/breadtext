@@ -42,7 +42,7 @@ dec tableau
 dec cursorPos
 dec selectionPos
 
-dec boardHeight = 23
+dec boardHeight = 24
 dec suitCharacterSet = ['s', 'c', 'H', 'D']
 
 func pushElement(sequence, element)
@@ -64,7 +64,7 @@ func populateDeck()
         pushElement(cardList, [value, suit, true])
         value += 1
         if value > 13
-            value = 0
+            value = 1
             suit += 1
         end
     end
@@ -175,13 +175,50 @@ func convertCardPosToCharPos(cardPos)
     end
 end
 
+func getCardAtPos(cardPos, isDestination)
+    dec type = cardPos[CARD_POS_TYPE]
+    dec index = cardPos[CARD_POS_INDEX]
+    dec pileIndex = cardPos[CARD_POS_PILE_INDEX]
+    if type == CARD_POS_TYPE_DECK
+        if deckIndex >= 0 && deckIndex < len(deck)
+            ret deck[deckIndex]
+        else
+            ret null
+        end
+    end
+    if type == CARD_POS_TYPE_TABLEAU
+        dec pile = tableau[index]
+        if isDestination
+            if len(pile) > 0
+                ret pile[len(pile) - 1]
+            else
+                ret null
+            end
+        else
+            if pileIndex >= 0 && pileIndex < len(pile)
+                ret pile[pileIndex]
+            else
+                ret null
+            end
+        end
+    end
+    if type == CARD_POS_TYPE_FOUNDATION
+        dec pile = foundations[index]
+        if len(pile) > 0
+            ret pile[len(pile) - 1]
+        else
+            ret null
+        end
+    end
+end
+
 func eraseTableauPile(index)
     dec cardPos = [CARD_POS_TYPE_TABLEAU, index, 0]
     dec pileIndex = 0
-    while pileIndex < boardHeight
+    while pileIndex < 19
         cardPos[CARD_POS_PILE_INDEX] = pileIndex
         dec pos = convertCardPosToCharPos(cardPos)
-        eraseCard(pos[0] + 1, pos[1], card)
+        eraseCard(pos[0] + 1, pos[1])
         pileIndex += 1
     end
 end
@@ -351,10 +388,47 @@ func setSelection()
     drawSelection()
 end
 
+func canPlaceCardOnTableauCard(sourceCard, destinationCard)
+    dec sourceValue = sourceCard[CARD_VALUE]
+    dec sourceSuit = sourceCard[CARD_SUIT]
+    dec destinationValue = destinationCard[CARD_VALUE]
+    dec destinationSuit = destinationCard[CARD_SUIT]
+    ret (destinationValue == sourceValue + 1 && (sourceSuit > 1 ^^ destinationSuit > 1))
+end
+
 func moveSelectionToCursor()
     eraseSelection()
-    # TODO: The rest.
-    
+    dec selectionType = selectionPos[CARD_POS_TYPE]
+    dec selectionIndex = selectionPos[CARD_POS_INDEX]
+    dec selectionPileIndex = selectionPos[CARD_POS_PILE_INDEX]
+    dec cursorType = cursorPos[CARD_POS_TYPE]
+    dec cursorIndex = cursorPos[CARD_POS_INDEX]
+    dec cursorPileIndex = cursorPos[CARD_POS_PILE_INDEX]
+    dec selectionCard = getCardAtPos(selectionPos, false)
+    dec cursorCard = getCardAtPos(cursorPos, true)
+    if selectionType == CARD_POS_TYPE_TABLEAU
+        dec selectionPile = tableau[selectionIndex]
+        dec count = len(selectionPile) - selectionPileIndex
+        if cursorType == CARD_POS_TYPE_TABLEAU
+            if canPlaceCardOnTableauCard(selectionCard, cursorCard)
+                dec cursorPile = tableau[cursorIndex]
+                while selectionPileIndex < len(selectionPile)
+                    dec card = selectionPile[selectionPileIndex]
+                    rem(selectionPile, selectionPileIndex)
+                    pushElement(cursorPile, card)
+                end
+                eraseTableauPile(selectionIndex)
+                drawTableauPile(selectionIndex)
+                eraseTableauPile(cursorIndex)
+                drawTableauPile(cursorIndex)
+            end
+        end
+        if cursorType == CARD_POS_TYPE_FOUNDATION
+            if count == 1
+                
+            end
+        end
+    end
     selectionPos = null
 end
 
