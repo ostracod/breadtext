@@ -306,6 +306,38 @@ func moveCursor(offsetX, offsetY)
     end
 end
 
+func eraseSelection()
+    dec pos = convertCardPosToCharPos(selectionPos)
+    setCursorPos(pos[0], pos[1])
+    pressKey('.')
+    pressKey(' ')
+    setCursorPos(pos[0] + 4, pos[1])
+    pressKey('.')
+    pressKey(' ')
+end
+
+func drawSelection()
+    dec pos = convertCardPosToCharPos(selectionPos)
+    setCursorPos(pos[0], pos[1])
+    pressKey('.')
+    pressKey('>')
+    setCursorPos(pos[0] + 4, pos[1])
+    pressKey('.')
+    pressKey('<')
+end
+
+func setSelection()
+    selectionPos = copy(cursorPos)
+    drawSelection()
+end
+
+func moveSelectionToCursor()
+    eraseSelection()
+    # TODO: The rest.
+    
+    selectionPos = null
+end
+
 func solitaire(argList)
     setMode(MODE_TEXT_ENTRY)
     setCursorPos(0, 0)
@@ -356,6 +388,13 @@ func solitaire(argList)
         end
         if key == KEY_DOWN
             moveCursor(0, 1)
+        end
+        if key == KEY_SPACE
+            if selectionPos === null
+                setSelection()
+            else
+                moveSelectionToCursor()
+            end
         end
     end
 end
