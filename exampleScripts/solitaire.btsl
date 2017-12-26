@@ -419,8 +419,8 @@ func setSelection()
 end
 
 func canPlaceCardOnTableauCard(sourceCard, destinationCard)
-    dec sourceValue = sourceCard[CARD_VALUE]
-    dec sourceSuit = sourceCard[CARD_SUIT]
+    dec sourceValue
+    dec sourceSuit
     if sourceCard !== null
         sourceValue = sourceCard[CARD_VALUE]
         sourceSuit = sourceCard[CARD_SUIT]
@@ -524,6 +524,19 @@ func moveSelectionToCursor()
         end
         eraseDeck()
         drawDeck()
+    end
+    if selectionType == CARD_POS_TYPE_FOUNDATION
+        dec selectionPile = foundations[selectionIndex]
+        if cursorType == CARD_POS_TYPE_TABLEAU
+            if canPlaceCardOnTableauCard(selectionCard, cursorCard)
+                dec cursorPile = tableau[cursorIndex]
+                rem(selectionPile, len(selectionPile) - 1)
+                pushElement(cursorPile, selectionCard)
+                eraseTableauPile(cursorIndex)
+                drawTableauPile(cursorIndex)
+            end
+        end
+        drawFoundations()
     end
     selectionPos = null
 end
