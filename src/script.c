@@ -1865,6 +1865,14 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBodyLine_t *scriptBod
             pushVectorElement(&scriptBranchStack, &tempBranch);
             return seekNextScriptBodyLine(scriptBodyLine);
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"func")) {
+            scriptBranch_t tempBranch;
+            tempBranch.type = SCRIPT_BRANCH_TYPE_FUNCTION;
+            tempBranch.shouldIgnore = true;
+            tempBranch.line = *scriptBodyLine;
+            pushVectorElement(&scriptBranchStack, &tempBranch);
+            return seekNextScriptBodyLine(scriptBodyLine);
+        }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"import")) {
             scriptBranch_t tempBranch;
             tempBranch.type = SCRIPT_BRANCH_TYPE_IMPORT;
