@@ -289,3 +289,73 @@ func factor(argList)
 end
 
 bindCommand("factor", factor)
+
+func convertBaseNameToNumber(name)
+    if name == "bin"
+        ret 2
+    else if name == "oct"
+        ret 8
+    else if name == "dec"
+        ret 10
+    else if name == "hex"
+        ret 16
+    else
+        ret num(name)
+    end
+end
+
+func convertBase(argList)
+    if len(argList) != 2
+        notifyUser("Wrong number of arguments.")
+        ret
+    end
+    dec sourceBase = convertBaseNameToNumber(argList[0])
+    dec destinationBase = convertBaseNameToNumber(argList[1])
+    if sourceBase === null || destinationBase === null
+        notifyUser("Bad base name.")
+        ret
+    end
+    dec inputText = getSelectionContents()
+    dec number = 0
+    dec placeValue = 1
+    dec index = len(inputText) - 1
+    while index >= 0
+        dec character = inputText[index]
+        if character >= 'a' && character <= 'z'
+            character += 'A' - 'a'
+        end
+        dec digitValue
+        if character >= '0' && character <= '9'
+            digitValue = character - '0'
+        else if character >= 'A' && character <= 'Z'
+            digitValue = character - 'A' + 10
+        else
+            notifyUser("Bad input text.")
+            ret
+        end
+        if digitValue >= sourceBase
+            notifyUser("Bad input text.")
+            ret
+        end
+        number += digitValue * placeValue
+        placeValue *= sourceBase
+        index -= 1
+    end
+    dec outputText = ""
+    while number > 0
+        dec digitValue = number % destinationBase
+        dec character
+        if digitValue < 10
+            character = digitValue + '0'
+        else
+            character = digitValue - 10 + 'A'
+        end
+        ins(outputText, 0, character)
+        number = floor(number / destinationBase)
+    end
+    pressKey('D')
+    writeText(outputText)
+    setMode(MODE_COMMAND)
+end
+
+bindCommand("convertBase", convertBase)
