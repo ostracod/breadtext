@@ -1,0 +1,166 @@
+
+dec boardSize
+dec boardLength
+dec board
+dec cursorPosX
+dec cursorPosY
+
+dec offsetSet = [[0, -1], [1, 0], [0, 1], [-1, 0]]
+
+func writeText(text)
+    text = str(text)
+    dec index = 0
+    while index < len(text)
+        pressKey(text[index])
+        index += 1
+    end
+end
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func convertTilePosToCharPos(posX, posY)
+    ret [posX * 5 + 1, posY * 3 + 1]
+end
+
+func drawTileText(posX, posY, text)
+    dec pos = convertTilePosToCharPos(posX, posY)
+    setCursorPos(pos[0], pos[1])
+    pressKey('h')
+    pressKey(KEY_RIGHT)
+    pressKey(KEY_RIGHT)
+    pressKey('D')
+    if text === null
+        pressKey(' ')
+        pressKey(' ')
+        pressKey(' ')
+    else
+        writeText(text)
+        dec count = 3 - len(text)
+        while count > 0
+            pressKey(' ')
+            count -= 1
+        end
+    end
+    setMode(MODE_COMMAND)
+end
+
+func moveTileWithoutDrawing(offsetX, offsetY)
+    dec posX = cursorPosX - offsetX
+    dec posY = cursorPosY - offsetY
+    if posX < 0 || posX >= boardSize || posY < 0 || posY >= boardSize
+        ret null
+    end
+    dec sourceIndex = posX + posY * boardSize
+    dec destinationIndex = cursorPosX + cursorPosY * boardSize
+    dec tile = board[sourceIndex]
+    board[sourceIndex] = 0
+    board[destinationIndex] = tile
+    cursorPosX = posX
+    cursorPosY = posY
+    ret tile
+end
+
+func moveTile(offsetX, offsetY)
+    dec lastPosX = cursorPosX
+    dec lastPosY = cursorPosY
+    dec tile = moveTileWithoutDrawing(offsetX, offsetY)
+    if tile === null
+        ret
+    end
+    dec posX = lastPosX - offsetX
+    dec posY = lastPosY - offsetY
+    drawTileText(posX, posY, null)
+    drawTileText(lastPosX, lastPosY, str(tile))
+end
+
+func scramble()
+    dec count = 0
+    while count < 3000
+        dec index = floor(rand() * len(offsetSet))
+        dec offset = offsetSet[index]
+        moveTileWithoutDrawing(offset[0], offset[1])
+        count += 1
+    end
+end
+
+func slidePuzzle(argList)
+    if len(argList) < 1
+        boardSize = 4
+    else
+        boardSize = num(argList[0])
+    end
+    boardLength = boardSize * boardSize
+    board = []
+    dec number = 1
+    while len(board) < boardLength
+        if number < boardLength
+            pushElement(board, number)
+        else
+            pushElement(board, 0)
+        end
+        number += 1
+    end
+    cursorPosX = boardSize - 1
+    cursorPosY = boardSize - 1
+    scramble()
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec index = 0
+    dec posY = 0
+    while posY < boardSize
+        pressKey(KEY_NEWLINE)
+        dec text = ""
+        dec posX = 0
+        while posX < boardSize
+            dec number = board[index]
+            if number > 0
+                pushElement(text, ' ')
+                text += str(number)
+            end
+            while len(text) < (posX + 1) * 5
+                pushElement(text, ' ')
+            end
+            index += 1
+            posX += 1
+        end
+        writeText(text)
+        pressKey(KEY_NEWLINE)
+        dec text = getLineContents(getCursorLineIndex())
+        if len(text) > 0
+            setMode(MODE_COMMAND)
+            pressKey(']')
+            pressKey(KEY_LEFT)
+            pressKey('h')
+            pressKey('[')
+            pressKey('D')
+        end
+        pressKey(KEY_NEWLINE)
+        posY += 1
+    end
+    setMode(MODE_COMMAND)
+    while true
+        dec pos = convertTilePosToCharPos(cursorPosX, cursorPosY)
+        setCursorPos(pos[0], pos[1])
+        dec key = promptKey()
+        if key == KEY_LEFT
+            moveTile(-1, 0)
+        end
+        if key == KEY_RIGHT
+            moveTile(1, 0)
+        end
+        if key == KEY_UP
+            moveTile(0, -1)
+        end
+        if key == KEY_DOWN
+            moveTile(0, 1)
+        end
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+    end
+end
+
+bindCommand("slidePuzzle", slidePuzzle)
+
