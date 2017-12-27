@@ -1,0 +1,173 @@
+
+dec inputLine
+dec inputLineIndex
+dec hasError
+
+func writeText(text)
+    text = str(text)
+    dec index = 0
+    while index < len(text)
+        pressKey(text[index])
+        index += 1
+    end
+end
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func isAtEnd()
+    ret (inputLineIndex >= len(inputLine))
+end
+
+func isWhitespaceChar(character)
+    ret (character == ' ' || character == '\t' || character == '\n')
+end
+
+func isNumberChar(character)
+    ret (character == '.' || (character >= '0' && character <= '9'))
+end
+
+func isOperatorChar(character)
+    ret (character == '+' || character == '-' \
+        || character == '*' || character == '/')
+end
+
+func getOperatorPrecedence(character)
+    if character == '+' || character == '-'
+        ret 2
+    end
+    if character == '*' || character == '/'
+        ret 1
+    end
+end
+
+func skipWhitespace()
+    while !isAtEnd()
+        dec character = inputLine[inputLineIndex]
+        if !isWhitespaceChar(character)
+            break
+        end
+        inputLineIndex += 1
+    end
+end
+
+func digestNumberText()
+    dec text = ""
+    while !isAtEnd()
+        dec character = inputLine[inputLineIndex]
+        if !isNumberChar(character)
+            break
+        end
+        pushElement(text, character)
+        inputLineIndex += 1
+    end
+    ret num(text)
+end
+
+func evaluateExpression(precedenceThreshold)
+    dec output
+    if isAtEnd()
+        hasError = true
+        ret null
+    end
+    skipWhitespace()
+    if isAtEnd()
+        hasError = true
+        ret null
+    end
+    dec firstCharacter = inputLine[inputLineIndex]
+    while true
+        if isNumberChar(firstCharacter)
+            output = digestNumberText()
+            if output === null
+                hasError = true
+                ret null
+            end
+            break
+        end
+        if firstCharacter == '('
+            inputLineIndex += 1
+            output = evaluateExpression(99)
+            if hasError
+                ret null
+            end
+            if isAtEnd()
+                hasError = true
+                ret null
+            end
+            dec character = inputLine[inputLineIndex]
+            inputLineIndex += 1
+            if character != ')'
+                hasError = true
+                ret null
+            end
+            break
+        end
+        if firstCharacter == '-'
+            inputLineIndex += 1
+            output = evaluateExpression(0)
+            if hasError
+                ret null
+            end
+            output = -output
+            break
+        end
+        hasError = true
+        ret null
+    end
+    while true
+        if isAtEnd()
+            break
+        end
+        skipWhitespace()
+        if isAtEnd()
+            break
+        end
+        dec character = inputLine[inputLineIndex]
+        if isOperatorChar(character)
+            dec precedence = getOperatorPrecedence(character)
+            if precedence >= precedenceThreshold
+                break
+            end
+            inputLineIndex += 1
+            dec result = evaluateExpression(precedence)
+            if hasError
+                ret null
+            end
+            if character == '+'
+                output += result
+            end
+            if character == '-'
+                output -= result
+            end
+            if character == '*'
+                output *= result
+            end
+            if character == '/'
+                output /= result
+            end
+        else
+            break
+        end
+    end
+    ret output
+end
+
+func calculateCommand(argList)
+    inputLine = getLineContents(getCursorLineIndex())
+    inputLineIndex = 0
+    hasError = false
+    dec result = evaluateExpression(99)
+    if hasError
+        notifyUser("Expression is malformed.")
+    else
+        setMode(MODE_COMMAND)
+        pressKey('o')
+        writeText(str(result))
+        setMode(MODE_COMMAND)
+    end
+end
+
+bindCommand("calc", calculateCommand)
+
