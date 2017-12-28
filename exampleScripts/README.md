@@ -51,6 +51,10 @@ Each script adds one or more commands.
 
 * `/maze`: Generates a maze which you can navigate. Press the arrow keys to move. Press q to quit.
 
+**memoryGame.btsl**
+
+* `/memoryGame (size?)`: Plays a card-based memory game. Press the arrow keys to move the cursor. Press space to uncover a card. Press q to quit.
+
 **mineDuster.btsl**
 
 * `/mineDuster`: Plays an explosive puzzle game. Press the arrow keys to move your cursor. Press space to uncover a tile. Press f to flag a tile. Press q to quit.

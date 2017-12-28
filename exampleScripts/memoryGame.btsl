@@ -1,0 +1,199 @@
+
+# Card structure:
+# [value, isVisible]
+
+dec CARD_VALUE = 0
+dec CARD_IS_VISIBLE = 1
+
+dec board
+dec boardWidth
+dec boardHeight
+dec boardLength
+
+dec cursorPosX
+dec cursorPosY
+
+dec revealedPos1
+dec revealedPos2
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func convertCardPosToCharPos(posX, posY)
+    ret [3 + posX * 5, 1 + posY * 2]
+end
+
+func drawCard(posX, posY, text)
+    dec index = 0
+    while index < 3
+        dec character
+        if index < len(text)
+            character = text[index]
+        else
+            character = ' '
+        end
+        setCursorPos(posX + index, posY)
+        pressKey('.')
+        pressKey(character)
+        index += 1
+    end
+end
+
+func eraseCursor()
+    dec pos = convertCardPosToCharPos(cursorPosX, cursorPosY)
+    setCursorPos(pos[0] - 1, pos[1])
+    pressKey('.')
+    pressKey(' ')
+    setCursorPos(pos[0] + 3, pos[1])
+    pressKey('.')
+    pressKey(' ')
+end
+
+func drawCursor()
+    dec pos = convertCardPosToCharPos(cursorPosX, cursorPosY)
+    setCursorPos(pos[0] - 1, pos[1])
+    pressKey('.')
+    pressKey('>')
+    setCursorPos(pos[0] + 3, pos[1])
+    pressKey('.')
+    pressKey('<')
+end
+
+func moveCursor(offsetX, offsetY)
+    if revealedPos1 !== null && revealedPos2 !== null
+        dec pos = convertCardPosToCharPos(revealedPos1[0], revealedPos1[1])
+        drawCard(pos[0], pos[1], "???")
+        dec pos = convertCardPosToCharPos(revealedPos2[0], revealedPos2[1])
+        drawCard(pos[0], pos[1], "???")
+        revealedPos1 = null
+        revealedPos2 = null
+    end
+    dec nextPosX = cursorPosX + offsetX
+    dec nextPosY = cursorPosY + offsetY
+    if nextPosX < 0 || nextPosX >= boardWidth || nextPosY < 0 || nextPosY >= boardHeight
+        ret
+    end
+    eraseCursor()
+    cursorPosX = nextPosX
+    cursorPosY = nextPosY
+    drawCursor()
+end
+
+func getCardIndex(posX, posY)
+    ret posX + posY * boardWidth
+end
+
+func flipCursorCard()
+    dec cursorPos = [cursorPosX, cursorPosY]
+    if cursorPos == revealedPos1 || cursorPos == revealedPos2
+        ret
+    end
+    dec card = board[getCardIndex(cursorPosX, cursorPosY)]
+    if card[CARD_IS_VISIBLE]
+        ret
+    end
+    dec value = card[CARD_VALUE]
+    dec pos = convertCardPosToCharPos(cursorPosX, cursorPosY)
+    drawCard(pos[0], pos[1], str(value))
+    if revealedPos1 === null
+        revealedPos1 = cursorPos
+    else
+        dec card2 = board[getCardIndex(revealedPos1[0], revealedPos1[1])]
+        dec value2 = card2[CARD_VALUE]
+        if value == value2
+            card[CARD_IS_VISIBLE] = true
+            card2[CARD_IS_VISIBLE] = true
+            revealedPos1 = null
+            revealedPos2 = null
+        else
+            revealedPos2 = cursorPos
+        end
+    end
+end
+
+func memoryGame(argList)
+    if len(argList) >= 1
+        boardHeight = num(argList[0])
+    else
+        boardHeight = 3
+    end
+    boardWidth = boardHeight * 2
+    boardLength = boardWidth * boardHeight
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec posX = 0
+    dec posY = 0
+    while posY < boardHeight * 2 + 1
+        if posX == 0
+            pressKey('|')
+        else
+            pressKey(' ')
+        end
+        posX += 1
+        if posX >= boardWidth * 5 + 2
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+    dec cardList = []
+    dec value = 0
+    dec count = 0
+    while len(cardList) < boardLength
+        pushElement(cardList, [value, false])
+        count += 1
+        if count >= 2
+            value += 1
+            count = 0
+        end
+    end
+    board = []
+    while len(cardList) > 0
+        dec index = floor(rand() * len(cardList))
+        dec card = cardList[index]
+        rem(cardList, index)
+        pushElement(board, card)
+    end
+    dec posX = 0
+    dec posY = 0
+    while posY < boardHeight
+        dec pos = convertCardPosToCharPos(posX, posY)
+        drawCard(pos[0], pos[1], "???")
+        posX += 1
+        if posX >= boardWidth
+            posX = 0
+            posY += 1
+        end
+    end
+    revealedPos1 = null
+    revealedPos2 = null
+    cursorPosX = 0
+    cursorPosY = 0
+    drawCursor()
+    while true
+        setCursorPos(0, 0)
+        dec key = promptKey()
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        if key == KEY_LEFT
+            moveCursor(-1, 0)
+        end
+        if key == KEY_RIGHT
+            moveCursor(1, 0)
+        end
+        if key == KEY_UP
+            moveCursor(0, -1)
+        end
+        if key == KEY_DOWN
+            moveCursor(0, 1)
+        end
+        if key == KEY_SPACE
+            flipCursorCard()
+        end
+    end
+end
+
+bindCommand("memoryGame", memoryGame)
