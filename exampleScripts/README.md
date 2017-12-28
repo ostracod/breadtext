@@ -39,6 +39,10 @@ Each script adds one or more commands.
 
 * `/conwayLife`: Runs Conway's game of life. Press space to advance. Press q to quit.
 
+**cubePuzzle.btsl**
+
+* `/cubePuzzle`: Runs a cube puzzle game. Press the arrow keys to move your cursor. Press space to rotate the selected face. Press q to quit.
+
 **mandelbrot.btsl**
 
 * `/mandelbrot`: Generates an ASCII art Mandelbrot set.

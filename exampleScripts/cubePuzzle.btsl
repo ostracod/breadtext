@@ -1,0 +1,225 @@
+
+# Triplet pos structure:
+# [faceIndex, stickerIndex, stickerIndex, stickerIndex]
+# The sticker indices are ordered in a clockwise fashion.
+
+# Faces are arranged like so:
+#
+#   0
+# 1 2 3 4
+#   5
+
+# Stickers are arranged like so:
+#
+#     012
+#     345
+#     678
+#
+# 012 012 012 012
+# 345 345 345 345
+# 678 678 678 678
+#
+#     012
+#     345
+#     678
+
+dec layerTripletPosSet = [ \
+    [[2, 2, 1, 0], [1, 2, 1, 0], [4, 2, 1, 0], [3, 2, 1, 0]], \
+    [[5, 0, 3, 6], [4, 8, 5, 2], [0, 0, 3, 6], [2, 0, 3, 6]], \
+    [[5, 2, 1, 0], [1, 8, 5, 2], [0, 6, 7, 8], [3, 0, 3, 6]], \
+    [[5, 8, 5, 2], [2, 8, 5, 2], [0, 8, 5, 2], [4, 0, 3, 6]], \
+    [[5, 6, 7, 8], [3, 8, 5, 2], [0, 2, 1, 0], [1, 0, 3, 6]], \
+    [[4, 6, 7, 8], [1, 6, 7, 8], [2, 6, 7, 8], [3, 6, 7, 8]] \
+]
+
+dec cube
+dec cursorIndex
+
+dec faceCharPosSet = [ \
+    [7, 1], \
+    [3, 5], \
+    [7, 5], \
+    [11, 5], \
+    [15, 5], \
+    [7, 9] \
+]
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func createFace(color)
+    ret [color, color, color, color, color, color, color, color, color]
+end
+
+func drawFace(index)
+    dec face = cube[index]
+    dec pos = faceCharPosSet[index]
+    dec offsetX = -1
+    dec offsetY = -1
+    dec stickerIndex = 0
+    while stickerIndex < len(face)
+        dec color = face[stickerIndex]
+        setCursorPos(pos[0] + offsetX, pos[1] + offsetY)
+        pressKey('.')
+        pressKey(color)
+        offsetX += 1
+        if offsetX > 1
+            offsetX = -1
+            offsetY += 1
+        end
+        stickerIndex += 1
+    end
+end
+
+func drawCube()
+    dec index = 0
+    while index < len(cube)
+        drawFace(index)
+        index += 1
+    end
+end
+
+func moveCursor(offsetX, offsetY)
+    dec lastIndex = cursorIndex
+    if lastIndex == 0
+        if offsetY > 0
+            cursorIndex = 2
+        end
+    end
+    if lastIndex >= 1 && lastIndex <= 3
+        if offsetX > 0
+            cursorIndex = lastIndex + 1
+        end
+    end
+    if lastIndex >= 2 && lastIndex <= 4
+        if offsetX < 0
+            cursorIndex = lastIndex - 1
+        end
+    end
+    if lastIndex >= 1 && lastIndex <= 4
+        if offsetY < 0
+            cursorIndex = 0
+        end
+        if offsetY > 0
+            cursorIndex = 5
+        end
+    end
+    if lastIndex == 5
+        if offsetY < 0
+            cursorIndex = 2
+        end
+    end
+end
+
+func getTriplet(pos)
+    dec face = cube[pos[0]]
+    ret [face[pos[1]], face[pos[2]], face[pos[3]]]
+end
+
+func setTriplet(pos, triplet)
+    dec face = cube[pos[0]]
+    face[pos[1]] = triplet[0]
+    face[pos[2]] = triplet[1]
+    face[pos[3]] = triplet[2]
+end
+
+func rotateLayer(faceIndex)
+    dec face = cube[faceIndex]
+    dec cornerList = [face[0], face[2], face[8], face[6]]
+    face[0] = cornerList[3]
+    face[2] = cornerList[0]
+    face[8] = cornerList[1]
+    face[6] = cornerList[2]
+    dec edgeList = [face[1], face[5], face[7], face[3]]
+    face[1] = edgeList[3]
+    face[5] = edgeList[0]
+    face[7] = edgeList[1]
+    face[3] = edgeList[2]
+    dec tripletList = []
+    dec tripletPosSet = layerTripletPosSet[faceIndex]
+    dec index = 0
+    while index < len(tripletPosSet)
+        dec tripletPos = tripletPosSet[index]
+        dec triplet = getTriplet(tripletPos)
+        pushElement(tripletList, triplet)
+        index += 1
+    end
+    dec index = 0
+    while index < len(tripletPosSet)
+        dec tripletIndex = (index + 1) % len(tripletPosSet)
+        dec tripletPos = tripletPosSet[tripletIndex]
+        dec triplet = tripletList[index]
+        setTriplet(tripletPos, triplet)
+        index += 1
+    end
+    
+end
+
+func scrambleCube()
+    dec count = 0
+    while count < 500
+        dec index = floor(rand() * len(cube))
+        rotateLayer(index)
+        count += 1
+    end
+end
+
+func cubePuzzle(argList)
+    cube = [ \
+        createFace('Y'), \
+        createFace('O'), \
+        createFace('B'), \
+        createFace('R'), \
+        createFace('G'), \
+        createFace('W') \
+    ]
+    setMode(MODE_TEXT_ENTRY)
+    setCursorPos(0, 0)
+    dec posX = 0
+    dec posY = 0
+    while posY < 11
+        if posX == 0
+            pressKey('|')
+        else
+            pressKey(' ')
+        end
+        posX += 1
+        if posX >= 17
+            pressKey(KEY_NEWLINE)
+            posX = 0
+            posY += 1
+        end
+    end
+    setMode(MODE_COMMAND)
+    scrambleCube()
+    cursorIndex = 0
+    drawCube()
+    while true
+        dec pos = faceCharPosSet[cursorIndex]
+        setCursorPos(pos[0], pos[1])
+        dec key = promptKey()
+        if key == 'q' || key == 'Q' || key == KEY_ESCAPE
+            break
+        end
+        if key == KEY_LEFT
+            moveCursor(-1, 0)
+        end
+        if key == KEY_RIGHT
+            moveCursor(1, 0)
+        end
+        if key == KEY_UP
+            moveCursor(0, -1)
+        end
+        if key == KEY_DOWN
+            moveCursor(0, 1)
+        end
+        if key == KEY_SPACE
+            rotateLayer(cursorIndex)
+            drawCube()
+        end
+    end
+end
+
+bindCommand("cubePuzzle", cubePuzzle)
+
