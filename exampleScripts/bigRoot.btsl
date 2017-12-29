@@ -1,0 +1,218 @@
+
+# Big num structure:
+# [exponent, digit, digit, digit, digit...]
+
+func pushElement(sequence, element)
+    ins(sequence, len(sequence), element)
+end
+
+func convertIntegerIntoBigNum(integer)
+    if integer == 0
+        ret [0, 0]
+    end
+    dec output = [0]
+    while true
+        ins(output, 1, integer % 10)
+        integer = floor(integer / 10)
+        if integer <= 0
+             break
+        end
+        output[0] += 1
+    end
+    ret output
+end
+
+func convertBigNumToText(bigNum)
+    dec output = ""
+    dec index = 1
+    while index < len(bigNum) || index <= bigNum[0] + 1
+        dec digit
+        if index < len(bigNum)
+            digit = bigNum[index]
+        else
+            digit = 0
+        end
+        pushElement(output, digit + '0')
+        if index - 1 == bigNum[0]
+            pushElement(output, '.')
+        end
+        index += 1
+    end
+    ret output
+end
+
+func incrementBigNumExponent(bigNum)
+    bigNum[0] += 1
+    ins(bigNum, 1, 0)
+end
+
+func padBigNum(bigNum, length)
+    while len(bigNum) < length
+        pushElement(bigNum, 0)
+    end
+end
+
+func normalizeBigNum(bigNum)
+    while true
+        dec digit = bigNum[1]
+        if digit == 0
+            rem(bigNum, 1)
+            bigNum[0] -= 1
+        else
+            break
+        end
+    end
+    while true
+        dec index = len(bigNum) - 1
+        dec digit = bigNum[index]
+        if digit == 0
+            rem(bigNum, index)
+        else
+            break
+        end
+    end
+end
+
+func addBigNums(bigNum1, bigNum2)
+    bigNum1 = copy(bigNum1)
+    bigNum2 = copy(bigNum2)
+    while bigNum1[0] < bigNum2[0]
+        incrementBigNumExponent(bigNum1)
+    end
+    while bigNum2[0] < bigNum1[0]
+        incrementBigNumExponent(bigNum2)
+    end
+    incrementBigNumExponent(bigNum1)
+    incrementBigNumExponent(bigNum2)
+    padBigNum(bigNum1, len(bigNum2))
+    padBigNum(bigNum2, len(bigNum1))
+    dec carry = 0
+    dec index = len(bigNum1) - 1
+    while index >= 1
+        dec sum = carry + bigNum1[index] + bigNum2[index]
+        if sum >= 10
+            sum -= 10
+            carry = 1
+        else
+            carry = 0
+        end
+        bigNum1[index] = sum
+        index -= 1
+    end
+    normalizeBigNum(bigNum1)
+    ret bigNum1
+end
+
+func multiplyBigNums(bigNum1, bigNum2)
+    dec bigNum1 = copy(bigNum1)
+    dec bigNum2 = copy(bigNum2)
+    dec output = [0, 0]
+    bigNum2[0] += bigNum1[0]
+    dec index = 1
+    while index < len(bigNum1)
+        dec digit = bigNum1[index]
+        while digit > 0
+            output = addBigNums(output, bigNum2)
+            digit -= 1
+        end
+        bigNum2[0] -= 1
+        index += 1
+    end
+    ret output
+end
+
+func compareBigNums(bigNum1, bigNum2)
+    if bigNum1[0] < bigNum2[0]
+        ret -1
+    end
+    if bigNum1[0] > bigNum2[0]
+        ret 1
+    end
+    dec index = 1
+    while true
+        if index >= len(bigNum1)
+            if index >= len(bigNum2)
+                ret 0
+            else
+                ret -1
+            end
+        end
+        if index >= len(bigNum2)
+            ret 1
+        end
+        dec digit1 = bigNum1[index]
+        dec digit2 = bigNum2[index]
+        if digit1 < digit2
+            ret -1
+        end
+        if digit1 > digit2
+            ret 1
+        end
+        index += 1
+    end
+end
+
+func squareRootBigNum(bigNum, minimumExponent)
+    dec output = [0, 0]
+    # First find the upper bound.
+    while true
+        dec nextBigNum = copy(output)
+        nextBigNum = addBigNums(nextBigNum, [0, 1])
+        dec result = multiplyBigNums(nextBigNum, nextBigNum)
+        if compareBigNums(result, bigNum) >= 0
+            break
+        end
+        output = nextBigNum
+    end
+    # Then find the lower bound.
+    dec exponent = output[0]
+    while exponent >= minimumExponent
+        dec nextBigNum = copy(output)
+        nextBigNum = addBigNums(nextBigNum, [exponent, 1])
+        dec result = multiplyBigNums(nextBigNum, nextBigNum)
+        if compareBigNums(result, bigNum) >= 0
+            exponent -= 1
+        else
+            output = nextBigNum
+        end
+    end
+    ret output
+end
+
+func bigRoot(argList)
+    if len(argList) != 1 && len(argList) != 2
+        notifyUser("Expecting 1 or 2 arguments.")
+        ret
+    end
+    dec number = num(argList[0])
+    if number === null
+        notifyUser("Number must be an integer.")
+        ret
+    end
+    if number != floor(number)
+        notifyUser("Number must be an integer.")
+        ret
+    end
+    dec minimumExponent
+    if len(argList) > 1
+        dec precision = num(argList[1])
+        if precision === null
+            notifyUser("Precision must be an integer.")
+            ret
+        end
+        if precision != floor(precision)
+            notifyUser("Precision must be an integer.")
+            ret
+        end
+        minimumExponent = -precision
+    else
+        minimumExponent = -10
+    end
+    dec bigNum = convertIntegerIntoBigNum(number)
+    dec result = squareRootBigNum(bigNum, minimumExponent)
+    notifyUser(convertBigNumToText(result))
+end
+
+bindCommand("bigRoot", bigRoot)
+
+

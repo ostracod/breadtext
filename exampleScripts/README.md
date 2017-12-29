@@ -31,6 +31,10 @@ Each script adds one or more commands.
 
 * `/asciiArt (text)`: Draws ASCII art text. Only compatible with letters and spaces.
 
+**bigRoot.btsl**
+
+* `/bigRoot (integer) (precision?)`: Computes the square root of the integer to arbitrary precision.
+
 **calc.btsl**
 
 * `/calc`: Evaluates the arithmetic expression in the same line as the cursor. Writes the result underneath the same line. Compatible with the four basic operators and parentheses.
