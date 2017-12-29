@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -c -lm
-LDFLAGS = -lncurses
+CFLAGS = -Wall -c
+LDFLAGS = -lncurses -lm
 DIRBUILD = build
 DIRSRC = src
 SOURCES := $(shell ls $(DIRSRC)/*.c)
