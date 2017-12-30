@@ -1,4 +1,4 @@
-#/usr/bin/sh
+#!/bin/bash
 
 TEST_COUNT=0
 FAILURE_COUNT=0

@@ -1,4 +1,4 @@
-#/usr/bin/sh
+#!/bin/bash
 
 FAILURE_COUNT=0
 
