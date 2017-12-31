@@ -678,5 +678,3 @@ void redrawHighlightLines() {
         displayAllTextLines();
     }
 }
-
-
