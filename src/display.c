@@ -154,6 +154,15 @@ void setColorScheme(int32_t number) {
         colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_WHITE;
         colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_WHITE;
         colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_WHITE;
+    } else if (colorScheme == 2) {
+        colorSet[DEFAULT_COLOR] = GREEN_ON_BLACK;
+        colorSet[COMMENT_COLOR] = RED_ON_BLACK;
+        colorSet[LITERAL_COLOR] = WHITE_ON_BLACK;
+        colorSet[KEYWORD_COLOR] = CYAN_ON_BLACK;
+        colorSet[HIGHLIGHTED_DEFAULT_COLOR] = GREEN_ON_WHITE;
+        colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_WHITE;
+        colorSet[HIGHLIGHTED_LITERAL_COLOR] = BLACK_ON_WHITE;
+        colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_WHITE;
     } else {
         colorSet[DEFAULT_COLOR] = BLACK_ON_WHITE;
         colorSet[COMMENT_COLOR] = RED_ON_WHITE;
@@ -669,4 +678,5 @@ void redrawHighlightLines() {
         displayAllTextLines();
     }
 }
+
 
