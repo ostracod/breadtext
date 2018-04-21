@@ -20,13 +20,17 @@ Data types:
 * Class
 * Object
 
+Boolean values are represented using numbers. Zero is false, while non-zero numbers are true.
+
+ASCII characters may be represented as numbers or buffers. Non-ASCII characters must be represented as buffers.
+
 Null literal: `null`
 
 Number literal: `1.23`
 
-Boolean literals (actually numbers): `true`, `false`
+Boolean literals: `true`, `false`
 
-Character literal (not actually sure what type this will be): `'a'`
+Character literal: `'a'`
 
 String literal: `"Hello"`
 
