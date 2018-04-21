@@ -5,15 +5,19 @@
 
 Variables are dynamically typed.
 
-Heap values are garbage-collected using mark-and-sweep.
+Heap values are garbage-collected using mark-and-sweep and automatic reference counting.
 
 Data types:
 
 * Null
 * Number (double-precision float)
-* String (mutable, dynamic length)
-* List (mutable, dynamic length)
+* Buffer (mutable byte sequence, dynamic length)
+* String (mutable unicode sequence, dynamic length)
+* List (mutable value sequence, dynamic length)
 * Function
+* Dictionary
+* Class
+* Object
 
 Null literal: `null`
 
@@ -27,11 +31,7 @@ String literal: `"Hello"`
 
 List literal: `[1, 2, 3]`
 
-Variable declaration: `dec myNumber`
-
-Variable declaration and assignment: `dec myNumber = 5`
-
-Comment: `# comment`
+Dictionary literal: `{"name": "Bob", "age": 47}`
 
 ## Operators
 
@@ -54,11 +54,33 @@ Increment and decrement: `++`, `--`
 
 List member access: `myList[myIndex]`
 
-Function invocation: `myFunc(myValue1, myValue2, myValue3...)`
+Function invocation: `myFunc(myValue1, myValue2, myValue3...)`  
+Argument labels: `myFunc(myName1: myValue1)`
+
+Member and method access: `.`  
+Direct member and method access without getters or setters: `..`
 
 ## Statements
 
 Statements are separated by newlines.
+
+Comment:
+
+```
+# comment
+```
+
+Variable declaration:
+
+```
+dec <name>
+```
+
+Variable declaration and assignment:
+
+```
+dec <name> = <value>
+```
 
 Expression statement:
 
