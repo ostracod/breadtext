@@ -57,7 +57,7 @@ Identity comparison: `===`, `!==`
 
 Increment and decrement: `++`, `--`
 
-List member access: `myList[myIndex]`
+Sequence member access: `mySequence[myIndex]`
 
 Function invocation: `myFunc(myValue1, myValue2, myValue3...)`  
 Argument labels: `myFunc(myName1: myValue1)`
