@@ -25,7 +25,7 @@ Number literal: `1.23`
 
 Boolean literals (actually numbers): `true`, `false`
 
-Character literal (actually a number): `'a'`
+Character literal (not actually sure what type this will be): `'a'`
 
 String literal: `"Hello"`
 
