@@ -1,7 +1,7 @@
 
 # Syntax and Semantics
 
-## Types
+## Values and Types
 
 Variables are dynamically typed.
 
@@ -126,7 +126,7 @@ for <name> in <iterable>
 end
 ```
 
-Function declaration statement:
+Function declaration statement (Supports closures):
 
 ```
 func <name>(<name: value?>, <name: value?>, <name: value?>...)
@@ -245,3 +245,19 @@ Consume all statement (Retrieve every variable in import body):
 ```
 consume all
 ```
+
+## Object-Oriented Features
+
+All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of methods associated with `Object`.
+
+Use the `this` keyword to refer to the instance or class of the containing method.
+
+Retreiving `myObject.myMember` will return the value of `myObject.getMyMember()`.
+
+Assigning a value to `myObject.myMember` will perform `myObject.setMyMember(value)`.
+
+All member variables are given default implementations of `get` and `set` methods. These methods may be overwritten by the class definition.
+
+Invoking a method will throw an error if it is inherited from multiple superclasses. To avoid such an error, provide an explicit definition.
+
+
