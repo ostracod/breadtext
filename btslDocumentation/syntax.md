@@ -16,6 +16,7 @@ Data types:
 * List (mutable value sequence, dynamic length)
 * Function
 * Dictionary
+* Type
 * Class
 * Object
 

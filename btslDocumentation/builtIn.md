@@ -1,84 +1,97 @@
 
 # Built-In Values
 
-## General-Purpose Functions
-
-`isNum(value)` - Returns true iff the value is a number.
-
-`isStr(value)` - Returns true iff the value is a string.
-
-`isList(value)` - Returns true iff the value is a list.
-
-`isFunc(value)` - Returns true iff the value is a function.
+## Top-Level Functions
 
 `copy(value)` - Returns a shallow copy of the value.
 
-`str(number)` - Converts a number into a string.
-
 `num(text)` - Converts a string into a number. Returns null if the text cannot be converted.
 
-`floor(num)` - Rounds the number down to the nearest integer.
+`buff(value)` - Converts a value into a buffer.
 
-`rand()` - Generates a random number between 0 and 1.
+`str(value)` - Converts a value into a string.
 
-`len(sequence)` - Returns the length of a list or string.
+`list(value)` - Converts a value into a list.
 
-`ins(sequence, index, item)` - Inserts a value into the list or string.
+`type(value)` - Returns the type of the value.
 
-`rem(sequence, index)` - Removes a value from the list or string.
+`len(sequence)` - Returns the length of the sequence.
 
-## BreadText-Specific Functions
+`ins(sequence, index, item)` - Inserts a value into the sequence.
 
-`pressKey(key)` - Simulates a key press in the editor.
+`rem(sequence, index)` - Removes a value from the sequence.
 
-`getMode()` - Returns the editor operation mode.
+## Top-Level Constants
 
-`setMode(mode)` - Sets the editor operation mode.
+`TYPE_NULL`  
+`TYPE_NUMBER`  
+`TYPE_BUFFER`  
+`TYPE_STRING`  
+`TYPE_LIST`  
+`TYPE_FUNCTION`  
+`TYPE_DICTIONARY`  
+`TYPE_TYPE`  
+`TYPE_CLASS`  
+`TYPE_OBJECT`
 
-`getSelectionContents()` - Returns the text highlighted in the buffer.
+## Math Class
 
-`getLineCount()` - Returns the total number of lines in the buffer.
+`Math.floor(num)` - Rounds the number down to the nearest integer.
 
-`getLineContents(index)` - Returns the text in the given line.
+`Math.rand()` - Generates a random number between 0 and 1.
 
-`getCursorCharIndex()` - Returns the selected character index within the cursor's line.
+## BreadText Class Methods
 
-`getCursorLineIndex()` - Returns the cursor's line index within the entire buffer.
+`BreadText.pressKey(key)` - Simulates a key press in the editor.
 
-`setCursorPos(charIndex, lineIndex)` - Moves the cursor to the given position.
+`BreadText.getMode()` - Returns the editor operation mode.
 
-`runCommand(commandName, argList)` - Runs a command which the user could otherwise invoke by pressing the forward-slash key. Returns an output value or null.
+`BreadText.setMode(mode)` - Sets the editor operation mode.
 
-`notifyUser(text)` - Shows a message in the status bar.
+`BreadText.getSelectionContents()` - Returns the text highlighted in the buffer.
 
-`promptKey()` - Waits for the user to press a key. Returns the pressed key.
+`BreadText.getLineCount()` - Returns the total number of lines in the buffer.
 
-`promptChar()` - Waits for the user to press a key. Returns the corresponding character if the user pressed a character key. Returns null otherwise.
+`BreadText.getLineContents(index)` - Returns the text in the given line.
 
-`bindKey(key, callback)` - Causes the callback to be invoked when the user presses the given key. The callback function should return a boolean indicating whether to override the default action.
+`BreadText.getCursorCharIndex()` - Returns the selected character index within the cursor's line.
 
-`mapKey(oldKey, newKey, mode)` - Maps one key to another in the given mode.
+`BreadText.getCursorLineIndex()` - Returns the cursor's line index within the entire buffer.
 
-`bindCommand(name, callback)` - Sets up a command which the user can invoke by pressing the forward-slash key. The callback function should accept a list of arguments. The callback function may return a value to be consumed by `runCommand`.
+`BreadText.setCursorPos(charIndex, lineIndex)` - Moves the cursor to the given position.
 
-## Constants
+`BreadText.runCommand(commandName, argList)` - Runs a command which the user could otherwise invoke by pressing the forward-slash key. Returns an output value or null.
 
-`KEY_ESCAPE`  
-`KEY_LEFT`  
-`KEY_RIGHT`  
-`KEY_UP`  
-`KEY_DOWN`  
-`KEY_SPACE`  
-`KEY_NEWLINE`  
-`KEY_BACKSPACE`  
-`KEY_TAB`  
-`KEY_BACKTAB`
+`BreadText.notifyUser(text)` - Shows a message in the status bar.
 
-`MODE_COMMAND`  
-`MODE_TEXT_ENTRY`  
-`MODE_TEXT_REPLACE`  
-`MODE_HIGHLIGHT_CHARACTER`  
-`MODE_HIGHLIGHT_STATIC`  
-`MODE_HIGHLIGHT_LINE`
+`BreadText.promptKey()` - Waits for the user to press a key. Returns the pressed key.
+
+`BreadText.promptChar()` - Waits for the user to press a key. Returns the corresponding character if the user pressed a character key. Returns null otherwise.
+
+`BreadText.bindKey(key, callback)` - Causes the callback to be invoked when the user presses the given key. The callback function should return a boolean indicating whether to override the default action.
+
+`BreadText.mapKey(oldKey, newKey, mode)` - Maps one key to another in the given mode.
+
+`BreadText.bindCommand(name, callback)` - Sets up a command which the user can invoke by pressing the forward-slash key. The callback function should accept a list of arguments. The callback function may return a value to be consumed by `runCommand`.
+
+## BreadText Class Constants
+
+`BreadText.KEY_ESCAPE`  
+`BreadText.KEY_LEFT`  
+`BreadText.KEY_RIGHT`  
+`BreadText.KEY_UP`  
+`BreadText.KEY_DOWN`  
+`BreadText.KEY_SPACE`  
+`BreadText.KEY_NEWLINE`  
+`BreadText.KEY_BACKSPACE`  
+`BreadText.KEY_TAB`  
+`BreadText.KEY_BACKTAB`
+
+`BreadText.MODE_COMMAND`  
+`BreadText.MODE_TEXT_ENTRY`  
+`BreadText.MODE_TEXT_REPLACE`  
+`BreadText.MODE_HIGHLIGHT_CHARACTER`  
+`BreadText.MODE_HIGHLIGHT_STATIC`  
+`BreadText.MODE_HIGHLIGHT_LINE`
 
 
