@@ -70,31 +70,17 @@ Comment:
 # comment
 ```
 
-Variable declaration:
-
-```
-dec <name>
-```
-
-Variable declaration and assignment:
-
-```
-dec <name> = <value>
-```
-
 Expression statement:
 
 ```
 <expression>
 ```
 
-Variable declaration:
+Variable declaration and initalization statements:
 
 ```
 dec <name>
 ```
-
-Variable declaration and assignment:
 
 ```
 dec <name> = <expression>
@@ -120,54 +106,97 @@ while <condition>
 end
 ```
 
-Break statement:
+Break and continue statements:
 
 ```
 break
 ```
 
-Continue statement:
-
 ```
 continue
+```
+
+For statement:
+
+```
+for <name> in <iterable>
+    <body>
+end
+```
+
+Throw statements:
+
+```
+throw <value>
+```
+
+```
+throw
+```
+
+Try statement:
+
+```
+try
+    <body>
+catch <name>
+    <body>
+finally
+    <body>
+end
+```
+
+With statement:
+
+```
+with <context>
+    <body>
+end
 ```
 
 Function declaration statement:
 
 ```
-func <name>(<name>, <name>, <name>...)
+func <name>(<name: value?>, <name: value?>, <name: value?>...)
     <body>
 end
 ```
 
-Return with value statement:
+Return statements:
 
 ```
 ret <expression>
 ```
 
-Return without value statement:
-
 ```
 ret
 ```
 
-Import statement:
+Import statements:
 
 ```
-import <path>
+import file <path>
     <body>
 end
 ```
 
-Retrieve specific variables in import body:
+```
+import module <string>
+    <body>
+end
+```
+
+Share statement (Retrieve specific variables in import body):
 
 ```
 share <name>, <name>, <name>
 ```
 
-Retrieve every variable in import body:
+Consume all statement (Retrieve every variable in import body):
 
 ```
-greedy dirtbag
+consume all
 ```
+
+
+
