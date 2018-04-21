@@ -57,7 +57,7 @@ List member access: `myList[myIndex]`
 Function invocation: `myFunc(myValue1, myValue2, myValue3...)`  
 Argument labels: `myFunc(myName1: myValue1)`
 
-Member and method access: `.`  
+Object and class member access: `.`  
 Direct member access without getters or setters: `..`
 
 ## Basic Statement Syntax
@@ -250,7 +250,9 @@ consume all
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of methods associated with `Object`.
 
-Use the `this` keyword to refer to the instance or class of the containing method.
+When a function is bound to a value, the keyword `this` in the function body will refer to the bound value.
+
+A method is actually a member variable whose value is a function. The function is bound to the class or an instance of the class.
 
 Retreiving `myObject.myMember` will return the value of `myObject.getMyMember()`.
 
