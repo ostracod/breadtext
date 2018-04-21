@@ -1,7 +1,7 @@
 
 # BreadText
 
-**Version 1.2.0**
+**Version 2.0.0**
 
 <img src="logo.png" alt="BreadText logo" width="110" />
 
@@ -176,4 +176,4 @@ indentationWidth 4
 
 ## BreadText Scripting Language
 
-For scripting documentation, please consult [this page](SCRIPTING.md).
+For scripting documentation, please consult [this page](/btslDocumentation).
