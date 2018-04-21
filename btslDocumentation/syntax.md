@@ -60,7 +60,7 @@ Argument labels: `myFunc(myName1: myValue1)`
 Member and method access: `.`  
 Direct member and method access without getters or setters: `..`
 
-## Statements
+## Basic Statement Syntax
 
 Statements are separated by newlines.
 
@@ -85,6 +85,8 @@ dec <name>
 ```
 dec <name> = <expression>
 ```
+
+## Control Flow Statements
 
 If statement:
 
@@ -124,6 +126,26 @@ for <name> in <iterable>
 end
 ```
 
+Function declaration statement:
+
+```
+func <name>(<name: value?>, <name: value?>, <name: value?>...)
+    <body>
+end
+```
+
+Return statements:
+
+```
+ret <expression>
+```
+
+```
+ret
+```
+
+## Error Handling Statements
+
 Throw statements:
 
 ```
@@ -154,23 +176,49 @@ with <context>
 end
 ```
 
-Function declaration statement:
+## Object-Oriented Statements
+
+Class declaration:
 
 ```
-func <name>(<name: value?>, <name: value?>, <name: value?>...)
+class <name> extends <class>, <class>, <class>...
     <body>
 end
 ```
 
-Return statements:
+Member variable declaration and initialization statements:
 
 ```
-ret <expression>
+mem <name>
 ```
 
 ```
-ret
+mem <name> = <value>
 ```
+
+```
+static mem <name>
+```
+
+```
+static mem <name> = <value>
+```
+
+Method declaration statements::
+
+```
+method <name>(<name: value?>, <name: value?>, <name: value?>...)
+    <body>
+end
+```
+
+```
+static method <name>(<name: value?>, <name: value?>, <name: value?>...)
+    <body>
+end
+```
+
+## Dependency Statements
 
 Import statements:
 
@@ -197,6 +245,3 @@ Consume all statement (Retrieve every variable in import body):
 ```
 consume all
 ```
-
-
-
