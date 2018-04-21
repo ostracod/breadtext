@@ -58,7 +58,7 @@ Function invocation: `myFunc(myValue1, myValue2, myValue3...)`
 Argument labels: `myFunc(myName1: myValue1)`
 
 Member and method access: `.`  
-Direct member and method access without getters or setters: `..`
+Direct member access without getters or setters: `..`
 
 ## Basic Statement Syntax
 
