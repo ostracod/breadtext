@@ -15,11 +15,42 @@
 
 `type(value)` - Returns the type of the value.
 
-`len(sequence)` - Returns the length of the sequence.
+`len(value)` - Returns the number of items in the sequence or dictionary.
 
 `ins(sequence, index, item)` - Inserts a value into the sequence.
 
+`insSub(sequence, index, subsequence)` - Inserts a subsequence into the sequence.
+
 `rem(sequence, index)` - Removes a value from the sequence.
+
+`remSub(sequence, startIndex, endIndex)` - Removes a subsequence from the sequence.
+
+`push(sequence, item)` - Appends a value to the end of the sequence.
+
+`pushLeft(sequence, item)` - Appends a value to the start of the sequence.
+
+`pushSub(sequence, subsequence)` - Appends a subsequence to the end of the sequence.
+
+`pushSubLeft(sequence, subsequence)` - Appends a subsequence to the start of the sequence.
+
+`pop(sequence)` - Removes a value from the end of the sequence.
+
+`popLeft(sequence)` - Removes a value from the start of the sequence.
+
+`popSub(sequence)` - Removes a subsequence from the end of the sequence.
+
+`popSubLeft(sequence)` - Removes a subsequence from the start of the sequence.
+
+`find(sequence, item, startIndex: null, endIndex: null, direction: 1, isCaseSensitive: true)` - Searches for a value in the sequence. Returns -1 if the value was not found.
+
+
+`findSub(sequence, subsequence, startIndex: null, endIndex: null, direction: 1, isCaseSensitive: true)` - Searches for a subsequence in the sequence. Returns -1 if the subsequence was not found.
+
+`keys(dictionary)` - Returns a list of keys in the dictionary.
+
+`hasKey(dictionary, key)` - Returns whether the dictionary contains a key.
+
+`sort(sequence, order: 1)` - Sorts the items of the sequence in-place.
 
 ## Top-Level Constants
 
