@@ -8,7 +8,7 @@ Place your BreadText script in `~/.breadtextrc.btsl`. It will be evaluated whene
 ## Documentation Pages
 
 * [Language Syntax](syntax.md)
-* [Built-In Functions and Values](builtIn.md)
+* [Built-In Values](builtIn.md)
 * [Example Scripts](/exampleScripts)
 
 

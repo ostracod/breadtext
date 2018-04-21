@@ -1,5 +1,5 @@
 
-# Built-In Functions and Values
+# Built-In Values
 
 ## General-Purpose Functions
 
