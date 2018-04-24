@@ -134,7 +134,7 @@ end
 Function declaration statement (Supports closures):
 
 ```
-func <name>(<name: value?>, <name: value?>, <name: value?>...)
+func <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
     <body>
 end
 ```
@@ -212,13 +212,13 @@ static mem <name> = <value>
 Method declaration statements::
 
 ```
-method <name>(<name: value?>, <name: value?>, <name: value?>...)
+method <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
     <body>
 end
 ```
 
 ```
-static method <name>(<name: value?>, <name: value?>, <name: value?>...)
+static method <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
     <body>
 end
 ```
@@ -242,7 +242,7 @@ end
 Share statement (Retrieve specific variables in import body):
 
 ```
-share <name>, <name>, <name>
+share <name> [as <name>?], <name> [as <name>?], <name> [as <name>?]...
 ```
 
 Consume all statement (Retrieve every variable in import body):
