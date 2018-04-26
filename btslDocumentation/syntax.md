@@ -64,6 +64,7 @@ Argument labels: `myFunc(myName1: myValue1)`
 
 Object and class member access: `.`  
 Direct member access without getters or setters: `..`
+Bind object to class: `(myClass)myObject`
 
 ## Basic Statement Syntax
 
@@ -209,16 +210,16 @@ static mem <name>
 static mem <name> = <value>
 ```
 
-Method declaration statements::
+Method declaration statements:
 
 ```
-method <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
+method <name>(<name>[: <value>?], <name>[: <value>?]...) [overrides <class>?]
     <body>
 end
 ```
 
 ```
-static method <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
+static method <name>(<name>[: <value>?], <name>[: <value>?]...)
     <body>
 end
 ```
@@ -253,8 +254,6 @@ consume all
 
 ## Object-Oriented Features
 
-All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of methods associated with `Object`.
-
 When a function is bound to a value, the keyword `this` in the function body will refer to the bound value.
 
 A method is actually a member variable whose value is a function. The function is bound to the class or an instance of the class.
@@ -265,6 +264,10 @@ Assigning a value to `myObject.myMember` will perform `myObject.setMyMember(valu
 
 All member variables are given default implementations of `get` and `set` methods. These methods may be overwritten by the class definition.
 
-Invoking a method will throw an error if it is inherited from multiple superclasses. To avoid such an error, provide an explicit definition.
+All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
+
+An object can be bound to any parent class or to the object's original class.
+
+An object stores members for all of its parent classes and for its own class. Members can only be accessed from the class to which an object is bound.
 
 
