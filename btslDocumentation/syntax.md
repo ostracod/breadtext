@@ -63,7 +63,7 @@ Function invocation: `myFunc(myValue1, myValue2, myValue3...)`
 Argument labels: `myFunc(myName1: myValue1)`
 
 Object and class member access: `.`  
-Direct member access without getters or setters: `..`
+Direct member access without getters or setters: `..`  
 Bind object to class: `myObject{myClass}`
 
 ## Basic Statement Syntax
