@@ -64,7 +64,7 @@ Argument labels: `myFunc(myName1: myValue1)`
 
 Object and class member access: `.`  
 Direct member access without getters or setters: `..`
-Bind object to class: `(myClass)myObject`
+Bind object to class: `myObject{myClass}`
 
 ## Basic Statement Syntax
 
