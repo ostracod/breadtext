@@ -43,7 +43,6 @@
 
 `find(sequence, item, startIndex: null, endIndex: null, direction: 1, isCaseSensitive: true)` - Searches for a value in the sequence. Returns -1 if the value was not found.
 
-
 `findSub(sequence, subsequence, startIndex: null, endIndex: null, direction: 1, isCaseSensitive: true)` - Searches for a subsequence in the sequence. Returns -1 if the subsequence was not found.
 
 `keys(dictionary)` - Returns a list of keys in the dictionary.
@@ -64,6 +63,34 @@
 `TYPE_TYPE`  
 `TYPE_CLASS`  
 `TYPE_OBJECT`
+
+## Object Instance Methods
+
+`myObject.compare(item)` - Returns -1, 0, or 1 depending on comparison of values. This method is used for comparison operators, dictionary keys, and the `sort` function.
+
+`myObject.getIterator()` - Returns an object conforming to the `Iterator` interface. This method is used in `for` loops.
+
+`myObject.getClass()` - Returns the class of the object.
+
+`myObject.isInstanceOf(class)` - Returns whether the object is an instance of the given class.
+
+`myObject.toString()` - Returns a string representation of the object and its values. This method is used by the `str` function.
+
+## Object Class Methods
+
+`Object.createInstance()` - Creates an instance of the class.
+
+`Object.getName()` - Gets the name of the class.
+
+`Object.isSubclassOf(class)` - Returns whether the class is a subclass of the given class.
+
+`Object.toString()` - Returns a string representation of the class and its values. This method is used by the `str` function.
+
+## Iterator Interface
+
+`myIterator.hasNext()` - Returns whether there is another item in the sequence.
+
+`myIterator.getNext()` - Returns the next item in the sequence and advances iteration forward.
 
 ## Math Class
 
