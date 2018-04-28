@@ -64,7 +64,7 @@ Argument labels: `myFunc(myName1: myValue1)`
 
 Object and class member access: `.`  
 Direct member access without getters or setters: `..`  
-Bind object to class: `myObject{myClass}`
+Bind value to class: `myValue{myClass}`
 
 ## Basic Statement Syntax
 
@@ -219,7 +219,7 @@ end
 ```
 
 ```
-static method <name>(<name>[: <value>?], <name>[: <value>?]...)
+static method <name>(<name>[: <value>?], <name>[: <value>?]...) [overrides <class>?]
     <body>
 end
 ```
@@ -269,5 +269,7 @@ All classes are implicitly subclasses of the `Object` class. See [this page](bui
 An object can be bound to any parent class or to the object's original class.
 
 An object stores members for all of its parent classes and for its own class. Members can only be accessed from the class to which an object is bound.
+
+A class can also be bound to another class in the same way. Class members behave in an analagous fashion to object members.
 
 
