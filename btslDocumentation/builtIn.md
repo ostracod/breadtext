@@ -78,7 +78,7 @@
 
 ## Object Class Methods
 
-`Object.createInstance()` - Creates an instance of the class.
+`Object.new()` - Creates an instance of the class.
 
 `Object.getName()` - Gets the name of the class.
 
