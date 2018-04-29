@@ -49,6 +49,8 @@
 
 `hasKey(dictionary, key)` - Returns whether the dictionary contains a key.
 
+`hasItem(value, item)` - Returns whether the sequence or dictionary contains an item.
+
 `sort(sequence, order: 1)` - Sorts the items of the sequence in-place.
 
 ## Top-Level Constants
