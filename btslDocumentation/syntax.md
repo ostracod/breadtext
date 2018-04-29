@@ -258,11 +258,9 @@ When a function is bound to a value, the keyword `this` in the function body wil
 
 A method is actually a member variable whose value is a function. The function is bound to the class or an instance of the class.
 
-Retreiving `myObject.myMember` will return the value of `myObject.getMyMember()`.
+If an object has a method named `getMyMember`, retrieving `myObject.myMember` will return the value of `myObject.getMyMember()`.
 
-Assigning a value to `myObject.myMember` will perform `myObject.setMyMember(value)`.
-
-All member variables are given default implementations of `get` and `set` methods. These methods may be overwritten by the class definition.
+If an object has a method named `setMyMember`, assigning a value to `myObject.myMember` will perform `myObject.setMyMember(value)`.
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
 
