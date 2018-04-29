@@ -57,7 +57,7 @@
 
 `charToPoints(character)` - Converts the character to a list of integer Unicode points.
 
-`pointsToChar(pointList)` - Converts the list of integer unicode points to a character.
+`pointsToChar(pointList)` - Converts the list of integer Unicode points to a character.
 
 ## Top-Level Constants
 
