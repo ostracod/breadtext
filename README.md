@@ -18,6 +18,7 @@ If you find any bugs, please report them on GitHub.
 * Offer intuitive, ergonomic controls
 * Use the system-wide clipboard by default
 * Allow extending functionality through scripting
+* Robust Unicode support
 * Bread
 
 ## Installation

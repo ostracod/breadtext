@@ -55,6 +55,10 @@
 
 `bindFunc(function, value)` - Binds the function to a value.
 
+`charToPoints(character)` - Converts the character to a list of integer Unicode points.
+
+`pointsToChar(pointList)` - Converts the list of integer unicode points to a character.
+
 ## Top-Level Constants
 
 `TYPE_NULL`  
