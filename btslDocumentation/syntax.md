@@ -264,10 +264,12 @@ If an object has a method named `setMyMember`, assigning a value to `myObject.my
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
 
-An object can be bound to any parent class or to the object's original class.
+Every instance of an object is associated with two classes: a binding class, and an overriding class. An object can only be bound to its overriding class or any superclass of the overriding class.
 
-An object stores members for all of its parent classes and for its own class. Members can only be accessed from the class to which an object is bound.
+An object stores members for its overriding class and all superclasses of the overriding class. Members can only be accessed from the object's binding class.
 
-A class can also be bound to another class in the same way. Class members behave in an analagous fashion to object members.
+The overriding class defines how to override methods of an object.
+
+A class is also associated with a binding class and an overriding class. Class members behave in an analagous fashion to object members.
 
 

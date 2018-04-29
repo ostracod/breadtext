@@ -53,6 +53,8 @@
 
 `sort(sequence, order: 1)` - Sorts the items of the sequence in-place.
 
+`bindFunc(function, value)` - Binds the function to a value.
+
 ## Top-Level Constants
 
 `TYPE_NULL`  
@@ -72,7 +74,7 @@
 
 `myObject.isInstanceOf(class)` - Returns whether the object is an instance of the given class.
 
-`myObject.getSuper(class: null)` - Returns a version of the object which uses methods implemented by the given class. If the class is null, use the non-Object superclass. If the class is null, and there is not exactly one non-Object superclass, throw an error.
+`myObject.getSuper(class: null)` - Returns a version of the object with the given binding and overriding class. If the class is null, use the non-Object superclass. If the class is null, and there is not exactly one non-Object superclass, throw an error.
 
 `myObject.compare(item)` - Returns -1, 0, or 1 depending on comparison of values. This method is used for comparison operators, dictionary keys, and the `sort` function.
 
@@ -87,6 +89,8 @@
 `Object.getName()` - Gets the name of the class.
 
 `Object.isSubclassOf(class)` - Returns whether the class is a subclass of the given class.
+
+`Object.getSuper(class: null)` - Returns a version of the class with the given binding and overriding class. If the class is null, use the non-Object superclass. If the class is null, and there is not exactly one non-Object superclass, throw an error.
 
 `Object.toString()` - Returns a string representation of the class and its values. This method is used by the `str` function.
 
