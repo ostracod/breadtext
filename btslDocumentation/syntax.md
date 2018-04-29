@@ -73,7 +73,7 @@ Statements are separated by newlines.
 Comment:
 
 ```
-# comment
+# <comment>
 ```
 
 Expression statement:
@@ -85,11 +85,7 @@ Expression statement:
 Variable declaration and initalization statements:
 
 ```
-dec <name>
-```
-
-```
-dec <name> = <expression>
+dec <name> [= <expression>]
 ```
 
 ## Control Flow Statements
@@ -135,7 +131,7 @@ end
 Function declaration statement (Supports closures):
 
 ```
-func <name>(<name>[: <value>?], <name>[: <value>?], <name>[: <value>?]...)
+func <name>(<name>[: <value>], <name>[: <value>], <name>[: <value>]...)
     <body>
 end
 ```
@@ -195,31 +191,13 @@ end
 Member variable declaration and initialization statements:
 
 ```
-mem <name>
-```
-
-```
-mem <name> = <value>
-```
-
-```
-static mem <name>
-```
-
-```
-static mem <name> = <value>
+[static] [overridable] mem <name> [= <expression>] [overrides <class>]
 ```
 
 Method declaration statements:
 
 ```
-method <name>(<name>[: <value>?], <name>[: <value>?]...) [overrides <class>?]
-    <body>
-end
-```
-
-```
-static method <name>(<name>[: <value>?], <name>[: <value>?]...) [overrides <class>?]
+[static] [overridable] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <class>]
     <body>
 end
 ```
@@ -243,7 +221,7 @@ end
 Share statement (Retrieve specific variables in import body):
 
 ```
-share <name> [as <name>?], <name> [as <name>?], <name> [as <name>?]...
+share <name> [as <name>], <name> [as <name>], <name> [as <name>]...
 ```
 
 Consume all statement (Retrieve every variable in import body):
