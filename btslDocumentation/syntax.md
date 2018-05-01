@@ -139,11 +139,7 @@ end
 Return statements:
 
 ```
-ret <expression>
-```
-
-```
-ret
+ret [<expression>]
 ```
 
 ## Error Handling Statements
@@ -151,11 +147,7 @@ ret
 Throw statements:
 
 ```
-throw <value>
-```
-
-```
-throw
+throw [<value>]
 ```
 
 Try statement:
@@ -191,13 +183,25 @@ end
 Member variable declaration and initialization statements:
 
 ```
-[static] [overridable] mem <name> [= <expression>] [overrides <class>]
+[static] mem <name> [= <expression>] [overrides <class>]
 ```
 
 Method declaration statements:
 
 ```
-[static] [overridable] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <class>]
+[static] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <class>]
+    <body>
+end
+```
+
+```
+[static] getter <name>() [overrides <class>]
+    <body>
+end
+```
+
+```
+[static] setter <name>(<name>) [overrides <class>]
     <body>
 end
 ```
@@ -235,10 +239,6 @@ consume all
 When a function is bound to a value, the keyword `this` in the function body will refer to the bound value.
 
 A method is actually a member variable whose value is a function. The function is bound to the class or an instance of the class.
-
-If an object has a method named `getMyMember`, retrieving `myObject.myMember` will return the value of `myObject.getMyMember()`.
-
-If an object has a method named `setMyMember`, assigning a value to `myObject.myMember` will perform `myObject.setMyMember(value)`.
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
 
