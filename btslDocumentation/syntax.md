@@ -250,7 +250,7 @@ A method is actually a member variable whose value is a function. The function i
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
 
-Every instance of an object is associated with two classes: a binding class, and an overriding class. An object can only be bound to its direct superclasses.
+Every instance of an object is associated with two classes: a binding class, and an overriding class. An object can only be bound to its direct superclasses (unless a custom binding is provided).
 
 An object stores members for its overriding class and all superclasses of the overriding class. Members can only be accessed from the object's binding class.
 
