@@ -186,24 +186,32 @@ Member variable declaration and initialization statements:
 [static] mem <name> [= <expression>] [overrides <class>]
 ```
 
+Superclass chain: `<class> -> <class> -> <class> -> ...`
+
 Method declaration statements:
 
 ```
-[static] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <class>]
+[static] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <superclass chain>]
     <body>
 end
 ```
 
 ```
-[static] getter <name>() [overrides <class>]
+[static] getter <name>() [overrides <superclass chain>]
     <body>
 end
 ```
 
 ```
-[static] setter <name>(<name>) [overrides <class>]
+[static] setter <name>(<name>) [overrides <superclass chain>]
     <body>
 end
+```
+
+Custom binding statements:
+
+```
+[static] binding <superclass> through <superclass chain>
 ```
 
 ## Dependency Statements
@@ -242,11 +250,11 @@ A method is actually a member variable whose value is a function. The function i
 
 All classes are implicitly subclasses of the `Object` class. See [this page](builtIn.md) for the list of members associated with `Object`.
 
-Every instance of an object is associated with two classes: a binding class, and an overriding class. An object can only be bound to its overriding class or any superclass of the overriding class.
+Every instance of an object is associated with two classes: a binding class, and an overriding class. An object can only be bound to its direct superclasses.
 
 An object stores members for its overriding class and all superclasses of the overriding class. Members can only be accessed from the object's binding class.
 
-The overriding class defines how to override methods of an object.
+The overriding class defines how to override members of an object.
 
 A class is also associated with a binding class and an overriding class. Class members behave in an analagous fashion to object members.
 
