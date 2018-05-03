@@ -82,8 +82,6 @@
 
 `myObject.compare(item)` - Returns -1, 0, or 1 depending on comparison of values. This method is used for comparison operators, dictionary keys, and the `sort` function.
 
-`myObject.getIterator()` - Returns an object conforming to the `Iterator` interface. This method is used in `for` loops.
-
 `myObject.toString()` - Returns a string representation of the object and its values. This method is used by the `str` function.
 
 ## Object Class Methods
@@ -98,7 +96,11 @@
 
 `Object.toString()` - Returns a string representation of the class and its values. This method is used by the `str` function.
 
-## Iterator Interface
+## Iterable Class
+
+`myIterable.getIterator()` - Returns an instance of `Iterator`. This method is used in `for` loops.
+
+## Iterator Class
 
 `myIterator.hasNext()` - Returns whether there is another item in the sequence.
 
