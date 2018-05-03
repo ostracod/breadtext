@@ -106,6 +106,26 @@
 
 `myIterator.getNext()` - Returns the next item in the sequence and advances iteration forward.
 
+## Error Classes
+
+`Error` - Base class for other error classes.
+
+`Error.new(message: null)` - Creates a new error with the given message.
+
+`NameError` - Thrown when trying to resolve a missing variable or member name.
+
+`NotImplementedError` - Thrown when trying to invoke an abstract method.
+
+`TypeError` - Thrown when an input has the wrong type.
+
+`ClassError` - Thrown when an input has the wrong class.
+
+`ValueError` - Thrown when an input has an inappropriate value, but the correct type (and class, if applicable).
+
+`StateError` - Thrown when it is not appropriate to perform a particular operation at the current time.
+
+`ResourceError` - Thrown when an external resource, such as storage or a network interface, fails to perform the desired operation.
+
 ## Math Class
 
 `Math.floor(num)` - Rounds the number down to the nearest integer.
