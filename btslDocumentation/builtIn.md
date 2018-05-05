@@ -74,11 +74,13 @@
 
 ## Object Instance Methods
 
-`myObject.getClass()` - Returns the class of the object.
+`myObject.class` - Returns the class of the object.
 
 `myObject.isInstanceOf(class)` - Returns whether the object is an instance of the given class.
 
-`myObject.getSuper(class: null)` - Returns a version of the object with the given binding and overriding class. If the class is null, use the non-Object superclass. If the class is null, and there is not exactly one non-Object superclass, throw an error.
+`myObject.getSuper(class)` - Returns a version of the object with the given binding and overriding class.
+
+`myObject.super` - Returns a version of the object whose binding and overriding class is the non-Object superclass. If there is not exactly one non-Object superclass, throw an error.
 
 `myObject.compare(item)` - Returns -1, 0, or 1 depending on comparison of values. This method is used for comparison operators, dictionary keys, and the `sort` function.
 
@@ -88,11 +90,13 @@
 
 `Object.new()` - Creates an instance of the class.
 
-`Object.getName()` - Gets the name of the class.
+`Object.name` - Gets the name of the class.
 
 `Object.isSubclassOf(class)` - Returns whether the class is a subclass of the given class.
 
-`Object.getSuper(class: null)` - Returns a version of the class with the given binding and overriding class. If the class is null, use the non-Object superclass. If the class is null, and there is not exactly one non-Object superclass, throw an error.
+`myObject.getSuper(class)` - Returns a version of the class with the given binding and overriding class.
+
+`myObject.super` - Returns a version of the class whose binding and overriding class is the non-Object superclass. If there is not exactly one non-Object superclass, throw an error.
 
 `Object.toString()` - Returns a string representation of the class and its values. This method is used by the `str` function.
 
@@ -111,6 +115,8 @@
 `Error` - Base class for other error classes.
 
 `Error.new(message: null)` - Creates a new error with the given message.
+
+`myError.message` - The message associated with the error.
 
 `NameError` - Thrown when trying to resolve a missing variable or member name.
 
@@ -136,19 +142,17 @@
 
 `BreadText.pressKey(key)` - Simulates a key press in the editor.
 
-`BreadText.getMode()` - Returns the editor operation mode.
+`BreadText.mode [= value]` - The current editor operation mode.
 
-`BreadText.setMode(mode)` - Sets the editor operation mode.
+`BreadText.selectionContents` - Returns the text highlighted in the buffer.
 
-`BreadText.getSelectionContents()` - Returns the text highlighted in the buffer.
-
-`BreadText.getLineCount()` - Returns the total number of lines in the buffer.
+`BreadText.lineCount` - Returns the total number of lines in the buffer.
 
 `BreadText.getLineContents(index)` - Returns the text in the given line.
 
-`BreadText.getCursorCharIndex()` - Returns the selected character index within the cursor's line.
+`BreadText.cursorCharIndex` - Returns the selected character index within the cursor's line.
 
-`BreadText.getCursorLineIndex()` - Returns the cursor's line index within the entire buffer.
+`BreadText.cursorLineIndex` - Returns the cursor's line index within the entire buffer.
 
 `BreadText.setCursorPos(charIndex, lineIndex)` - Moves the cursor to the given position.
 
