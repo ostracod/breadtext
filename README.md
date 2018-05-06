@@ -158,21 +158,37 @@ To view controls within BreadText, enter `/help`.
 ### Configuration Variables
 
 `colorScheme`: 0 is black on white, 1 is white on black.  
-`shouldUseHardTabs`: 0 means no, 1 means yes.  
+`shouldUseHardTabs`: Boolean (`true` or `false`).  
 `indentationWidth`: The number of spaces to use for soft tabs.  
-`isCaseSensitive`: 0 means no, 1 means yes.  
-`shouldUseSystemClipboard`: 0 means no, 1 means yes.  
-`shouldHighlightSyntax`: 0 means no, 1 means yes.  
-`shouldUseXclip`: 0 means no, 1 means yes. Only significant in macOS.
+`isCaseSensitive`: Boolean.  
+`shouldUseSystemClipboard`: Boolean.  
+`shouldHighlightSyntax`: Boolean.  
+`shouldUseXclip`: Boolean. Only significant in macOS.
 
-On start-up, BreadText looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
+Color configuration variables:
 
-Example contents of `.breadtextrc` file:
+`bodyForegroundColor`, `bodyBackgroundColor`,  
+`highlightForegroundColor`, `highlightBackgroundColor`,  
+`statusBarForegroundColor`, `statusBarBackgroundColor`,  
+`keywordColor`, `valueLiteralColor`, `commentColor`
+
+Possible values for color variables:
+
+`black`, `brightBlack`, `red`, `brightRed`,  
+`green`, `brightGreen`, `yellow`, `brightYellow`,  
+`blue`, `brightBlue`, `magenta`, `brightMagenta`,  
+`cyan`, `brightCyan`, `white`, `brightWhite`
+
+On start-up, BreadText looks for the file `~/.breadtextrc.json` to read configuration variables.
+
+Example contents of `.breadtextrc.json` file:
 
 ```
-colorScheme 0
-shouldUseHardTabs 0
-indentationWidth 4
+{
+    "colorScheme": 0,
+    "shouldUseHardTabs": false,
+    "indentationWidth": 4
+}
 ```
 
 ## BreadText Scripting Language
