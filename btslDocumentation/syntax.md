@@ -225,7 +225,7 @@ end
 ```
 
 ```
-import module <string>
+import module <name string> [<version string>]
     <body>
 end
 ```
