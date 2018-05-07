@@ -138,7 +138,7 @@ To view controls within BreadText, enter `/help`.
 `-` = Decrement number under cursor  
 `_` = Toggle boolean literal
 
-### Commands
+## Commands
 
 `/gotoLine (line number)`  
 `/find (pattern)`  
@@ -155,7 +155,7 @@ To view controls within BreadText, enter `/help`.
 `/version`  
 `/help`
 
-### Configuration Variables
+## Configuration Variables
 
 `colorScheme`: 0 is black on white, 1 is white on black.  
 `shouldUseHardTabs`: Boolean (`true` or `false`).  
