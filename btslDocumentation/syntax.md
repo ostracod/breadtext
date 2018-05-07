@@ -219,7 +219,7 @@ Custom binding statements:
 Import statements:
 
 ```
-import file <path>
+import file <path string>
     <body>
 end
 ```
