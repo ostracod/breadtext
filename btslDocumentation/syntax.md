@@ -128,6 +128,8 @@ for <name> in <iterable>
 end
 ```
 
+`<iterable>` can be a buffer, string, list, dictionary, or instance of Iterable. See [this page](builtIn.md) for a description of the Iterable class.
+
 Function declaration statement (Supports closures):
 
 ```
