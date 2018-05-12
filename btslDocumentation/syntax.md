@@ -133,7 +133,7 @@ end
 Function declaration statement (Supports closures):
 
 ```
-func <name>(<name>[: <value>], <name>[: <value>], <name>[: <value>]...)
+func <name>(<name>[: <default value>], <name>[: <default value>]...)
     <body>
 end
 ```
@@ -193,7 +193,7 @@ Superclass chain: `<class> -> <class> -> <class> -> ...`
 Method declaration statements:
 
 ```
-[static] method <name>(<name>[: <value>], <name>[: <value>]...) [overrides <superclass chain>]
+[static] method <name>(<name>[: <default value>], <name>[: <default value>]...) [overrides <superclass chain>]
     <body>
 end
 ```
