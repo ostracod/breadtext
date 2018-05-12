@@ -130,10 +130,12 @@ end
 
 `<iterable>` can be a buffer, string, list, dictionary, or instance of Iterable. See [this page](builtIn.md) for a description of the Iterable class.
 
+Argument list signature: `<name>[: <default value>], <name>[: <default value>], <name>[: <default value>]...`
+
 Function declaration statement (Supports closures):
 
 ```
-func <name>(<name>[: <default value>], <name>[: <default value>]...)
+func <name>(<argument list signature>)
     <body>
 end
 ```
@@ -193,7 +195,7 @@ Superclass chain: `<class> -> <class> -> <class> -> ...`
 Method declaration statements:
 
 ```
-[static] method <name>(<name>[: <default value>], <name>[: <default value>]...) [overrides <superclass chain>]
+[static] method <name>(<argument list signature>) [overrides <superclass chain>]
     <body>
 end
 ```
