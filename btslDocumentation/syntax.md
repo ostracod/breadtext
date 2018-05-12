@@ -234,16 +234,16 @@ import module <name string>
 end
 ```
 
-Share statement (Retrieve specific variables in import body):
+Pick statement (Retrieve specific variables in import body):
 
 ```
-share <name> [as <name>], <name> [as <name>], <name> [as <name>]...
+pick <name> [as <name>], <name> [as <name>], <name> [as <name>]...
 ```
 
-Consume all statement (Retrieve every variable in import body):
+Take all statement (Retrieve every variable in import body):
 
 ```
-consume all
+take all
 ```
 
 ## Object-Oriented Features
