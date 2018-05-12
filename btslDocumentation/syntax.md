@@ -130,7 +130,7 @@ end
 
 `<iterable>` can be a buffer, string, list, dictionary, or instance of Iterable. See [this page](builtIn.md) for a description of the Iterable class.
 
-Argument list signature: `<name>[: <default value>], <name>[: <default value>], <name>[: <default value>]...`
+Argument list signature: `<name>[: <default value>], <name>[: <default value>]...`
 
 Function declaration statement (Supports closures):
 
