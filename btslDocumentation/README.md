@@ -7,8 +7,13 @@ Place your BreadText script in `~/.breadtextrc.btsl`. It will be evaluated whene
 
 ## Documentation Pages
 
-* [Syntax and Semantics](syntax.md)
-* [Built-In Values](builtIn.md)
+* [Values and Operators](values.md)
+* [Basic Statements](basicStatements.md)
+* [Object-Oriented Functionality](oop.md)
+* [Dependency Statements](dependencies.md)
+* [Top-Level Functions and Constants](topLevel.md)
+* [Non-BreadText Classes](nonBreadText.md)
+* [BreadText Class](breadText.md)
 * [Module Design](modules.md)
 * [Example Scripts](/exampleScripts)
 
