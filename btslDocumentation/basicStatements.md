@@ -81,7 +81,7 @@ Return statements:
 ret [<expression>]
 ```
 
-## Error Handling Statements
+## Error-Handling Statements
 
 Throw statements:
 
