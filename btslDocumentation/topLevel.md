@@ -8,7 +8,7 @@
 * `value` may have any type except object or class.
 * Return value has the same type as `value`.
 
-`num(text)` - Converts a string into a number. Returns null if the text cannot be converted.
+`num(text)` - Converts a string into a number.
 
 * `text` must be a string containing a decimal number.
 * Return value is a number.
@@ -27,7 +27,9 @@
 `list(value)` - Converts a value into a list.
 
 * `value` may be a buffer, string, or list.
-* Return value is a list.
+* If `sequence` is a buffer, return value will be a list of numbers.
+* If `sequence` is a string, return value will be a list of characters.
+* If `sequence` is a list, return value will be a list of values with mixed types.
 
 `type(value)` - Returns the type of the value.
 
@@ -106,7 +108,7 @@
 `popSubLeft(sequence, length)` - Removes a subsequence from the start of the sequence.
 
 * `sequence` may be a buffer, string, or list.
-* `length` must be a number.
+* `length` must be a non-negative number.
 * Return value has the same type as `sequence`.
 * Throws `ValueError` if `sequence` is too small.
 
