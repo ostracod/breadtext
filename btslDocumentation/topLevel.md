@@ -132,10 +132,15 @@
 * `isCaseSensitive` must be a boolean.
 * Return value is a number.
 
-`sort(sequence, order: 1)` - Sorts the items of the sequence in-place.
+`sort(sequence, order: 1, comparator: null)` - Sorts the items of the sequence in-place.
 
 * `sequence` may be a buffer, string, or list.
 * `order` must be a non-zero number.
+* `comparator` may be null or a function with the signature `myFunc(value1, value2)`.
+    * If `sequence` is a buffer, `value1` and `value2` will be numbers.
+    * If `sequence` is a string, `value1` and `value2` will be characters.
+    * If `sequence` is a list, `value1` and `value2` may have any type.
+    * Return value must be a number.
 * Does not return a value.
 
 ## Miscellaneous Functions
