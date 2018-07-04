@@ -224,14 +224,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
             macroKeyListLength += 1;
         }
     }
-    if (shouldUseBindings && activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
-        int8_t tempResult = invokeKeyBinding(key);
-        if (tempResult) {
-            return false;
+    if (!isConsumingSingleCharacter) {
+        if (shouldUseBindings && activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
+            int8_t tempResult = invokeKeyBinding(key);
+            if (tempResult) {
+                return false;
+            }
         }
-    }
-    if (shouldUseMappings) {
-        key = invokeKeyMapping(key);
+        if (shouldUseMappings) {
+            key = invokeKeyMapping(key);
+        }
     }
     if (isShowingNotification) {
         eraseNotification();
