@@ -8,7 +8,7 @@ void copySelection();
 void deleteSelectionHelper();
 void deleteSelection();
 void cutSelection();
-void pasteBeforeCursorHelper(FILE *file, int32_t baseIndentationLevel);
+void pasteBeforeCursorHelper(vector_t *systemClipboard, int32_t baseIndentationLevel);
 void pasteBeforeCursor();
 void pasteAfterCursor();
 void swapSelection();

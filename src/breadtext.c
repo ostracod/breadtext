@@ -1368,7 +1368,6 @@ int main(int argc, const char *argv[]) {
     } else {
         filePath = mallocRealpath((int8_t *)(argv[1]));
     }
-    clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
     rcScriptFilePath = mallocRealpath((int8_t *)"~/.breadtextrc.btsl");
     syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
