@@ -264,6 +264,9 @@ int8_t clipboardEndsInNewline(vector_t *systemClipboard) {
             return false;
         }
     } else {
+        if (internalClipboard == NULL) {
+            return false;
+        }
         return (internalClipboard[internalClipboardSize - 1] == '\n');
     }
 }
