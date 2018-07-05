@@ -255,9 +255,14 @@ void eraseTextCommandCursor() {
     if (activityMode != TEXT_COMMAND_MODE) {
         return;
     }
-    int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, tempPosX, ' ');
+    int8_t tempCharacter;
+    if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
+        tempCharacter = textCommandBuffer[textCommandCursorIndex];
+    } else {
+        tempCharacter = ' ';
+    }
+    mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
@@ -266,9 +271,14 @@ void displayTextCommandCursor() {
         return;
     }
     refresh();
-    int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
     attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, tempPosX, ' ');
+    int8_t tempCharacter;
+    if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
+        tempCharacter = textCommandBuffer[textCommandCursorIndex];
+    } else {
+        tempCharacter = ' ';
+    }
+    mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
     attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
 }
 

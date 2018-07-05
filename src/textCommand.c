@@ -74,30 +74,30 @@ int8_t compileRegexes() {
 }
 
 void insertTextCommandCharacter(int8_t character) {
-    int8_t index = strlen((char *)textCommandBuffer);
-    if (index >= sizeof(textCommandBuffer) - 1 || index + 2 >= windowWidth) {
+    int8_t tempLength = strlen((char *)textCommandBuffer);
+    if (tempLength >= sizeof(textCommandBuffer) - 1 || tempLength + 2 >= windowWidth) {
         return;
     }
     eraseTextCommandCursor();
-    textCommandBuffer[index] = character;
+    copyData(textCommandBuffer + textCommandCursorIndex + 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
+    textCommandBuffer[textCommandCursorIndex] = character;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, index + 1, character);
+    mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    index += 1;
-    textCommandBuffer[index] = 0;
+    textCommandCursorIndex += 1;
     displayTextCommandCursor();
 }
 
 void deleteTextCommandCharacter() {
-    int8_t index = strlen((char *)textCommandBuffer);
-    if (index <= 0) {
+    if (textCommandCursorIndex <= 0) {
         return;
     }
+    int8_t tempLength = strlen((char *)textCommandBuffer);
     eraseTextCommandCursor();
-    index -= 1;
-    textCommandBuffer[index] = 0;
+    copyData(textCommandBuffer + textCommandCursorIndex - 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
+    textCommandCursorIndex -= 1;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, index + 1, ' ');
+    mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s ", textCommandBuffer + textCommandCursorIndex);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     displayTextCommandCursor();
 }
@@ -396,5 +396,26 @@ void enterBeginningOfCommand(int8_t *text) {
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 1, "%s", (char *)textCommandBuffer);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    textCommandCursorIndex = strlen((char *)textCommandBuffer);
     displayTextCommandCursor();
 }
+
+void moveTextCommandCursorLeft() {
+    if (textCommandCursorIndex <= 0) {
+        return;
+    }
+    eraseTextCommandCursor();
+    textCommandCursorIndex -= 1;
+    displayTextCommandCursor();
+}
+
+void moveTextCommandCursorRight() {
+    if (textCommandCursorIndex >= strlen((char *)textCommandBuffer)) {
+        return;
+    }
+    eraseTextCommandCursor();
+    textCommandCursorIndex += 1;
+    displayTextCommandCursor();
+}
+
+

@@ -127,6 +127,7 @@ void setActivityMode(int8_t mode) {
     } else if (activityMode == TEXT_COMMAND_MODE) {
         if (mode != PREVIOUS_MODE) {
             textCommandBuffer[0] = 0;
+            textCommandCursorIndex = 0;
         }
         displayStatusBar();
     } else if (previousActivityMode == TEXT_COMMAND_MODE) {
@@ -314,6 +315,12 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
         }
         if (key == '\n') {
             executeTextCommand();
+        }
+        if (key == KEY_LEFT) {
+            moveTextCommandCursorLeft();
+        }
+        if (key == KEY_RIGHT) {
+            moveTextCommandCursorRight();
         }
     } else {
         if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == TEXT_REPLACE_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
@@ -1309,7 +1316,7 @@ void resetApplication() {
 
 int main(int argc, const char *argv[]) {
     
-    strcpy((char *)applicationVersion, "1.2.0");
+    strcpy((char *)applicationVersion, "1.3.0");
     
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);
