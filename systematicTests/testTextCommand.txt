@@ -13,6 +13,20 @@ ADD_LINE "ghi"
 PRESS_KEY / g o t o x BACKSPACE L i n e " " 2 NEWLINE
 ASSERT_POS 2 0
 
+TEST "Move cursor"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+PRESS_KEY / g o t i n e LEFT LEFT LEFT o L RIGHT RIGHT RIGHT " " 2 NEWLINE
+ASSERT_POS 2 0
+
+TEST "Move cursor and delete"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+PRESS_KEY / g o t o L i x n e LEFT LEFT BACKSPACE RIGHT RIGHT " " 2 NEWLINE
+ASSERT_POS 2 0
+
 TEST "Goto line"
 ADD_LINE "abc"
 ADD_LINE "def"
