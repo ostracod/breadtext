@@ -984,5 +984,26 @@ ASSERT_LINE 2 "    x"
 ASSERT_LINE 3 "ghi"
 ASSERT_POS 2 5
 
+TEST "Join previous line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY &
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "ghi"
+ASSERT_POS 1 3
+
+TEST "Join next line"
+ADD_LINE "abc"
+ADD_LINE "def"
+ADD_LINE "ghi"
+SET_POS 2 1
+PRESS_KEY 7
+ASSERT_LINE_COUNT 2
+ASSERT_LINE 1 "abc"
+ASSERT_LINE 2 "defghi"
+ASSERT_POS 2 3
 
 
