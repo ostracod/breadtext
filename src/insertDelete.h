@@ -31,6 +31,8 @@ void deleteUntilBeginningOfLineInclusive();
 void deleteUntilBeginningOfLineExclusive();
 void deleteUntilEndOfLineInclusive();
 void deleteUntilEndOfLineExclusive();
+void joinCurrentLineToPreviousLine();
+void joinCurrentLineToNextLine();
 
 // INSERT_DELETE_HEADER_FILE
 #endif

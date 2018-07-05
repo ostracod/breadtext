@@ -499,5 +499,14 @@ void insertAndEditLineAfterCursor() {
     }
 }
 
+void joinCurrentLineToPreviousLine() {
+    moveCursorToBeginningOfLine();
+    deleteCharacterBeforeCursor(true);
+}
+
+void joinCurrentLineToNextLine() {
+    moveCursorToEndOfLine();
+    deleteCharacterAfterCursor(true);
+}
 
 

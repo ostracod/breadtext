@@ -809,11 +809,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     gotoMark(6);
                     break;
                 }
-                case '7':
-                {
-                    gotoMark(7);
-                    break;
-                }
                 case '!':
                 {
                     setMark(1);
@@ -842,11 +837,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case '^':
                 {
                     setMark(6);
-                    break;
-                }
-                case '&':
-                {
-                    setMark(7);
                     break;
                 }
                 default:
@@ -895,6 +885,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case ';':
                 {
                     toggleSemicolonAtEndOfLine();
+                    break;
+                }
+                case '7':
+                {
+                    joinCurrentLineToNextLine();
+                    break;
+                }
+                case '&':
+                {
+                    joinCurrentLineToPreviousLine();
                     break;
                 }
                 default:
