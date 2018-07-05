@@ -12,6 +12,7 @@ void executeTextCommand();
 void enterBeginningOfCommand(int8_t *text);
 void moveTextCommandCursorLeft();
 void moveTextCommandCursorRight();
+void pasteClipboardIntoTextCommand();
 
 // TEXT_COMMAND_HEADER_FILE
 #endif

@@ -16,9 +16,6 @@
 #include "selection.h"
 #include "breadtext.h"
 
-int8_t *internalClipboard = NULL;
-int64_t internalClipboardSize;
-
 int8_t *allocateStringFromSelection() {
     textPos_t *tempFirstTextPos;
     textPos_t *tempLastTextPos;

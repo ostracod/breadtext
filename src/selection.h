@@ -2,6 +2,9 @@
 #ifndef SELECTION_HEADER_FILE
 #define SELECTION_HEADER_FILE
 
+int8_t *internalClipboard;
+int64_t internalClipboardSize;
+
 int8_t *allocateStringFromSelection();
 int8_t copySelectionHelper();
 void copySelection();

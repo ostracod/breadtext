@@ -7,6 +7,7 @@
 #include "textAllocation.h"
 #include "textLine.h"
 #include "textPos.h"
+#include "vector.h"
 #include "display.h"
 #include "history.h"
 #include "indentation.h"
@@ -73,9 +74,19 @@ int8_t compileRegexes() {
     return tempResult;
 }
 
+int64_t getMaximumCommandLength() {
+    int64_t tempLength1 = sizeof(textCommandBuffer) - 1;
+    int64_t tempLength2 = windowWidth - 2;
+    if (tempLength1 < tempLength2) {
+        return tempLength1;
+    } else {
+        return tempLength2;
+    }
+}
+
 void insertTextCommandCharacter(int8_t character) {
-    int8_t tempLength = strlen((char *)textCommandBuffer);
-    if (tempLength >= sizeof(textCommandBuffer) - 1 || tempLength + 2 >= windowWidth) {
+    int32_t tempLength = strlen((char *)textCommandBuffer);
+    if (tempLength >= getMaximumCommandLength()) {
         return;
     }
     eraseTextCommandCursor();
@@ -92,7 +103,7 @@ void deleteTextCommandCharacter() {
     if (textCommandCursorIndex <= 0) {
         return;
     }
-    int8_t tempLength = strlen((char *)textCommandBuffer);
+    int32_t tempLength = strlen((char *)textCommandBuffer);
     eraseTextCommandCursor();
     copyData(textCommandBuffer + textCommandCursorIndex - 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
     textCommandCursorIndex -= 1;
@@ -416,6 +427,52 @@ void moveTextCommandCursorRight() {
     eraseTextCommandCursor();
     textCommandCursorIndex += 1;
     displayTextCommandCursor();
+}
+
+void pasteClipboardIntoTextCommand() {
+    vector_t tempSystemClipboard;
+    while (true) {
+        int8_t *tempText;
+        if (shouldUseSystemClipboard) {
+            systemPasteClipboard(&tempSystemClipboard);
+            if (tempSystemClipboard.length <= 0) {
+                cleanUpSystemClipboardAllocation(&tempSystemClipboard);
+                break;
+            }
+            getVectorElement(&tempText, &tempSystemClipboard, 0);
+            int8_t tempContainsNewline;
+            removeBadCharacters(tempText, &tempContainsNewline);
+        } else {
+            if (internalClipboard == NULL) {
+                break;
+            }
+            tempText = internalClipboard;
+        }
+        int64_t tempLength = strlen((char *)textCommandBuffer);
+        int64_t tempMaximumLength = getMaximumCommandLength();
+        int64_t tempClipboardLength = 0;
+        while (tempLength < tempMaximumLength) {
+            int8_t tempCharacter = tempText[tempClipboardLength];
+            if (tempCharacter == 0 || tempCharacter == '\n') {
+                break;
+            }
+            tempLength += 1;
+            tempClipboardLength += 1;
+        }
+        tempLength = strlen((char *)textCommandBuffer);
+        eraseTextCommandCursor();
+        copyData(textCommandBuffer + textCommandCursorIndex + tempClipboardLength, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
+        copyData(textCommandBuffer + textCommandCursorIndex, tempText, tempClipboardLength);
+        attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
+        attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        textCommandCursorIndex += tempClipboardLength;
+        displayTextCommandCursor();
+        break;
+    }
+    if (shouldUseSystemClipboard) {
+        cleanUpSystemClipboardAllocation(&tempSystemClipboard);
+    }
 }
 
 

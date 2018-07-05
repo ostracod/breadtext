@@ -322,6 +322,9 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
         if (key == KEY_RIGHT) {
             moveTextCommandCursorRight();
         }
+        if (key == KEY_BTAB) {
+            pasteClipboardIntoTextCommand();
+        }
     } else {
         if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == TEXT_REPLACE_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
             if (key == KEY_LEFT) {
@@ -1274,6 +1277,7 @@ int8_t initializeApplication() {
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;
+    internalClipboard = NULL;
     shouldUseSystemClipboard = true;
     shouldHighlightSyntax = true;
     commentPrefix = NULL;
