@@ -45,6 +45,7 @@ int8_t *helpText[] = {
     (int8_t *)"Shift + / = Enter find command",
     (int8_t *)"V = Highlight line without indentation or newline",
     (int8_t *)"Shift + V = Enter gotoLine command",
+    (int8_t *)"Shift + Tab = Paste in text command entry",
     (int8_t *)"",
     (int8_t *)"MOVEMENT",
     (int8_t *)"",
