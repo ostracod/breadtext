@@ -99,7 +99,7 @@ void insertTextEntryModeCharacterBeforeCursor(int8_t character) {
     }
 }
 
-void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
+void deleteCharacterBeforeCursorHelper(int8_t shouldAddHistoryFrame, int8_t shouldRecordHistory) {
     int64_t index = getTextPosIndex(&cursorTextPos);
     if (index > 0 && index == getTextLineIndentationEndIndex(cursorTextPos.line)) {
         decreaseSelectionIndentationLevel();
@@ -116,7 +116,7 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
         if (tempLine == NULL) {
             return;
         }
-        if (shouldRecordHistory) {
+        if (shouldRecordHistory && shouldAddHistoryFrame) {
             addHistoryFrame();
         }
         index = tempLine->textAllocation.length;
@@ -190,6 +190,10 @@ void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
         textBufferIsDirty = true;
         finishCurrentHistoryFrame();
     }
+}
+
+void deleteCharacterBeforeCursor(int8_t shouldRecordHistory) {
+    deleteCharacterBeforeCursorHelper(shouldRecordHistory, shouldRecordHistory);
 }
 
 void deleteCharacterAfterCursorHelper(int8_t shouldAddHistoryFrame, int8_t shouldRecordHistory) {
@@ -499,14 +503,44 @@ void insertAndEditLineAfterCursor() {
     }
 }
 
+void removeTextLineIndentation(textLine_t *line) {
+    int64_t tempAmount = getTextLineIndentationEndIndex(line);
+    if (tempAmount <= 0) {
+        return;
+    }
+    recordTextLineDeleted(line);
+    removeTextFromTextAllocation(&(line->textAllocation), 0, tempAmount);
+    recordTextLineInserted(line);
+}
+
 void joinCurrentLineToPreviousLine() {
+    textLine_t *tempLine = getPreviousTextLine(cursorTextPos.line);
+    if (tempLine == NULL) {
+        notifyUser((int8_t *)"Could not join line.");
+        return;
+    }
+    addHistoryFrame();
+    removeTextLineIndentation(cursorTextPos.line);
     moveCursorToBeginningOfLine();
-    deleteCharacterBeforeCursor(true);
+    deleteCharacterBeforeCursorHelper(false, true);
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
+    textBufferIsDirty = true;
 }
 
 void joinCurrentLineToNextLine() {
+    textLine_t *tempLine = getNextTextLine(cursorTextPos.line);
+    if (tempLine == NULL) {
+        notifyUser((int8_t *)"Could not join line.");
+        return;
+    }
+    addHistoryFrame();
+    removeTextLineIndentation(tempLine);
     moveCursorToEndOfLine();
-    deleteCharacterAfterCursor(true);
+    deleteCharacterAfterCursorHelper(false, true);
+    finishCurrentHistoryFrame();
+    historyFrameIsConsecutive = false;
+    textBufferIsDirty = true;
 }
 
 
