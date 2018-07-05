@@ -96,8 +96,8 @@ To view controls within BreadText, enter `/help`.
 `Shift + N` = Find previous instance  
 `F` = Find next instance of word under cursor  
 `Shift + F` = Find previous instance of word under cursor  
-`1-7` = Go to mark  
-`Shift + 1-7` = Set mark
+`1-6` = Go to mark  
+`Shift + 1-6` = Set mark
 
 ### Highlight Actions
 
@@ -135,7 +135,9 @@ To view controls within BreadText, enter `/help`.
 `Shift + B` = Uppercase  
 `+` = Increment number under cursor  
 `-` = Decrement number under cursor  
-`_` = Toggle boolean literal
+`_` = Toggle boolean literal  
+`7` = Join next line and current line  
+`Shift + 7` = Join previous line and current line
 
 ### Commands
 
