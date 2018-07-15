@@ -303,7 +303,7 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
-START_TEST "bindKey"
+START_TEST "bindKey 1"
 func action()
     testLog(1)
     ret true
@@ -316,6 +316,23 @@ ASSERT_NO_ERROR
 ASSERT_OUTPUT
 1
 1
+END_TEST
+
+START_TEST "bindKey 2"
+func action()
+    testLog(getLineContents(0))
+    ret true
+end
+bindKey('7', action)
+RUN_SCRIPT
+PRESS_KEY t a b c ESC
+PRESS_KEY 7
+PRESS_KEY "\"" 7
+PRESS_KEY 7
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+abc
+abc7
 END_TEST
 
 START_TEST "Bad bindKey"
@@ -336,12 +353,16 @@ func action()
 end
 bindKey('7', action)
 mapKey('3', 'a', MODE_TEXT_ENTRY)
+mapKey('6', 'b', MODE_COMMAND)
 RUN_SCRIPT
 PRESS_KEY t 1 2 3 4 5 ESC
+PRESS_KEY 7
+PRESS_KEY "\"" 6
 PRESS_KEY 7
 ASSERT_NO_ERROR
 ASSERT_OUTPUT
 12a45
+12a456
 END_TEST
 
 START_TEST "Bad mapKey 1"

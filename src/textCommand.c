@@ -7,6 +7,7 @@
 #include "textAllocation.h"
 #include "textLine.h"
 #include "textPos.h"
+#include "vector.h"
 #include "display.h"
 #include "history.h"
 #include "indentation.h"
@@ -73,31 +74,41 @@ int8_t compileRegexes() {
     return tempResult;
 }
 
+int64_t getMaximumCommandLength() {
+    int64_t tempLength1 = sizeof(textCommandBuffer) - 1;
+    int64_t tempLength2 = windowWidth - 2;
+    if (tempLength1 < tempLength2) {
+        return tempLength1;
+    } else {
+        return tempLength2;
+    }
+}
+
 void insertTextCommandCharacter(int8_t character) {
-    int8_t index = strlen((char *)textCommandBuffer);
-    if (index >= sizeof(textCommandBuffer) - 1 || index + 2 >= windowWidth) {
+    int32_t tempLength = strlen((char *)textCommandBuffer);
+    if (tempLength >= getMaximumCommandLength()) {
         return;
     }
     eraseTextCommandCursor();
-    textCommandBuffer[index] = character;
+    copyData(textCommandBuffer + textCommandCursorIndex + 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
+    textCommandBuffer[textCommandCursorIndex] = character;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, index + 1, character);
+    mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    index += 1;
-    textCommandBuffer[index] = 0;
+    textCommandCursorIndex += 1;
     displayTextCommandCursor();
 }
 
 void deleteTextCommandCharacter() {
-    int8_t index = strlen((char *)textCommandBuffer);
-    if (index <= 0) {
+    if (textCommandCursorIndex <= 0) {
         return;
     }
+    int32_t tempLength = strlen((char *)textCommandBuffer);
     eraseTextCommandCursor();
-    index -= 1;
-    textCommandBuffer[index] = 0;
+    copyData(textCommandBuffer + textCommandCursorIndex - 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
+    textCommandCursorIndex -= 1;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, index + 1, ' ');
+    mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s ", textCommandBuffer + textCommandCursorIndex);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     displayTextCommandCursor();
 }
@@ -396,5 +407,75 @@ void enterBeginningOfCommand(int8_t *text) {
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
     mvprintw(windowHeight - 1, 1, "%s", (char *)textCommandBuffer);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    textCommandCursorIndex = strlen((char *)textCommandBuffer);
     displayTextCommandCursor();
 }
+
+void moveTextCommandCursorLeft() {
+    if (textCommandCursorIndex <= 0) {
+        return;
+    }
+    eraseTextCommandCursor();
+    textCommandCursorIndex -= 1;
+    displayTextCommandCursor();
+}
+
+void moveTextCommandCursorRight() {
+    if (textCommandCursorIndex >= strlen((char *)textCommandBuffer)) {
+        return;
+    }
+    eraseTextCommandCursor();
+    textCommandCursorIndex += 1;
+    displayTextCommandCursor();
+}
+
+void pasteClipboardIntoTextCommand() {
+    vector_t tempSystemClipboard;
+    while (true) {
+        int8_t *tempText;
+        int64_t tempTextLength;
+        if (shouldUseSystemClipboard) {
+            systemPasteClipboard(&tempSystemClipboard);
+            if (tempSystemClipboard.length <= 0) {
+                cleanUpSystemClipboardAllocation(&tempSystemClipboard);
+                break;
+            }
+            getVectorElement(&tempText, &tempSystemClipboard, 0);
+            int8_t tempContainsNewline;
+            removeBadCharacters(tempText, &tempContainsNewline);
+            tempTextLength = strlen((char *)tempText);
+        } else {
+            if (internalClipboard == NULL) {
+                break;
+            }
+            tempText = internalClipboard;
+            tempTextLength = internalClipboardSize;
+        }
+        int64_t tempCommandLength = strlen((char *)textCommandBuffer);
+        int64_t tempMaximumLength = getMaximumCommandLength();
+        int64_t tempPasteLength = 0;
+        while (tempCommandLength < tempMaximumLength && tempPasteLength < tempTextLength) {
+            int8_t tempCharacter = tempText[tempPasteLength];
+            if (tempCharacter == 0 || tempCharacter == '\n') {
+                break;
+            }
+            tempCommandLength += 1;
+            tempPasteLength += 1;
+        }
+        tempCommandLength = strlen((char *)textCommandBuffer);
+        eraseTextCommandCursor();
+        copyData(textCommandBuffer + textCommandCursorIndex + tempPasteLength, textCommandBuffer + textCommandCursorIndex, tempCommandLength - textCommandCursorIndex + 1);
+        copyData(textCommandBuffer + textCommandCursorIndex, tempText, tempPasteLength);
+        attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
+        attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        textCommandCursorIndex += tempPasteLength;
+        displayTextCommandCursor();
+        break;
+    }
+    if (shouldUseSystemClipboard) {
+        cleanUpSystemClipboardAllocation(&tempSystemClipboard);
+    }
+}
+
+

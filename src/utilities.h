@@ -1,4 +1,6 @@
 
+#include "vector.h"
+
 #ifndef UTILITIES_HEADER_FILE
 #define UTILITIES_HEADER_FILE
 
@@ -8,7 +10,6 @@
 #define PLATFORM_MAC 1
 #define PLATFORM_LINUX 2
 
-int8_t *clipboardFilePath;
 int8_t applicationPlatform;
 
 void copyData(int8_t *destination, int8_t *source, int64_t amount);
@@ -20,8 +21,11 @@ int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline);
 void convertTabsToSpaces(int8_t *text);
 int8_t isWordCharacter(int8_t tempCharacter);
 int8_t *mallocRealpath(int8_t *path);
-void systemCopyClipboardFile();
-void systemPasteClipboardFile();
+void systemCopyClipboard(int8_t *text);
+// Returns a vector of malloced lines.
+// Use cleanUpSystemClipboardAllocation to clean up.
+void systemPasteClipboard(vector_t *destination);
+void cleanUpSystemClipboardAllocation(vector_t *allocation);
 void addToHexadecimalText(int8_t *text, int64_t offset);
 void sleepMilliseconds(int32_t milliseconds);
 int8_t *getFileExtension(int8_t *path);

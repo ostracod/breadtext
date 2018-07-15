@@ -127,6 +127,7 @@ void setActivityMode(int8_t mode) {
     } else if (activityMode == TEXT_COMMAND_MODE) {
         if (mode != PREVIOUS_MODE) {
             textCommandBuffer[0] = 0;
+            textCommandCursorIndex = 0;
         }
         displayStatusBar();
     } else if (previousActivityMode == TEXT_COMMAND_MODE) {
@@ -224,14 +225,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
             macroKeyListLength += 1;
         }
     }
-    if (shouldUseBindings && activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
-        int8_t tempResult = invokeKeyBinding(key);
-        if (tempResult) {
-            return false;
+    if (!isConsumingSingleCharacter) {
+        if (shouldUseBindings && activityMode != TEXT_COMMAND_MODE && activityMode != HELP_MODE) {
+            int8_t tempResult = invokeKeyBinding(key);
+            if (tempResult) {
+                return false;
+            }
         }
-    }
-    if (shouldUseMappings) {
-        key = invokeKeyMapping(key);
+        if (shouldUseMappings) {
+            key = invokeKeyMapping(key);
+        }
     }
     if (isShowingNotification) {
         eraseNotification();
@@ -312,6 +315,15 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
         }
         if (key == '\n') {
             executeTextCommand();
+        }
+        if (key == KEY_LEFT) {
+            moveTextCommandCursorLeft();
+        }
+        if (key == KEY_RIGHT) {
+            moveTextCommandCursorRight();
+        }
+        if (key == KEY_BTAB) {
+            pasteClipboardIntoTextCommand();
         }
     } else {
         if (activityMode == COMMAND_MODE || activityMode == TEXT_ENTRY_MODE || activityMode == TEXT_REPLACE_MODE || activityMode == HIGHLIGHT_CHARACTER_MODE) {
@@ -807,11 +819,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     gotoMark(6);
                     break;
                 }
-                case '7':
-                {
-                    gotoMark(7);
-                    break;
-                }
                 case '!':
                 {
                     setMark(1);
@@ -840,11 +847,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case '^':
                 {
                     setMark(6);
-                    break;
-                }
-                case '&':
-                {
-                    setMark(7);
                     break;
                 }
                 default:
@@ -893,6 +895,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case ';':
                 {
                     toggleSemicolonAtEndOfLine();
+                    break;
+                }
+                case '7':
+                {
+                    joinCurrentLineToNextLine();
+                    break;
+                }
+                case '&':
+                {
+                    joinCurrentLineToPreviousLine();
                     break;
                 }
                 default:
@@ -1265,6 +1277,7 @@ int8_t initializeApplication() {
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;
+    internalClipboard = NULL;
     shouldUseSystemClipboard = true;
     shouldHighlightSyntax = true;
     commentPrefix = NULL;
@@ -1307,7 +1320,7 @@ void resetApplication() {
 
 int main(int argc, const char *argv[]) {
     
-    strcpy((char *)applicationVersion, "1.2.0");
+    strcpy((char *)applicationVersion, "1.3.0");
     
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);
@@ -1366,7 +1379,6 @@ int main(int argc, const char *argv[]) {
     } else {
         filePath = mallocRealpath((int8_t *)(argv[1]));
     }
-    clipboardFilePath = mallocRealpath((int8_t *)"./.temporaryBreadtextClipboard");
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
     rcScriptFilePath = mallocRealpath((int8_t *)"~/.breadtextrc.btsl");
     syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");

@@ -6,6 +6,7 @@
 #include <time.h>
 #include <wordexp.h>
 #include <unistd.h>
+#include "vector.h"
 #include "breadtext.h"
 #include "utilities.h"
 
@@ -136,34 +137,46 @@ int8_t *mallocRealpath(int8_t *path) {
     return output;
 }
 
-void systemCopyClipboardFile() {
+void systemCopyClipboard(int8_t *text) {
+    FILE *tempProcess;
     if (applicationPlatform == PLATFORM_LINUX || shouldUseXclip) {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "xclip -selection clipboard \"%s\" > /dev/null 2>&1", (char *)clipboardFilePath);
-        system((char *)tempCommand);
+        tempProcess = popen("xclip -selection clipboard", "w");
     } else {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "cat \"%s\" | pbcopy > /dev/null 2>&1", (char *)clipboardFilePath);
-        system((char *)tempCommand);
+        tempProcess = popen("pbcopy", "w");
     }
+    fwrite(text, 1, strlen((char *)text), tempProcess);
+    pclose(tempProcess);
 }
 
-void systemPasteClipboardFile() {
-    int8_t tempCommand[5000];
-    sprintf((char *)tempCommand, "touch \"%s\" > /dev/null 2>&1", (char *)clipboardFilePath);
-    system((char *)tempCommand);
-    if (access((char *)clipboardFilePath, F_OK) == -1) {
-        return;
-    }
+void systemPasteClipboard(vector_t *destination) {
+    FILE *tempProcess;
     if (applicationPlatform == PLATFORM_LINUX || shouldUseXclip) {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "xclip -selection clipboard -o > \"%s\" 2> /dev/null", (char *)clipboardFilePath);
-        system((char *)tempCommand);
+        tempProcess = popen("xclip -selection clipboard -o", "r");
     } else {
-        int8_t tempCommand[5000];
-        sprintf((char *)tempCommand, "pbpaste > \"%s\" 2> /dev/null", (char *)clipboardFilePath);
-        system((char *)tempCommand);
+        tempProcess = popen("pbpaste", "r");
     }
+    createEmptyVector(destination, sizeof(int8_t *));
+    while (true) {
+        int8_t *tempText = NULL;
+        size_t tempSize = 0;
+        int64_t tempCount = getline((char **)&tempText, &tempSize, tempProcess);
+        if (tempCount < 0) {
+            break;
+        }
+        pushVectorElement(destination, &tempText);
+    }
+    pclose(tempProcess);
+}
+
+void cleanUpSystemClipboardAllocation(vector_t *allocation) {
+    int64_t index = 0;
+    while (index < allocation->length) {
+        int8_t *tempText;
+        getVectorElement(&tempText, allocation, index);
+        free(tempText);
+        index += 1;
+    }
+    cleanUpVector(allocation);
 }
 
 void addToHexadecimalText(int8_t *text, int64_t offset) {

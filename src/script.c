@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <curses.h>
+#include <inttypes.h>
 #include "utilities.h"
 #include "vector.h"
 #include "scriptValue.h"
@@ -2301,7 +2302,7 @@ void displayScriptError() {
         }
         sprintf(
             (char *)tempText,
-            "ERROR: %s (Line %lld, %s)",
+            "ERROR: %s (Line %" PRId64 ", %s)",
             (char *)scriptErrorMessage,
             scriptErrorLine.number,
             (char *)(tempPath + tempFileNameIndex)

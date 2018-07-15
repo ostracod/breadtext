@@ -45,6 +45,7 @@ int8_t *helpText[] = {
     (int8_t *)"Shift + / = Enter find command",
     (int8_t *)"V = Highlight line without indentation or newline",
     (int8_t *)"Shift + V = Enter gotoLine command",
+    (int8_t *)"Shift + Tab = Paste in text command entry",
     (int8_t *)"",
     (int8_t *)"MOVEMENT",
     (int8_t *)"",
@@ -66,8 +67,8 @@ int8_t *helpText[] = {
     (int8_t *)"Shift + N = Find previous instance",
     (int8_t *)"F = Find next instance of word under cursor",
     (int8_t *)"Shift + F = Find previous instance of word under cursor",
-    (int8_t *)"1-7 = Go to mark",
-    (int8_t *)"Shift + 1-7 = Set mark",
+    (int8_t *)"1-6 = Go to mark",
+    (int8_t *)"Shift + 1-6 = Set mark",
     (int8_t *)"",
     (int8_t *)"HIGHLIGHT ACTIONS",
     (int8_t *)"",
@@ -106,6 +107,8 @@ int8_t *helpText[] = {
     (int8_t *)"+ = Increment number under cursor",
     (int8_t *)"- = Decrement number under cursor",
     (int8_t *)"_ = Toggle boolean literal",
+    (int8_t *)"7 = Join next line and current line",
+    (int8_t *)"Shift + 7 = Join previous line and current line",
     (int8_t *)"",
     (int8_t *)"COMMANDS",
     (int8_t *)"",
@@ -262,9 +265,14 @@ void eraseTextCommandCursor() {
     if (activityMode != TEXT_COMMAND_MODE) {
         return;
     }
-    int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
     attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, tempPosX, ' ');
+    int8_t tempCharacter;
+    if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
+        tempCharacter = textCommandBuffer[textCommandCursorIndex];
+    } else {
+        tempCharacter = ' ';
+    }
+    mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
     attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
 }
 
@@ -273,9 +281,14 @@ void displayTextCommandCursor() {
         return;
     }
     refresh();
-    int32_t tempPosX = strlen((char *)textCommandBuffer) + 1;
     attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
-    mvaddch(windowHeight - 1, tempPosX, ' ');
+    int8_t tempCharacter;
+    if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
+        tempCharacter = textCommandBuffer[textCommandCursorIndex];
+    } else {
+        tempCharacter = ' ';
+    }
+    mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
     attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
 }
 

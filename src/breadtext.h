@@ -56,6 +56,7 @@ int8_t hasLastDisplayHighlight;
 textPos_t lastDisplayCursorTextPos;
 textPos_t lastDisplayHighlightTextPos;
 int8_t textCommandBuffer[1000];
+int32_t textCommandCursorIndex;
 int32_t helpScroll;
 int8_t *filePath;
 int8_t *rcFilePath;
