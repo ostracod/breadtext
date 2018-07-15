@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <curses.h>
+#include <inttypes.h>
 #include "utilities.h"
 #include "breadtext.h"
 #include "textLine.h"
@@ -99,13 +100,13 @@ int8_t processSystematicTestCommand(int8_t *command) {
             return false;
         }
         int64_t tempLineCount1;
-        sscanf((char *)(tempTermList[1]), "%lld", &tempLineCount1);
+        sscanf((char *)(tempTermList[1]), "%" PRId64, &tempLineCount1);
         textLine_t *tempLine = getRightmostTextLine(rootTextLine);
         int64_t tempLineCount2 = getTextLineNumber(tempLine);
         assertionCount += 1;
         if (tempLineCount1 != tempLineCount2) {
             failedAssertionCount += 1;
-            fprintf(systematicTestResultFile, "LINE COUNT ASSERTION FAILURE\nExpected: %lld\nFound: %lld\n", tempLineCount1, tempLineCount2);
+            fprintf(systematicTestResultFile, "LINE COUNT ASSERTION FAILURE\nExpected: %" PRId64 "\nFound: %" PRId64 "\n", tempLineCount1, tempLineCount2);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -118,11 +119,11 @@ int8_t processSystematicTestCommand(int8_t *command) {
             return false;
         }
         int64_t tempLineNumber;
-        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber);
+        sscanf((char *)(tempTermList[1]), "%" PRId64, &tempLineNumber);
         textLine_t *tempLine = getTextLineByNumber(tempLineNumber);
         assertionCount += 1;
         if (tempLine == NULL) {
-            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE\nMissing line number %lld\n", tempLineNumber);
+            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE\nMissing line number %" PRId64 "\n", tempLineNumber);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -139,7 +140,7 @@ int8_t processSystematicTestCommand(int8_t *command) {
             int8_t tempText[tempLine->textAllocation.length + 1];
             copyData(tempText, tempLine->textAllocation.text, tempLine->textAllocation.length + 1);
             tempText[tempLine->textAllocation.length] = 0;
-            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %lld)\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
+            fprintf(systematicTestResultFile, "LINE ASSERTION FAILURE (line %" PRId64 ")\nExpected: %s\nFound: %s\n", tempLineNumber, tempTermList[2], tempText);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -153,14 +154,14 @@ int8_t processSystematicTestCommand(int8_t *command) {
         }
         int64_t tempLineNumber1;
         int64_t index1;
-        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber1);
-        sscanf((char *)(tempTermList[2]), "%lld", &index1);
+        sscanf((char *)(tempTermList[1]), "%" PRId64, &tempLineNumber1);
+        sscanf((char *)(tempTermList[2]), "%" PRId64, &index1);
         int64_t tempLineNumber2 = getTextLineNumber(cursorTextPos.line);
         int64_t index2 = getTextPosIndex(&cursorTextPos);
         assertionCount += 1;
         if (tempLineNumber1 != tempLineNumber2 || index1 != index2) {
             failedAssertionCount += 1;
-            fprintf(systematicTestResultFile, "POS ASSERTION FAILURE\nExpected: %lld %lld\nFound: %lld %lld\n", tempLineNumber1, index1, tempLineNumber2, index2);
+            fprintf(systematicTestResultFile, "POS ASSERTION FAILURE\nExpected: %" PRId64 " %" PRId64 "\nFound: %" PRId64 " %" PRId64 "\n", tempLineNumber1, index1, tempLineNumber2, index2);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -174,14 +175,14 @@ int8_t processSystematicTestCommand(int8_t *command) {
         }
         int64_t tempLineNumber1;
         int64_t index1;
-        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber1);
-        sscanf((char *)(tempTermList[2]), "%lld", &index1);
+        sscanf((char *)(tempTermList[1]), "%" PRId64, &tempLineNumber1);
+        sscanf((char *)(tempTermList[2]), "%" PRId64, &index1);
         int64_t tempLineNumber2 = getTextLineNumber(highlightTextPos.line);
         int64_t index2 = getTextPosIndex(&highlightTextPos);
         assertionCount += 1;
         if (tempLineNumber1 != tempLineNumber2 || index1 != index2) {
             failedAssertionCount += 1;
-            fprintf(systematicTestResultFile, "HIGHLIGHT POS ASSERTION FAILURE\nExpected: %lld %lld\nFound: %lld %lld\n", tempLineNumber1, index1, tempLineNumber2, index2);
+            fprintf(systematicTestResultFile, "HIGHLIGHT POS ASSERTION FAILURE\nExpected: %" PRId64 " %" PRId64 "\nFound: %" PRId64 " %" PRId64 "\n", tempLineNumber1, index1, tempLineNumber2, index2);
             fflush(systematicTestResultFile);
             return false;
         }
@@ -218,16 +219,16 @@ int8_t processSystematicTestCommand(int8_t *command) {
         }
         int64_t tempLineNumber;
         int64_t index;
-        sscanf((char *)(tempTermList[1]), "%lld", &tempLineNumber);
-        sscanf((char *)(tempTermList[2]), "%lld", &index);
+        sscanf((char *)(tempTermList[1]), "%" PRId64, &tempLineNumber);
+        sscanf((char *)(tempTermList[2]), "%" PRId64, &index);
         textLine_t *tempLine = getTextLineByNumber(tempLineNumber);
         if (tempLine == NULL) {
-            fprintf(systematicTestResultFile, "ERROR: Missing line number %lld.\n", tempLineNumber);
+            fprintf(systematicTestResultFile, "ERROR: Missing line number %" PRId64 ".\n", tempLineNumber);
             fflush(systematicTestResultFile);
             return false;
         }
         if (index > tempLine->textAllocation.length) {
-            fprintf(systematicTestResultFile, "ERROR: Line number %lld is too short.\n", tempLineNumber);
+            fprintf(systematicTestResultFile, "ERROR: Line number %" PRId64 " is too short.\n", tempLineNumber);
             fflush(systematicTestResultFile);
             return false;
         }
