@@ -11,13 +11,13 @@ class <name> extends <class>, <class>, <class>...
 end
 ```
 
+Superclass chain: `<class> -> <class> -> <class> -> ...`
+
 Member variable declaration and initialization statements:
 
 ```
-[static] mem <name> [= <expression>] [overrides <class>]
+[static] mem <name> [= <expression>] [overrides <superclass chain>]
 ```
-
-Superclass chain: `<class> -> <class> -> <class> -> ...`
 
 Method declaration statements:
 
