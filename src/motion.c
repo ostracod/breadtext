@@ -707,8 +707,9 @@ void setMark(int64_t index) {
         notifyUser((int8_t *)"Error: Bad mark number.");
         return;
     }
-    markList[index] = cursorTextPos.line;
-    markIsSetList[index] = true;
+    mark_t *tempMark = markList + index;
+    tempMark->textLine = cursorTextPos.line;
+    tempMark->isSet = true;
     notifyUser((int8_t *)"Set mark.");
 }
 
@@ -717,12 +718,13 @@ void gotoMark(int64_t index) {
         notifyUser((int8_t *)"Error: Bad mark number.");
         return;
     }
-    if (!markIsSetList[index]) {
+    mark_t *tempMark = markList + index;
+    if (!tempMark->isSet) {
         notifyUser((int8_t *)"Error: Mark is not set.");
         return;
     }
     textPos_t tempTextPos;
-    textLine_t *tempLine = markList[index];
+    textLine_t *tempLine = tempMark->textLine;
     tempTextPos.line = tempLine;
     setTextPosIndex(&tempTextPos, tempLine->textAllocation.length);
     moveCursor(&tempTextPos);

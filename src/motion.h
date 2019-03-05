@@ -5,7 +5,12 @@
 #ifndef CURSOR_MOTION_HEADER_FILE
 #define CURSOR_MOTION_HEADER_FILE
 
-#define MARK_AMOUNT 10
+#define MARK_AMOUNT 6
+
+typedef struct mark {
+    int8_t isSet;
+    textLine_t *textLine;
+} mark_t;
 
 int8_t searchTerm[1000];
 int64_t searchTermLength;
@@ -13,8 +18,7 @@ regex_t searchRegexForward;
 regex_t searchRegexBackward;
 int8_t searchRegexIsEmpty;
 int8_t searchTermIsRegex;
-textLine_t *markList[MARK_AMOUNT];
-int8_t markIsSetList[MARK_AMOUNT];
+mark_t markList[MARK_AMOUNT];
 int8_t isCaseSensitive;
 
 void moveCursor(textPos_t *pos);

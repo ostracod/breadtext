@@ -49,14 +49,15 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
     }
     int8_t index = 0;
     while (index < MARK_AMOUNT) {
-        if (markIsSetList[index]) {
-            textLine_t **tempTextLine = markList + index;
+        mark_t *tempMark = markList + index;
+        if (tempMark->isSet) {
+            textLine_t **tempTextLine = &(tempMark->textLine);
             if (lineToBeDeleted == *tempTextLine) {
                 *tempTextLine = getNextTextLine(lineToBeDeleted);
                 if (*tempTextLine == NULL) {
                     *tempTextLine = getPreviousTextLine(lineToBeDeleted);
                     if (*tempTextLine == NULL) {
-                        markIsSetList[index] = false;
+                        tempMark->isSet = false;
                     }
                 }
             }
@@ -791,62 +792,62 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 }
                 case '1':
                 {
-                    gotoMark(1);
+                    gotoMark(0);
                     break;
                 }
                 case '2':
                 {
-                    gotoMark(2);
+                    gotoMark(1);
                     break;
                 }
                 case '3':
                 {
-                    gotoMark(3);
+                    gotoMark(2);
                     break;
                 }
                 case '4':
                 {
-                    gotoMark(4);
+                    gotoMark(3);
                     break;
                 }
                 case '5':
                 {
-                    gotoMark(5);
+                    gotoMark(4);
                     break;
                 }
                 case '6':
                 {
-                    gotoMark(6);
+                    gotoMark(5);
                     break;
                 }
                 case '!':
                 {
-                    setMark(1);
+                    setMark(0);
                     break;
                 }
                 case '@':
                 {
-                    setMark(2);
+                    setMark(1);
                     break;
                 }
                 case '#':
                 {
-                    setMark(3);
+                    setMark(2);
                     break;
                 }
                 case '$':
                 {
-                    setMark(4);
+                    setMark(3);
                     break;
                 }
                 case '%':
                 {
-                    setMark(5);
+                    setMark(4);
                     break;
                 }
                 case '^':
                 {
-                    setMark(6);
+                    setMark(5);
                     break;
                 }
                 default:
@@ -1268,7 +1269,7 @@ int8_t initializeApplication() {
     setColorScheme(0);
     int8_t index = 0;
     while (index < MARK_AMOUNT) {
-        markIsSetList[index] = false;
+        markList[index].isSet = false;
         index += 1;
     }
     indentationWidth = 4;
