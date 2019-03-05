@@ -10,6 +10,7 @@
 typedef struct mark {
     int8_t isSet;
     textLine_t *textLine;
+    int64_t characterIndex;
 } mark_t;
 
 int8_t searchTerm[1000];

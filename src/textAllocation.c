@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "utilities.h"
 #include "textAllocation.h"
+#include "motion.h"
 
 void eraseSyntaxHighlighting(textAllocation_t *allocation) {
     if (allocation->syntaxHighlighting != NULL) {
@@ -39,6 +40,17 @@ void insertTextIntoTextAllocation(textAllocation_t *allocation, int64_t index, i
     copyData(allocation->text + index + amount, allocation->text + index, tempAmount);
     copyData(allocation->text + index, text, amount);
     allocation->length = tempLength;
+    int8_t tempMarkIndex = 0;
+    while (tempMarkIndex < MARK_AMOUNT) {
+        mark_t *tempMark = markList + tempMarkIndex;
+        if (tempMark->isSet) {
+            textAllocation_t *tempAllocation = &(tempMark->textLine->textAllocation);
+            if (allocation == tempAllocation && tempMark->characterIndex >= index) {
+                tempMark->characterIndex += amount;
+            }
+        }
+        tempMarkIndex += 1;
+    }
 }
 
 void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, int64_t amount) {
@@ -50,6 +62,21 @@ void removeTextFromTextAllocation(textAllocation_t *allocation, int64_t index, i
         setTextAllocationSize(allocation, tempLength * 2);
     }
     allocation->length = tempLength;
+    int8_t tempMarkIndex = 0;
+    while (tempMarkIndex < MARK_AMOUNT) {
+        mark_t *tempMark = markList + tempMarkIndex;
+        if (tempMark->isSet) {
+            textAllocation_t *tempAllocation = &(tempMark->textLine->textAllocation);
+            if (allocation == tempAllocation && tempMark->characterIndex >= index) {
+                if (tempMark->characterIndex >= index + amount) {
+                    tempMark->characterIndex -= amount;
+                } else {
+                    tempMark->characterIndex = index;
+                }
+            }
+        }
+        tempMarkIndex += 1;
+    }
 }
 
 void cleanUpTextAllocation(textAllocation_t *allocation) {

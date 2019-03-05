@@ -709,6 +709,7 @@ void setMark(int64_t index) {
     }
     mark_t *tempMark = markList + index;
     tempMark->textLine = cursorTextPos.line;
+    tempMark->characterIndex = getTextPosIndex(&cursorTextPos);
     tempMark->isSet = true;
     notifyUser((int8_t *)"Set mark.");
 }
@@ -726,7 +727,7 @@ void gotoMark(int64_t index) {
     textPos_t tempTextPos;
     textLine_t *tempLine = tempMark->textLine;
     tempTextPos.line = tempLine;
-    setTextPosIndex(&tempTextPos, tempLine->textAllocation.length);
+    setTextPosIndex(&tempTextPos, tempMark->characterIndex);
     moveCursor(&tempTextPos);
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;

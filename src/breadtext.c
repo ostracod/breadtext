@@ -60,6 +60,9 @@ void handleTextLineDeleted(textLine_t *lineToBeDeleted) {
                         tempMark->isSet = false;
                     }
                 }
+                if (tempMark->isSet) {
+                    tempMark->characterIndex = (*tempTextLine)->textAllocation.length;
+                }
             }
         }
         index += 1;
@@ -1321,7 +1324,7 @@ void resetApplication() {
 
 int main(int argc, const char *argv[]) {
     
-    strcpy((char *)applicationVersion, "1.3.0");
+    strcpy((char *)applicationVersion, "1.4.0");
     
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);
