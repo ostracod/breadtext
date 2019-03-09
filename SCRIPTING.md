@@ -145,7 +145,7 @@ end
 Retrieve specific variables in import body:
 
 ```
-share <name>, <name>, <name>
+share <name>, <name>, <name>...
 ```
 
 Retrieve every variable in import body:

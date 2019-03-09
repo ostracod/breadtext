@@ -13,13 +13,13 @@
 #include "indentation.h"
 #include "breadtext.h"
 
-int32_t getTextLineIndentationLevel(textLine_t *line) {
+// Set length to -1 for null or newline terminated text.
+int32_t getTextLineIndentationLevelHelper(int8_t *text, int64_t length) {
     int32_t output = 0;
     int8_t tempSpaceCount = 0;
-    int64_t tempLength = line->textAllocation.length;
     int64_t index = 0;
-    while (index < tempLength) {
-        int8_t tempCharacter = line->textAllocation.text[index];
+    while (index < length || length < 0) {
+        int8_t tempCharacter = text[index];
         if (tempCharacter == ' ') {
             tempSpaceCount += 1;
             if (tempSpaceCount >= indentationWidth) {
@@ -35,6 +35,13 @@ int32_t getTextLineIndentationLevel(textLine_t *line) {
         index += 1;
     }
     return output;
+}
+
+int32_t getTextLineIndentationLevel(textLine_t *line) {
+    return getTextLineIndentationLevelHelper(
+        line->textAllocation.text,
+        line->textAllocation.length
+    );
 }
 
 int64_t getTextLineIndentationEndIndex(textLine_t *line) {
@@ -185,6 +192,13 @@ int64_t getIndentationWidth(int64_t level) {
         return level;
     }
     return level * indentationWidth;
+}
+
+// Returns the new character offset after indentation.
+int64_t setTextAllocationIndentationLevel(textAllocation_t *allocation, int32_t level) {
+    // TODO: Implement.
+    
+    return 0;
 }
 
 void increaseSelectionIndentationLevel() {

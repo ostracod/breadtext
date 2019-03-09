@@ -186,19 +186,28 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
-void pasteBeforeCursorHelper(vector_t *systemClipboard, int32_t baseIndentationLevel) {
-    int64_t internalClipboardIndex = 0;
-    int64_t systemClipboardLineIndex = 0;
+int32_t getClipboardBaseIndentationLevel(vector_t *systemClipboard) {
+    // TODO: Implement.
+    
+    return 0;
+}
+
+void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirstLine) {
     if (!shouldUseSystemClipboard) {
         if (internalClipboard == NULL) {
             return;
         }
     }
+    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    int32_t clipboardBaseIndentationLevel = getClipboardBaseIndentationLevel(systemClipboard);
+    int64_t internalClipboardIndex = 0;
+    int64_t systemClipboardLineIndex = 0;
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
         int8_t *tempText;
         int64_t tempCount;
         int64_t tempBufferSize;
+        // TODO: I should probably use a vector_t for the internal clipboard.
         if (shouldUseSystemClipboard) {
             if (systemClipboardLineIndex >= systemClipboard->length) {
                 break;
@@ -210,7 +219,7 @@ void pasteBeforeCursorHelper(vector_t *systemClipboard, int32_t baseIndentationL
             if (internalClipboardIndex >= internalClipboardSize) {
                 break;
             }
-            tempText = internalClipboard + internalClipboardIndex; 
+            tempText = internalClipboard + internalClipboardIndex;
             tempCount = 0;
             while (internalClipboardIndex < internalClipboardSize) {
                 int8_t tempCharacter = internalClipboard[internalClipboardIndex];
@@ -233,8 +242,19 @@ void pasteBeforeCursorHelper(vector_t *systemClipboard, int32_t baseIndentationL
         int64_t index = getTextPosIndex(&cursorTextPos);
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
-        recordTextLineInserted(cursorTextPos.line);
         index += tempCount;
+        if (!shouldIndentFirstLine || cursorTextPos.line != tempFirstLine) {
+            int32_t tempIndentationLevel = getTextLineIndentationLevelHelper(tempText, -1);
+            int64_t tempWidth = getTextLineIndentationEndIndex(cursorTextPos.line);
+            int64_t tempOffset = setTextAllocationIndentationLevel(
+                &(cursorTextPos.line->textAllocation),
+                baseIndentationLevel + tempIndentationLevel - clipboardBaseIndentationLevel
+            );
+            if (index >= tempWidth) {
+                index += tempOffset;
+            }
+        }
+        recordTextLineInserted(cursorTextPos.line);
         setTextPosIndex(&cursorTextPos, index);
         if (tempContainsNewline) {
             insertNewlineBeforeCursorHelper(baseIndentationLevel, true);
@@ -296,15 +316,15 @@ void pasteBeforeCursor() {
     } else {
         tempLastIsHighlightingLines = false;
     }
-    int32_t tempLevel;
+    int8_t tempShouldIndentFirstLine;
     if (clipboardEndsInNewline(&tempSystemClipboard) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
-        tempLevel = 0;
+        tempShouldIndentFirstLine = true;
     } else {
-        tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
+        tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(&tempSystemClipboard, tempLevel);
+    pasteBeforeCursorHelper(&tempSystemClipboard, tempShouldIndentFirstLine);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }
@@ -327,11 +347,11 @@ void pasteAfterCursor() {
         tempLastIsHighlightingLines = false;
     }
     int8_t tempClipboardEndsInNewline = clipboardEndsInNewline(&tempSystemClipboard);
-    int32_t tempLevel;
+    int8_t tempShouldIndentFirstLine;
     if (tempLastIsHighlightingLines && tempClipboardEndsInNewline) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
-        tempLevel = 0;
+        tempShouldIndentFirstLine = true;
     } else if (!tempLastIsHighlighting) {
         if (tempClipboardEndsInNewline) {
             eraseCursor();
@@ -345,15 +365,15 @@ void pasteAfterCursor() {
                 cursorTextPos.row = 0;
                 cursorTextPos.column = 0;
             }
-            tempLevel = 0;
+            tempShouldIndentFirstLine = true;
         } else {
             moveCursorRight(1);
-            tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
+            tempShouldIndentFirstLine = false;
         }
     } else {
-        tempLevel = getTextLineIndentationLevel(cursorTextPos.line);
+        tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(&tempSystemClipboard, tempLevel);
+    pasteBeforeCursorHelper(&tempSystemClipboard, tempShouldIndentFirstLine);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }
