@@ -434,23 +434,17 @@ void pasteClipboardIntoTextCommand() {
     while (true) {
         int8_t *tempText;
         int64_t tempTextLength;
+        vector_t *tempClipboard;
         if (shouldUseSystemClipboard) {
             systemPasteClipboard(&tempSystemClipboard);
-            if (tempSystemClipboard.length <= 0) {
-                cleanUpSystemClipboardAllocation(&tempSystemClipboard);
-                break;
-            }
-            getVectorElement(&tempText, &tempSystemClipboard, 0);
-            int8_t tempContainsNewline;
-            removeBadCharacters(tempText, &tempContainsNewline);
-            tempTextLength = strlen((char *)tempText);
+            tempClipboard = &tempSystemClipboard;
         } else {
-            if (internalClipboard == NULL) {
-                break;
-            }
-            tempText = internalClipboard;
-            tempTextLength = internalClipboardSize;
+            tempClipboard = &internalClipboard;
         }
+        getVectorElement(&tempText, tempClipboard, 0);
+        int8_t tempContainsNewline;
+        removeBadCharacters(tempText, &tempContainsNewline);
+        tempTextLength = strlen((char *)tempText);
         int64_t tempCommandLength = strlen((char *)textCommandBuffer);
         int64_t tempMaximumLength = getMaximumCommandLength();
         int64_t tempPasteLength = 0;

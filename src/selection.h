@@ -2,17 +2,16 @@
 #ifndef SELECTION_HEADER_FILE
 #define SELECTION_HEADER_FILE
 
-int8_t *internalClipboard;
-int64_t internalClipboardSize;
+vector_t internalClipboard;
 
 int8_t *allocateStringFromSelection();
-int8_t copySelectionHelper();
+void copySelectionHelper();
 void copySelection();
 void deleteSelectionHelper();
 void deleteSelection();
 void cutSelection();
-int32_t getClipboardBaseIndentationLevel(vector_t *systemClipboard);
-void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirstLine);
+int32_t getClipboardBaseIndentationLevel(vector_t *clipboard);
+void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine);
 void pasteBeforeCursor();
 void pasteAfterCursor();
 void swapSelection();

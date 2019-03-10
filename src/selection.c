@@ -66,33 +66,59 @@ int8_t *allocateStringFromSelection() {
     return output;
 }
 
-int8_t copyString(int8_t *text) {
-    int64_t tempLength = strlen((char *)text);
+void copyString(int8_t *text) {
     if (shouldUseSystemClipboard) {
         systemCopyClipboard(text);
     } else {
-        if (internalClipboard != NULL) {
-            free(internalClipboard);
+        uint64_t index = 0;
+        while (index < internalClipboard.length) {
+            int8_t *tempText;
+            getVectorElement(&tempText, &internalClipboard, index);
+            free(tempText);
+            index += 1;
         }
-        internalClipboard = malloc(tempLength);
-        copyData(internalClipboard, text, tempLength);
-        internalClipboardSize = tempLength;
+        cleanUpVector(&internalClipboard);
+        createEmptyVector(&internalClipboard, sizeof(int8_t *));
+        int64_t tempLineCount = 0;
+        int64_t tempStartIndex = 0;
+        while (true) {
+            int8_t tempHasReachedEnd = false;
+            int64_t tempEndIndex = tempStartIndex;
+            while (true) {
+                int8_t tempCharacter = text[tempEndIndex];
+                if (tempCharacter == 0) {
+                    tempHasReachedEnd = true;
+                    break;
+                }
+                tempEndIndex += 1;
+                if (tempCharacter == '\n') {
+                    break;
+                }
+            }
+            int64_t tempLength = tempEndIndex - tempStartIndex;
+            if (tempLength > 0 || (tempHasReachedEnd && tempLineCount <= 0)) {
+                int8_t *tempText = malloc(tempLength + 1);
+                memcpy(tempText, text + tempStartIndex, tempLength);
+                tempText[tempLength] = 0;
+                pushVectorElement(&internalClipboard, &tempText);
+            }
+            tempLineCount += 1;
+            if (tempHasReachedEnd) {
+                break;
+            }
+            tempStartIndex = tempEndIndex;
+        }
     }
-    return true;
 }
 
-int8_t copySelectionHelper() {
+void copySelectionHelper() {
     int8_t *tempText = allocateStringFromSelection();
-    int8_t output = copyString(tempText);
+    copyString(tempText);
     free(tempText);
-    return output;
 }
 
 void copySelection() {
-    int8_t tempResult = copySelectionHelper();
-    if (!tempResult) {
-        return;
-    }
+    copySelectionHelper();
     setActivityMode(COMMAND_MODE);
     if (shouldUseSystemClipboard) {
         notifyUser((int8_t *)"Copied selection. (System)");
@@ -171,10 +197,7 @@ void deleteSelection() {
 }
 
 void cutSelection() {
-    int8_t tempResult = copySelectionHelper();
-    if (!tempResult) {
-        return;
-    }
+    copySelectionHelper();
     addHistoryFrame();
     deleteSelectionHelper();
     if (shouldUseSystemClipboard) {
@@ -186,59 +209,26 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
-int32_t getClipboardBaseIndentationLevel(vector_t *systemClipboard) {
+int32_t getClipboardBaseIndentationLevel(vector_t *clipboard) {
     // TODO: Implement.
     
     return 0;
 }
 
-void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirstLine) {
-    if (!shouldUseSystemClipboard) {
-        if (internalClipboard == NULL) {
-            return;
-        }
-    }
+void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine) {
     int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
-    int32_t clipboardBaseIndentationLevel = getClipboardBaseIndentationLevel(systemClipboard);
-    int64_t internalClipboardIndex = 0;
-    int64_t systemClipboardLineIndex = 0;
+    int32_t clipboardBaseIndentationLevel = getClipboardBaseIndentationLevel(clipboard);
+    int64_t tempClipboardLineIndex = 0;
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
+        if (tempClipboardLineIndex >= clipboard->length) {
+            break;
+        }
         int8_t *tempText;
-        int64_t tempCount;
-        int64_t tempBufferSize;
-        // TODO: I should probably use a vector_t for the internal clipboard.
-        if (shouldUseSystemClipboard) {
-            if (systemClipboardLineIndex >= systemClipboard->length) {
-                break;
-            }
-            getVectorElement(&tempText, systemClipboard, systemClipboardLineIndex);
-            systemClipboardLineIndex += 1;
-            tempBufferSize = 0;
-        } else {
-            if (internalClipboardIndex >= internalClipboardSize) {
-                break;
-            }
-            tempText = internalClipboard + internalClipboardIndex;
-            tempCount = 0;
-            while (internalClipboardIndex < internalClipboardSize) {
-                int8_t tempCharacter = internalClipboard[internalClipboardIndex];
-                tempCount += 1;
-                internalClipboardIndex += 1;
-                if (tempCharacter == '\n') {
-                    break;
-                }
-            }
-            tempBufferSize = tempCount + 1;
-        }
-        int8_t tempBuffer[tempBufferSize];
-        if (!shouldUseSystemClipboard) {
-            copyData(tempBuffer, tempText, tempCount);
-            tempBuffer[tempCount] = 0;
-            tempText = tempBuffer;
-        }
+        getVectorElement(&tempText, clipboard, tempClipboardLineIndex);
+        tempClipboardLineIndex += 1;
         int8_t tempContainsNewline;
-        tempCount = removeBadCharacters(tempText, &tempContainsNewline);
+        int64_t tempCount = removeBadCharacters(tempText, &tempContainsNewline);
         int64_t index = getTextPosIndex(&cursorTextPos);
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
@@ -273,21 +263,14 @@ void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirst
     textBufferIsDirty = true;
 }
 
-int8_t clipboardEndsInNewline(vector_t *systemClipboard) {
-    if (shouldUseSystemClipboard) {
-        int8_t *tempText;
-        getVectorElement(&tempText, systemClipboard, systemClipboard->length - 1);
-        int64_t tempLength = strlen((char *)tempText);
-        if (tempLength > 0) {
-            return (tempText[tempLength - 1] == '\n');
-        } else {
-            return false;
-        }
+int8_t clipboardEndsInNewline(vector_t *clipboard) {
+    int8_t *tempText;
+    getVectorElement(&tempText, clipboard, clipboard->length - 1);
+    int64_t tempLength = strlen((char *)tempText);
+    if (tempLength > 0) {
+        return (tempText[tempLength - 1] == '\n');
     } else {
-        if (internalClipboard == NULL) {
-            return false;
-        }
-        return (internalClipboard[internalClipboardSize - 1] == '\n');
+        return false;
     }
 }
 
@@ -304,8 +287,12 @@ int8_t isHighlightingLines() {
 
 void pasteBeforeCursor() {
     vector_t tempSystemClipboard;
+    vector_t *tempClipboard;
     if (shouldUseSystemClipboard) {
         systemPasteClipboard(&tempSystemClipboard);
+        tempClipboard = &tempSystemClipboard;
+    } else {
+        tempClipboard = &internalClipboard;
     }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
@@ -317,14 +304,14 @@ void pasteBeforeCursor() {
         tempLastIsHighlightingLines = false;
     }
     int8_t tempShouldIndentFirstLine;
-    if (clipboardEndsInNewline(&tempSystemClipboard) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
+    if (clipboardEndsInNewline(tempClipboard) && (!tempLastIsHighlighting || tempLastIsHighlightingLines)) {
         cursorTextPos.row = 0;
         cursorTextPos.column = 0;
         tempShouldIndentFirstLine = true;
     } else {
         tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(&tempSystemClipboard, tempShouldIndentFirstLine);
+    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }
@@ -334,8 +321,12 @@ void pasteBeforeCursor() {
 
 void pasteAfterCursor() {
     vector_t tempSystemClipboard;
+    vector_t *tempClipboard;
     if (shouldUseSystemClipboard) {
         systemPasteClipboard(&tempSystemClipboard);
+        tempClipboard = &tempSystemClipboard;
+    } else {
+        tempClipboard = &internalClipboard;
     }
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
@@ -346,7 +337,7 @@ void pasteAfterCursor() {
     } else {
         tempLastIsHighlightingLines = false;
     }
-    int8_t tempClipboardEndsInNewline = clipboardEndsInNewline(&tempSystemClipboard);
+    int8_t tempClipboardEndsInNewline = clipboardEndsInNewline(tempClipboard);
     int8_t tempShouldIndentFirstLine;
     if (tempLastIsHighlightingLines && tempClipboardEndsInNewline) {
         cursorTextPos.row = 0;
@@ -373,7 +364,7 @@ void pasteAfterCursor() {
     } else {
         tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(&tempSystemClipboard, tempShouldIndentFirstLine);
+    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }
@@ -385,14 +376,12 @@ void swapSelection() {
     int8_t *tempText = allocateStringFromSelection();
     deleteSelection();
     pasteBeforeCursor();
-    int8_t tempResult = copyString(tempText);
+    copyString(tempText);
     free(tempText);
-    if (tempResult) {
-        if (shouldUseSystemClipboard) {
-            notifyUser((int8_t *)"Copied selection. (System)");
-        } else {
-            notifyUser((int8_t *)"Copied selection. (Internal)");
-        }
+    if (shouldUseSystemClipboard) {
+        notifyUser((int8_t *)"Copied selection. (System)");
+    } else {
+        notifyUser((int8_t *)"Copied selection. (Internal)");
     }
 }
 

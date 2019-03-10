@@ -1281,7 +1281,10 @@ int8_t initializeApplication() {
     textBufferIsDirty = false;
     isStartOfNonconsecutiveEscapeSequence = false;
     lastIsStartOfNonconsecutiveEscapeSequence = false;
-    internalClipboard = NULL;
+    createEmptyVector(&internalClipboard, sizeof(int8_t *));
+    int8_t *tempText = malloc(1);
+    tempText[0] = 0;
+    pushVectorElement(&internalClipboard, &tempText);
     shouldUseSystemClipboard = true;
     shouldHighlightSyntax = true;
     commentPrefix = NULL;
