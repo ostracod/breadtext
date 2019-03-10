@@ -329,6 +329,26 @@ void insertTextReplaceModeCharacter(int8_t character) {
     }
 }
 
+void trimTextAllocationTrailingWhitespace(textAllocation_t *allocation) {
+    int64_t index = allocation->length - 1;
+    while (index >= 0) {
+        int8_t tempCharacter = allocation->text[index];
+        if (tempCharacter != ' ' && tempCharacter != '\t') {
+            break;
+        }
+        index -= 1;
+    }
+    if (index < 0) {
+        return;
+    }
+    int64_t tempStartIndex = index + 1;
+    int64_t tempAmount = allocation->length - tempStartIndex;
+    if (tempAmount <= 0) {
+        return;
+    }
+    removeTextFromTextAllocation(allocation, tempStartIndex, tempAmount);
+}
+
 void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel, int8_t shouldRecordHistory) {
     textLine_t *tempLine = createEmptyTextLine();
     textLine_t *tempLine2 = cursorTextPos.line;
@@ -340,6 +360,7 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel, int8_t should
         recordTextLineDeleted(cursorTextPos.line);
     }
     removeTextFromTextAllocation(&(cursorTextPos.line->textAllocation), index, tempAmount);
+    trimTextAllocationTrailingWhitespace(&(cursorTextPos.line->textAllocation));
     if (shouldRecordHistory) {
         recordTextLineInserted(cursorTextPos.line);
     }
