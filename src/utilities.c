@@ -156,6 +156,7 @@ void systemPasteClipboard(vector_t *destination) {
         tempProcess = popen("pbpaste", "r");
     }
     createEmptyVector(destination, sizeof(int8_t *));
+    int64_t tempLineCount = 0;
     while (true) {
         int8_t *tempText = NULL;
         size_t tempSize = 0;
@@ -163,6 +164,12 @@ void systemPasteClipboard(vector_t *destination) {
         if (tempCount < 0) {
             break;
         }
+        pushVectorElement(destination, &tempText);
+        tempLineCount += 1;
+    }
+    if (tempLineCount <= 0) {
+        int8_t *tempText = malloc(1);
+        tempText[0] = 0;
         pushVectorElement(destination, &tempText);
     }
     pclose(tempProcess);
