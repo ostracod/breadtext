@@ -133,8 +133,8 @@ int64_t increaseTextAllocationIndentationLevel(textAllocation_t *allocation) {
 }
 
 void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
-    int32_t tempOldLevel = getTextLineIndentationLevel(line);
-    if (tempOldLevel <= 0) {
+    int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
+    if (tempEndIndex <= 0) {
         return;
     }
     if (shouldRecordHistory) {
@@ -203,6 +203,24 @@ int64_t getIndentationWidth(int64_t level) {
     return level * indentationWidth;
 }
 
+int64_t fixTextAllocationIndentation(textAllocation_t *allocation) {
+    int64_t tempEndIndex = getTextIndentationEndIndex(allocation->text, allocation->length);
+    int64_t tempStartIndex = 0;
+    int64_t index = 0;
+    while (true) {
+        index = seekNextIndentationLevel(allocation->text, allocation->length, index);
+        if (index < 0) {
+            break;
+        }
+        tempStartIndex = index;
+    }
+    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    if (tempAmount > 0) {
+        removeTextFromTextAllocation(allocation, tempStartIndex, tempAmount);
+    }
+    return tempAmount;
+}
+
 // Returns the new character offset after indentation.
 int64_t setTextAllocationIndentationLevel(textAllocation_t *allocation, int32_t level) {
     int64_t output = 0;
@@ -215,6 +233,7 @@ int64_t setTextAllocationIndentationLevel(textAllocation_t *allocation, int32_t 
         output += increaseTextAllocationIndentationLevel(allocation);
         tempLevel += 1;
     }
+    output -= fixTextAllocationIndentation(allocation);
     return output;
 }
 
