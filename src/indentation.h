@@ -6,6 +6,7 @@ int8_t indentationWidth;
 int8_t shouldUseHardTabs;
 
 int32_t getTextIndentationLevel(int8_t *text, int64_t length);
+int64_t getTextIndentationEndIndex(int8_t *text, int64_t length);
 int32_t getTextLineIndentationLevel(textLine_t *line);
 int64_t getTextLineIndentationEndIndex(textLine_t *line);
 int64_t getIndentationWidth(int64_t level);

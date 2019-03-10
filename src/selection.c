@@ -209,15 +209,62 @@ void cutSelection() {
     historyFrameIsConsecutive = false;
 }
 
-int32_t getClipboardBaseIndentationLevel(vector_t *clipboard) {
-    // TODO: Implement.
-    
-    return 0;
+// Existing indentation of the first line should be ignored and replaced with headLevel.
+// Indentation of every line afterward should be decreased by tailBaseLevel.
+void getClipboardIndentationLevels(int32_t *headLevel, int32_t *tailBaseLevel, vector_t *clipboard) {
+    if (clipboard->length <= 0) {
+        *headLevel = 0;
+        *tailBaseLevel = 0;
+        return;
+    }
+    if (clipboard->length == 1) {
+        *headLevel = 0;
+        *tailBaseLevel = 0;
+        return;
+    }
+    int8_t *tempText;
+    getVectorElement(&tempText, clipboard, 0);
+    int32_t tempHeadLevel = getTextIndentationLevel(tempText, -1);
+    int32_t tempSecondLevel;
+    int64_t tempTailBaseLevel = -1;
+    int64_t index = 1;
+    while (index < clipboard->length) {
+        int8_t *tempText;
+        getVectorElement(&tempText, clipboard, index);
+        int32_t tempLevel = getTextIndentationLevel(tempText, -1);
+        if (index == 1) {
+            tempSecondLevel = tempLevel;
+        }
+        int64_t tempEndIndex = getTextIndentationEndIndex(tempText, -1);
+        int8_t tempCharacter = tempText[tempEndIndex];
+        if (tempCharacter != '\n' && tempCharacter != 0) {
+            if (tempTailBaseLevel < 0 || tempLevel < tempTailBaseLevel) {
+                tempTailBaseLevel = tempLevel;
+            }
+        }
+        index += 1;
+    }
+    if (tempHeadLevel < tempSecondLevel) {
+        tempHeadLevel = tempSecondLevel - 1;
+    }
+    tempHeadLevel -= tempTailBaseLevel;
+    if (tempHeadLevel < 0) {
+        tempTailBaseLevel += tempHeadLevel;
+        tempHeadLevel = 0;
+    }
+    *headLevel = tempHeadLevel;
+    *tailBaseLevel = tempTailBaseLevel;
 }
 
 void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine) {
     int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
-    int32_t clipboardBaseIndentationLevel = getClipboardBaseIndentationLevel(clipboard);
+    int32_t headIndentationLevel;
+    int32_t tailBaseIndentationLevel;
+    getClipboardIndentationLevels(
+        &headIndentationLevel,
+        &tailBaseIndentationLevel,
+        clipboard
+    );
     int64_t tempClipboardLineIndex = 0;
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
@@ -233,12 +280,18 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine) 
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
         index += tempCount;
-        if (shouldIndentFirstLine || cursorTextPos.line != tempFirstLine) {
-            int32_t tempIndentationLevel = getTextIndentationLevel(tempText, -1);
+        int8_t tempIsFirstLine = (cursorTextPos.line == tempFirstLine);
+        if (shouldIndentFirstLine || !tempIsFirstLine) {
             int64_t tempWidth = getTextLineIndentationEndIndex(cursorTextPos.line);
+            int32_t tempIndentationLevel = baseIndentationLevel;
+            if (tempIsFirstLine) {
+                tempIndentationLevel += headIndentationLevel;
+            } else {
+                tempIndentationLevel += getTextIndentationLevel(tempText, -1) - tailBaseIndentationLevel;
+            }
             int64_t tempOffset = setTextAllocationIndentationLevel(
                 &(cursorTextPos.line->textAllocation),
-                baseIndentationLevel + tempIndentationLevel - clipboardBaseIndentationLevel
+                tempIndentationLevel
             );
             if (index >= tempWidth) {
                 index += tempOffset;

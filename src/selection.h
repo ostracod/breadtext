@@ -10,7 +10,7 @@ void copySelection();
 void deleteSelectionHelper();
 void deleteSelection();
 void cutSelection();
-int32_t getClipboardBaseIndentationLevel(vector_t *clipboard);
+void getClipboardIndentationLevels(int32_t *headLevel, int32_t *tailBaseLevel, vector_t *clipboard);
 void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine);
 void pasteBeforeCursor();
 void pasteAfterCursor();
