@@ -243,8 +243,8 @@ void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirst
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
         index += tempCount;
-        if (!shouldIndentFirstLine || cursorTextPos.line != tempFirstLine) {
-            int32_t tempIndentationLevel = getTextLineIndentationLevelHelper(tempText, -1);
+        if (shouldIndentFirstLine || cursorTextPos.line != tempFirstLine) {
+            int32_t tempIndentationLevel = getTextIndentationLevel(tempText, -1);
             int64_t tempWidth = getTextLineIndentationEndIndex(cursorTextPos.line);
             int64_t tempOffset = setTextAllocationIndentationLevel(
                 &(cursorTextPos.line->textAllocation),
@@ -258,7 +258,7 @@ void pasteBeforeCursorHelper(vector_t *systemClipboard, int8_t shouldIndentFirst
         setTextPosIndex(&cursorTextPos, index);
         if (tempContainsNewline) {
             insertNewlineBeforeCursorHelper(baseIndentationLevel, true);
-            int64_t index = getIndentationWidth(baseIndentationLevel);
+            int64_t index = getTextLineIndentationEndIndex(cursorTextPos.line);
             setTextPosIndex(&cursorTextPos, index);
         }
         cursorSnapColumn = cursorTextPos.column;

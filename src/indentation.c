@@ -14,41 +14,52 @@
 #include "breadtext.h"
 
 // Set length to -1 for null or newline terminated text.
-int32_t getTextLineIndentationLevelHelper(int8_t *text, int64_t length) {
-    int32_t output = 0;
+// Returns -1 if there is no next indentation level.
+int64_t seekNextIndentationLevel(int8_t *text, int64_t length, int64_t index) {
     int8_t tempSpaceCount = 0;
-    int64_t index = 0;
     while (index < length || length < 0) {
         int8_t tempCharacter = text[index];
+        index += 1;
         if (tempCharacter == ' ') {
             tempSpaceCount += 1;
             if (tempSpaceCount >= indentationWidth) {
-                output += 1;
-                tempSpaceCount = 0;
+                return index;
             }
         } else if (tempCharacter == '\t') {
-            output += 1;
-            tempSpaceCount = 0;
+            return index;
         } else {
+            return -1;
+        }
+    }
+    return -1;
+}
+
+// Set length to -1 for null or newline terminated text.
+int32_t getTextIndentationLevel(int8_t *text, int64_t length) {
+    int32_t output = 0;
+    int64_t index = 0;
+    while (true) {
+        index = seekNextIndentationLevel(text, length, index);
+        if (index < 0) {
             break;
         }
-        index += 1;
+        output += 1;
     }
     return output;
 }
 
 int32_t getTextLineIndentationLevel(textLine_t *line) {
-    return getTextLineIndentationLevelHelper(
+    return getTextIndentationLevel(
         line->textAllocation.text,
         line->textAllocation.length
     );
 }
 
-int64_t getTextLineIndentationEndIndex(textLine_t *line) {
-    int64_t tempLength = line->textAllocation.length;
+// Set length to -1 for null or newline terminated text.
+int64_t getTextIndentationEndIndex(int8_t *text, int64_t length) {
     int64_t index = 0;
-    while (index < tempLength) {
-        int8_t tempCharacter = line->textAllocation.text[index];
+    while (index < length || length < 0) {
+        int8_t tempCharacter = text[index];
         if (tempCharacter != ' ' && tempCharacter != '\t') {
             break;
         }
@@ -57,42 +68,82 @@ int64_t getTextLineIndentationEndIndex(textLine_t *line) {
     return index;
 }
 
-void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
-    int32_t tempOldLevel = getTextLineIndentationLevel(line);
-    int64_t tempStartIndex = 0;
-    int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
-    int32_t tempLevel = 0;
-    int8_t tempSpaceCount = 0;
-    while (tempStartIndex < tempEndIndex) {
-        if (tempLevel >= tempOldLevel - 1) {
-            break;
-        }
-        int8_t tempCharacter = line->textAllocation.text[tempStartIndex];
-        if (tempCharacter == ' ') {
-            tempSpaceCount += 1;
-            if (tempSpaceCount >= indentationWidth) {
-                tempLevel += 1;
-                tempSpaceCount = 0;
+int64_t getTextLineIndentationEndIndex(textLine_t *line) {
+    return getTextIndentationEndIndex(line->textAllocation.text, line->textAllocation.length);
+}
+
+int64_t decreaseTextAllocationIndentationLevel(textAllocation_t *allocation) {
+    int64_t tempEndIndex = getTextIndentationEndIndex(allocation->text, allocation->length);
+    if (tempEndIndex == 0) {
+        return 0;
+    }
+    int32_t tempOldLevel = getTextIndentationLevel(allocation->text, allocation->length);
+    int64_t tempStartIndex;
+    if (tempOldLevel == 0) {
+        tempStartIndex = 0;
+    } else {
+        int32_t tempLevel = 0;
+        int64_t index = 0;
+        while (tempLevel < tempOldLevel - 1) {
+            index = seekNextIndentationLevel(allocation->text, allocation->length, index);
+            if (index < 0) {
+                break;
             }
-        } else if (tempCharacter == '\t') {
             tempLevel += 1;
-            tempSpaceCount = 0;
-        } else {
-            break;
         }
-        tempStartIndex += 1;
+        tempStartIndex = index;
     }
     int64_t tempAmount = tempEndIndex - tempStartIndex;
-    if (tempAmount > 0) {
-        if (shouldRecordHistory) {
-            recordTextLineDeleted(line);
+    removeTextFromTextAllocation(allocation, tempStartIndex, tempAmount);
+    return tempAmount;
+}
+
+int64_t increaseTextAllocationIndentationLevel(textAllocation_t *allocation) {
+    int64_t tempEndIndex = getTextIndentationEndIndex(allocation->text, allocation->length);
+    int32_t tempOldLevel = getTextIndentationLevel(allocation->text, allocation->length);
+    int32_t tempLevel = 0;
+    int64_t index = 0;
+    while (tempLevel < tempOldLevel) {
+        index = seekNextIndentationLevel(allocation->text, allocation->length, index);
+        if (index < 0) {
+            break;
         }
-        removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
-        if (shouldRecordHistory) {
-            recordTextLineInserted(line);
-        }
+        tempLevel += 1;
     }
-    int64_t tempOffset = -tempAmount;
+    int64_t tempStartIndex = index;
+    int64_t tempAmount = tempEndIndex - tempStartIndex;
+    int8_t tempIndentation[100];
+    int8_t tempIndentationLength;
+    if (shouldUseHardTabs) {
+        tempIndentation[0] = '\t';
+        tempIndentationLength = 1;
+    } else {
+        int8_t index = 0;
+        while (index < indentationWidth) {
+            tempIndentation[index] = ' ' ;
+            index += 1;
+        }
+        tempIndentationLength = indentationWidth;
+    }
+    if (tempAmount > 0) {
+        removeTextFromTextAllocation(allocation, tempStartIndex, tempAmount);
+    }
+    insertTextIntoTextAllocation(allocation, tempStartIndex, tempIndentation, tempIndentationLength);
+    return tempIndentationLength - tempAmount;
+}
+
+void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
+    int32_t tempOldLevel = getTextLineIndentationLevel(line);
+    if (tempOldLevel <= 0) {
+        return;
+    }
+    if (shouldRecordHistory) {
+        recordTextLineDeleted(line);
+    }
+    int64_t tempOffset = -decreaseTextAllocationIndentationLevel(&(line->textAllocation));
+    if (shouldRecordHistory) {
+        recordTextLineInserted(line);
+    }
     if (line == cursorTextPos.line) {
         int64_t index = getTextPosIndex(&cursorTextPos);
         index += tempOffset;
@@ -116,55 +167,13 @@ void decreaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecor
 }
 
 void increaseTextLineIndentationLevelHelper(textLine_t *line, int8_t shouldRecordHistory) {
-    int32_t tempOldLevel = getTextLineIndentationLevel(line);
-    int64_t tempStartIndex = 0;
-    int64_t tempEndIndex = getTextLineIndentationEndIndex(line);
-    int32_t tempLevel = 0;
-    int8_t tempSpaceCount = 0;
-    while (tempStartIndex < tempEndIndex) {
-        if (tempLevel >= tempOldLevel) {
-            break;
-        }
-        int8_t tempCharacter = line->textAllocation.text[tempStartIndex];
-        if (tempCharacter == ' ') {
-            tempSpaceCount += 1;
-            if (tempSpaceCount >= indentationWidth) {
-                tempLevel += 1;
-                tempSpaceCount = 0;
-            }
-        } else if (tempCharacter == '\t') {
-            tempLevel += 1;
-            tempSpaceCount = 0;
-        } else {
-            break;
-        }
-        tempStartIndex += 1;
-    }
-    int64_t tempAmount = tempEndIndex - tempStartIndex;
-    int8_t tempIndentation[100];
-    int8_t tempIndentationLength;
-    if (shouldUseHardTabs) {
-        tempIndentation[0] = '\t';
-        tempIndentationLength = 1;
-    } else {
-        int8_t index = 0;
-        while (index < indentationWidth) {
-            tempIndentation[index] = ' ' ;
-            index += 1;
-        }
-        tempIndentationLength = indentationWidth;
-    }
     if (shouldRecordHistory) {
         recordTextLineDeleted(line);
     }
-    if (tempAmount > 0) {
-        removeTextFromTextAllocation(&(line->textAllocation), tempStartIndex, tempAmount);
-    }
-    insertTextIntoTextAllocation(&(line->textAllocation), tempStartIndex, tempIndentation, tempIndentationLength);
+    int64_t tempOffset = increaseTextAllocationIndentationLevel(&(line->textAllocation));
     if (shouldRecordHistory) {
         recordTextLineInserted(line);
     }
-    int64_t tempOffset = tempIndentationLength - tempAmount;
     if (line == cursorTextPos.line) {
         int64_t index = getTextPosIndex(&cursorTextPos);
         index += tempOffset;
@@ -196,9 +205,17 @@ int64_t getIndentationWidth(int64_t level) {
 
 // Returns the new character offset after indentation.
 int64_t setTextAllocationIndentationLevel(textAllocation_t *allocation, int32_t level) {
-    // TODO: Implement.
-    
-    return 0;
+    int64_t output = 0;
+    int32_t tempLevel = getTextIndentationLevel(allocation->text, allocation->length);
+    while (tempLevel > level) {
+        output -= decreaseTextAllocationIndentationLevel(allocation);
+        tempLevel -= 1;
+    }
+    while (tempLevel < level) {
+        output += increaseTextAllocationIndentationLevel(allocation);
+        tempLevel += 1;
+    }
+    return output;
 }
 
 void increaseSelectionIndentationLevel() {

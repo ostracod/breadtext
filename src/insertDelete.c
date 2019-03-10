@@ -335,11 +335,7 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel, int8_t should
     int64_t index = getTextPosIndex(&cursorTextPos);
     int64_t tempAmount = cursorTextPos.line->textAllocation.length - index;
     insertTextIntoTextAllocation(&(tempLine->textAllocation), 0, cursorTextPos.line->textAllocation.text + index, tempAmount);
-    int32_t tempCount = 0;
-    while (tempCount < baseIndentationLevel) {
-        increaseTextLineIndentationLevelHelper(tempLine, false);
-        tempCount += 1;
-    }
+    setTextAllocationIndentationLevel(&(tempLine->textAllocation), baseIndentationLevel);
     if (shouldRecordHistory) {
         recordTextLineDeleted(cursorTextPos.line);
     }
