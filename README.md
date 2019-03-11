@@ -167,6 +167,26 @@ To view controls within BreadText, enter `/help`.
 `shouldHighlightSyntax`: 0 means no, 1 means yes.  
 `shouldUseXclip`: 0 means no, 1 means yes. Only significant in macOS.
 
+Color configuration variables:
+
+`bodyForegroundColor`, `bodyBackgroundColor`,  
+`highlightForegroundColor`, `highlightBackgroundColor`,  
+`statusBarForegroundColor`, `statusBarBackgroundColor`,  
+`keywordColor`, `valueLiteralColor`, `commentColor`
+
+Possible values for color variables:
+
+* 0 = Black
+* 1 = Red
+* 2 = Green
+* 3 = Yellow
+* 4 = Blue
+* 5 = Magenta
+* 6 = Cyan
+* 7 = White
+
+Add 8 to any color value for a bright variant. Ex: 12 = bright blue
+
 On start-up, BreadText looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
 
 Example contents of `.breadtextrc` file:
@@ -175,6 +195,7 @@ Example contents of `.breadtextrc` file:
 colorScheme 0
 shouldUseHardTabs 0
 indentationWidth 4
+statusBarBackgroundColor 5
 ```
 
 ## BreadText Scripting Language
