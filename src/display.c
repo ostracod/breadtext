@@ -180,59 +180,79 @@ void updateColorPairs() {
 }
 
 void setColorFromConfigValue(int32_t *destination, int32_t value) {
+    if (value < 0 || value > 15) {
+        return;
+    }
+    int8_t tempIsBright = (value >= 8);
+    if (tempIsBright) {
+        value -= 8;
+    }
+    int32_t tempColor = COLOR_BLACK;
     if (value == 0) {
-        *destination = COLOR_BLACK;
+        tempColor = COLOR_BLACK;
     }
     if (value == 1) {
-        *destination = COLOR_RED;
+        tempColor = COLOR_RED;
     }
     if (value == 2) {
-        *destination = COLOR_GREEN;
+        tempColor = COLOR_GREEN;
     }
     if (value == 3) {
-        *destination = COLOR_YELLOW;
+        tempColor = COLOR_YELLOW;
     }
     if (value == 4) {
-        *destination = COLOR_BLUE;
+        tempColor = COLOR_BLUE;
     }
     if (value == 5) {
-        *destination = COLOR_MAGENTA;
+        tempColor = COLOR_MAGENTA;
     }
     if (value == 6) {
-        *destination = COLOR_CYAN;
+        tempColor = COLOR_CYAN;
     }
     if (value == 7) {
-        *destination = COLOR_WHITE;
+        tempColor = COLOR_WHITE;
     }
+    if (tempIsBright) {
+        tempColor += BRIGHT_COLOR_OFFSET;
+    }
+    *destination = tempColor;
     updateColorPairs();
 }
 
 int32_t convertColorToConfigValue(int32_t color) {
+    int8_t tempIsBright = (color >= COLOR_BLACK + BRIGHT_COLOR_OFFSET);
+    if (tempIsBright) {
+        color -= BRIGHT_COLOR_OFFSET;
+    }
+    int32_t tempValue = 0;
     if (color == COLOR_BLACK) {
-        return 0;
+        tempValue = 0;
     }
     if (color == COLOR_RED) {
-        return 1;
+        tempValue = 1;
     }
     if (color == COLOR_GREEN) {
-        return 2;
+        tempValue = 2;
     }
     if (color == COLOR_YELLOW) {
-        return 3;
+        tempValue = 3;
     }
     if (color == COLOR_BLUE) {
-        return 4;
+        tempValue = 4;
     }
     if (color == COLOR_MAGENTA) {
-        return 5;
+        tempValue = 5;
     }
     if (color == COLOR_CYAN) {
-        return 6;
+        tempValue = 6;
     }
     if (color == COLOR_WHITE) {
-        return 7;
+        tempValue = 7;
     }
-    return -1;
+    if (tempIsBright) {
+        tempValue += 8;
+    }
+    return tempValue;
 }
 
 void setColorScheme(int32_t number) {
@@ -361,7 +381,7 @@ void displayTextCommandCursor() {
         return;
     }
     refresh();
-    attron(COLOR_PAIR(DEFAULT_COLOR));
+    attron(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
     int8_t tempCharacter;
     if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
         tempCharacter = textCommandBuffer[textCommandCursorIndex];
@@ -369,7 +389,7 @@ void displayTextCommandCursor() {
         tempCharacter = ' ';
     }
     mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
-    attroff(COLOR_PAIR(DEFAULT_COLOR));
+    attroff(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
 }
 
 textPos_t *getFirstHighlightTextPos() {
