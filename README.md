@@ -185,7 +185,7 @@ Possible values for color variables:
 * 6 = Cyan
 * 7 = White
 
-Add 8 to any color value for a bright variant. Ex: 12 = bright blue
+Add 8 to any color value for a bright variant. Ex: 12 = Bright blue
 
 On start-up, BreadText looks for the file `~/.breadtextrc` to read configuration variables. Each line of `.breadtextrc` contains a variable name and a value separated by a space.
 

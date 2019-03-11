@@ -137,6 +137,26 @@ int8_t *helpText[] = {
     (int8_t *)"shouldHighlightSyntax: 0 means no, 1 means yes.",
     (int8_t *)"shouldUseXclip: 0 means no, 1 means yes. Only significant in macOS.",
     (int8_t *)"",
+    (int8_t *)"Color configuration variables:",
+    (int8_t *)"",
+    (int8_t *)"bodyForegroundColor, bodyBackgroundColor,",
+    (int8_t *)"highlightForegroundColor, highlightBackgroundColor,",
+    (int8_t *)"statusBarForegroundColor, statusBarBackgroundColor,",
+    (int8_t *)"keywordColor, valueLiteralColor, commentColor",
+    (int8_t *)"",
+    (int8_t *)"Possible values for color variables:",
+    (int8_t *)"",
+    (int8_t *)"0 = Black",
+    (int8_t *)"1 = Red",
+    (int8_t *)"2 = Green",
+    (int8_t *)"3 = Yellow",
+    (int8_t *)"4 = Blue",
+    (int8_t *)"5 = Magenta",
+    (int8_t *)"6 = Cyan",
+    (int8_t *)"7 = White",
+    (int8_t *)"",
+    (int8_t *)"Add 8 to any color value for a bright variant. Ex: 12 = Bright blue",
+    (int8_t *)"",
     (int8_t *)"On start-up, BreadText looks for the file ~/.breadtextrc to read configuration variables. Each line of .breadtextrc contains a variable name and a value separated by a space.",
     (int8_t *)"",
     (int8_t *)"Example contents of .breadtextrc file:",
@@ -149,23 +169,27 @@ int8_t *helpText[] = {
 void setColorScheme(int32_t number) {
     colorScheme = number;
     if (colorScheme == 1) {
-        colorSet[DEFAULT_COLOR] = WHITE_ON_BLACK;
-        colorSet[COMMENT_COLOR] = RED_ON_BLACK;
-        colorSet[LITERAL_COLOR] = GREEN_ON_BLACK;
-        colorSet[KEYWORD_COLOR] = CYAN_ON_BLACK;
-        colorSet[HIGHLIGHTED_DEFAULT_COLOR] = BLACK_ON_WHITE;
-        colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_WHITE;
-        colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_WHITE;
-        colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_WHITE;
+        init_pair(DEFAULT_COLOR, COLOR_WHITE, COLOR_BLACK);
+        init_pair(COMMENT_COLOR, COLOR_RED, COLOR_BLACK);
+        init_pair(LITERAL_COLOR, COLOR_GREEN, COLOR_BLACK);
+        init_pair(KEYWORD_COLOR, COLOR_CYAN, COLOR_BLACK);
+        init_pair(STATUS_BAR_COLOR, COLOR_WHITE, COLOR_BLACK);
+        init_pair(HIGHLIGHTED_DEFAULT_COLOR, COLOR_WHITE, COLOR_BLACK);
+        init_pair(HIGHLIGHTED_COMMENT_COLOR, COLOR_RED, COLOR_WHITE);
+        init_pair(HIGHLIGHTED_LITERAL_COLOR, COLOR_GREEN, COLOR_WHITE);
+        init_pair(HIGHLIGHTED_KEYWORD_COLOR, COLOR_CYAN, COLOR_WHITE);
+        init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, COLOR_WHITE, COLOR_BLACK);
     } else {
-        colorSet[DEFAULT_COLOR] = BLACK_ON_WHITE;
-        colorSet[COMMENT_COLOR] = RED_ON_WHITE;
-        colorSet[LITERAL_COLOR] = GREEN_ON_WHITE;
-        colorSet[KEYWORD_COLOR] = CYAN_ON_WHITE;
-        colorSet[HIGHLIGHTED_DEFAULT_COLOR] = WHITE_ON_BLACK;
-        colorSet[HIGHLIGHTED_COMMENT_COLOR] = RED_ON_BLACK;
-        colorSet[HIGHLIGHTED_LITERAL_COLOR] = GREEN_ON_BLACK;
-        colorSet[HIGHLIGHTED_KEYWORD_COLOR] = CYAN_ON_BLACK;
+        init_pair(DEFAULT_COLOR, COLOR_BLACK, COLOR_WHITE);
+        init_pair(COMMENT_COLOR, COLOR_RED, COLOR_WHITE);
+        init_pair(LITERAL_COLOR, COLOR_GREEN, COLOR_WHITE);
+        init_pair(KEYWORD_COLOR, COLOR_CYAN, COLOR_WHITE);
+        init_pair(STATUS_BAR_COLOR, COLOR_BLACK, COLOR_WHITE);
+        init_pair(HIGHLIGHTED_DEFAULT_COLOR, COLOR_BLACK, COLOR_WHITE);
+        init_pair(HIGHLIGHTED_COMMENT_COLOR, COLOR_RED, COLOR_BLACK);
+        init_pair(HIGHLIGHTED_LITERAL_COLOR, COLOR_GREEN, COLOR_BLACK);
+        init_pair(HIGHLIGHTED_KEYWORD_COLOR, COLOR_CYAN, COLOR_BLACK);
+        init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, COLOR_BLACK, COLOR_WHITE);
     }
 }
 
@@ -232,9 +256,9 @@ void eraseCursor() {
         return;
     }
     int8_t tempColorIndex = getCursorColorIndex();
-    attron(COLOR_PAIR(colorSet[tempColorIndex]));
+    attron(COLOR_PAIR(tempColorIndex));
     mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
-    attroff(COLOR_PAIR(colorSet[tempColorIndex]));
+    attroff(COLOR_PAIR(tempColorIndex));
 }
 
 void displayCursor() {
@@ -247,16 +271,16 @@ void displayCursor() {
     }
     refresh();
     int8_t tempColorIndex = getCursorColorIndex() + HIGHLIGHTED_COLOR_OFFSET;
-    attron(COLOR_PAIR(colorSet[tempColorIndex]));
+    attron(COLOR_PAIR(tempColorIndex));
     mvaddch(tempPosY, cursorTextPos.column, (char)getCursorCharacter());
-    attroff(COLOR_PAIR(colorSet[tempColorIndex]));
+    attroff(COLOR_PAIR(tempColorIndex));
 }
 
 void eraseTextCommandCursor() {
     if (activityMode != TEXT_COMMAND_MODE) {
         return;
     }
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
     int8_t tempCharacter;
     if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
         tempCharacter = textCommandBuffer[textCommandCursorIndex];
@@ -264,7 +288,7 @@ void eraseTextCommandCursor() {
         tempCharacter = ' ';
     }
     mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
 }
 
 void displayTextCommandCursor() {
@@ -272,7 +296,7 @@ void displayTextCommandCursor() {
         return;
     }
     refresh();
-    attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+    attron(COLOR_PAIR(DEFAULT_COLOR));
     int8_t tempCharacter;
     if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
         tempCharacter = textCommandBuffer[textCommandCursorIndex];
@@ -280,7 +304,7 @@ void displayTextCommandCursor() {
         tempCharacter = ' ';
     }
     mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
-    attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(DEFAULT_COLOR));
 }
 
 textPos_t *getFirstHighlightTextPos() {
@@ -378,7 +402,7 @@ int64_t displayTextLine(int64_t posY, textLine_t *line) {
                 }
             }
         }
-        int8_t tempNextColor = colorSet[tempNextColorIndex];
+        int8_t tempNextColor = tempNextColorIndex;
         if (tempNextColor != tempColor) {
             if (tempBufferIndex != 0) {
                 tempBuffer[tempBufferIndex] = 0;
@@ -422,9 +446,9 @@ void displayTextLinesUnderAndIncludingTextLine(int64_t posY, textLine_t *line) {
             tempBuffer[index] = ' ';
             index += 1;
         }
-        attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attron(COLOR_PAIR(DEFAULT_COLOR));
         mvprintw(tempPosY, 0, "%s", tempBuffer);
-        attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attroff(COLOR_PAIR(DEFAULT_COLOR));
     }
 }
 
@@ -443,9 +467,9 @@ void eraseStatusBar() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 0, "%s", tempBuffer);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void eraseActivityMode() {
@@ -456,13 +480,13 @@ void eraseActivityMode() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void displayActivityMode() {
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     if (activityMode == COMMAND_MODE) {
         int8_t tempMessage[] = "Command Mode";
         mvprintw(windowHeight - 1, 0, "%s", (char *)tempMessage);
@@ -496,7 +520,7 @@ void displayActivityMode() {
     if (activityMode == TEXT_COMMAND_MODE) {
         activityModeTextLength = 0;
     }
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void eraseLineNumber() {
@@ -507,18 +531,18 @@ void eraseLineNumber() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void displayLineNumber() {
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     int8_t tempMessage[100];
     sprintf((char *)tempMessage, "Line %lld", (long long)(getTextLineNumber(cursorTextPos.line)));
     lineNumberTextLength = (int32_t)strlen((char *)tempMessage);
     mvprintw(windowHeight - 1, windowWidth - lineNumberTextLength, "%s", (char *)tempMessage);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void eraseNotification() {
@@ -529,17 +553,17 @@ void eraseNotification() {
         tempBuffer[index] = ' ';
         index += 1;
     }
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 0, "%s", (char *)tempBuffer);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
     isShowingNotification = false;
 }
 
 void displayNotification(int8_t *message) {
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     notificationTextLength = (int32_t)strlen((char *)message);
     mvprintw(windowHeight - 1, 0, "%s", (char *)message);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
     isShowingNotification = true;
 }
 
@@ -559,10 +583,10 @@ void notifyUser(int8_t *message) {
 void displayStatusBar() {
     eraseStatusBar();
     if (activityMode == TEXT_COMMAND_MODE) {
-        attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        attron(COLOR_PAIR(STATUS_BAR_COLOR));
         mvprintw(windowHeight - 1, 0, "/");
         mvprintw(windowHeight - 1, 1, "%s", textCommandBuffer);
-        attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        attroff(COLOR_PAIR(STATUS_BAR_COLOR));
         displayTextCommandCursor();
     } else {
         displayActivityMode();
@@ -571,7 +595,7 @@ void displayStatusBar() {
 }
 
 void displayHelpMessage() {
-    bkgd(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+    bkgd(COLOR_PAIR(DEFAULT_COLOR));
     clear();
     int64_t tempPosY = 0;
     int64_t tempLength = sizeof(helpText) / sizeof(*helpText);
@@ -585,9 +609,9 @@ void displayHelpMessage() {
             int64_t tempRowCount2 = windowHeight - tempPosY;
             tempBuffer[tempRowCount2 * windowWidth] = 0;
         }
-        attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attron(COLOR_PAIR(DEFAULT_COLOR));
         mvprintw(tempPosY, 0, "%s", tempBuffer);
-        attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attroff(COLOR_PAIR(DEFAULT_COLOR));
         tempPosY += tempRowCount;
         index += 1;
     }

@@ -1297,15 +1297,6 @@ int8_t initializeApplication() {
         processRcFile();
     }
     
-    init_pair(BLACK_ON_WHITE, COLOR_BLACK, COLOR_WHITE);
-    init_pair(RED_ON_WHITE, COLOR_RED, COLOR_WHITE);
-    init_pair(GREEN_ON_WHITE, COLOR_GREEN, COLOR_WHITE);
-    init_pair(CYAN_ON_WHITE, COLOR_CYAN, COLOR_WHITE);
-    init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
-    init_pair(RED_ON_BLACK, COLOR_RED, COLOR_BLACK);
-    init_pair(GREEN_ON_BLACK, COLOR_GREEN, COLOR_BLACK);
-    init_pair(CYAN_ON_BLACK, COLOR_CYAN, COLOR_BLACK);
-    
     updateSyntaxDefinition();
     
     handleResize();

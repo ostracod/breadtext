@@ -55,13 +55,13 @@ int8_t *allocateScreenArray() {
 }
 
 void displayScreenArray(int8_t *screenArray) {
-    attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+    attron(COLOR_PAIR(DEFAULT_COLOR));
     int64_t tempPosY = 0;
     while (tempPosY < viewPortHeight) {
         mvprintw(tempPosY, 0, "%s", (char *)(screenArray + tempPosY * (viewPortWidth + 1)));
         tempPosY += 1;
     }
-    attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(DEFAULT_COLOR));
 }
 
 int8_t craneIntersects(int8_t *screenArray, int64_t posX, int64_t posY, int8_t character) {
@@ -148,7 +148,7 @@ void craneSecret() {
             tempFallDelay = 0;
         }
         displayScreenArray(tempScreenArray);
-        attron(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attron(COLOR_PAIR(DEFAULT_COLOR));
         int64_t tempPosY = 0;
         while (tempPosY < tempCranePosY) {
             mvaddch(tempPosY, tempCranePosX, '|');
@@ -157,7 +157,7 @@ void craneSecret() {
         if (tempCraneCharacter != ' ') {
             mvaddch(tempCranePosY, tempCranePosX, tempCraneCharacter);
         }
-        attroff(COLOR_PAIR(colorSet[DEFAULT_COLOR]));
+        attroff(COLOR_PAIR(DEFAULT_COLOR));
         refresh();
         sleepMilliseconds(50);
     }

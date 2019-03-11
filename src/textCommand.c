@@ -92,9 +92,9 @@ void insertTextCommandCharacter(int8_t character) {
     eraseTextCommandCursor();
     copyData(textCommandBuffer + textCommandCursorIndex + 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
     textCommandBuffer[textCommandCursorIndex] = character;
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
     textCommandCursorIndex += 1;
     displayTextCommandCursor();
 }
@@ -107,9 +107,9 @@ void deleteTextCommandCharacter() {
     eraseTextCommandCursor();
     copyData(textCommandBuffer + textCommandCursorIndex - 1, textCommandBuffer + textCommandCursorIndex, tempLength - textCommandCursorIndex + 1);
     textCommandCursorIndex -= 1;
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s ", textCommandBuffer + textCommandCursorIndex);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
     displayTextCommandCursor();
 }
 
@@ -404,9 +404,9 @@ void executeTextCommand() {
 void enterBeginningOfCommand(int8_t *text) {
     setActivityMode(TEXT_COMMAND_MODE);
     strcpy((char *)textCommandBuffer, (char *)text);
-    attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     mvprintw(windowHeight - 1, 1, "%s", (char *)textCommandBuffer);
-    attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
     textCommandCursorIndex = strlen((char *)textCommandBuffer);
     displayTextCommandCursor();
 }
@@ -460,9 +460,9 @@ void pasteClipboardIntoTextCommand() {
         eraseTextCommandCursor();
         copyData(textCommandBuffer + textCommandCursorIndex + tempPasteLength, textCommandBuffer + textCommandCursorIndex, tempCommandLength - textCommandCursorIndex + 1);
         copyData(textCommandBuffer + textCommandCursorIndex, tempText, tempPasteLength);
-        attron(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        attron(COLOR_PAIR(STATUS_BAR_COLOR));
         mvprintw(windowHeight - 1, 1 + textCommandCursorIndex, "%s", textCommandBuffer + textCommandCursorIndex);
-        attroff(COLOR_PAIR(colorSet[HIGHLIGHTED_DEFAULT_COLOR]));
+        attroff(COLOR_PAIR(STATUS_BAR_COLOR));
         textCommandCursorIndex += tempPasteLength;
         displayTextCommandCursor();
         break;
