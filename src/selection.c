@@ -256,8 +256,8 @@ void getClipboardIndentationLevels(int32_t *headLevel, int32_t *tailBaseLevel, v
     *tailBaseLevel = tempTailBaseLevel;
 }
 
-void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine) {
-    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, int32_t baseIndentationLevel) {
+    int32_t cursorIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
     int32_t headIndentationLevel;
     int32_t tailBaseIndentationLevel;
     getClipboardIndentationLevels(
@@ -300,7 +300,7 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine) 
         recordTextLineInserted(cursorTextPos.line);
         setTextPosIndex(&cursorTextPos, index);
         if (tempContainsNewline) {
-            insertNewlineBeforeCursorHelper(baseIndentationLevel, true);
+            insertNewlineBeforeCursorHelper(cursorIndentationLevel, true);
             int64_t index = getTextLineIndentationEndIndex(cursorTextPos.line);
             setTextPosIndex(&cursorTextPos, index);
         }
@@ -347,6 +347,7 @@ void pasteBeforeCursor() {
     } else {
         tempClipboard = &internalClipboard;
     }
+    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
@@ -364,7 +365,7 @@ void pasteBeforeCursor() {
     } else {
         tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine);
+    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine, baseIndentationLevel);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }
@@ -381,6 +382,7 @@ void pasteAfterCursor() {
     } else {
         tempClipboard = &internalClipboard;
     }
+    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
@@ -417,7 +419,7 @@ void pasteAfterCursor() {
     } else {
         tempShouldIndentFirstLine = false;
     }
-    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine);
+    pasteBeforeCursorHelper(tempClipboard, tempShouldIndentFirstLine, baseIndentationLevel);
     if (shouldUseSystemClipboard) {
         cleanUpSystemClipboardAllocation(&tempSystemClipboard);
     }

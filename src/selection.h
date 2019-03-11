@@ -11,7 +11,7 @@ void deleteSelectionHelper();
 void deleteSelection();
 void cutSelection();
 void getClipboardIndentationLevels(int32_t *headLevel, int32_t *tailBaseLevel, vector_t *clipboard);
-void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine);
+void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, int32_t baseIndentationLevel);
 void pasteBeforeCursor();
 void pasteAfterCursor();
 void swapSelection();
