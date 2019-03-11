@@ -986,6 +986,42 @@ int8_t getConfigurationVariable(int64_t *destination, int8_t *name) {
         *destination = shouldUseXclip;
         output = true;
     }
+    if (strcmp((char *)name, "bodyForegroundColor") == 0) {
+        *destination = convertColorToConfigValue(bodyForegroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "bodyBackgroundColor") == 0) {
+        *destination = convertColorToConfigValue(bodyBackgroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "highlightForegroundColor") == 0) {
+        *destination = convertColorToConfigValue(highlightForegroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "highlightBackgroundColor") == 0) {
+        *destination = convertColorToConfigValue(highlightBackgroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "statusBarForegroundColor") == 0) {
+        *destination = convertColorToConfigValue(statusBarForegroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "statusBarBackgroundColor") == 0) {
+        *destination = convertColorToConfigValue(statusBarBackgroundColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "keywordColor") == 0) {
+        *destination = convertColorToConfigValue(keywordColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "valueLiteralColor") == 0) {
+        *destination = convertColorToConfigValue(valueLiteralColor);
+        output = true;
+    }
+    if (strcmp((char *)name, "commentColor") == 0) {
+        *destination = convertColorToConfigValue(commentColor);
+        output = true;
+    }
     return output;
 }
 
@@ -1019,6 +1055,42 @@ int8_t setConfigurationVariable(int8_t *name, int64_t value) {
     }
     if (strcmp((char *)name, "shouldUseXclip") == 0) {
         shouldUseXclip = value;
+        output = true;
+    }
+    if (strcmp((char *)name, "bodyForegroundColor") == 0) {
+        setColorFromConfigValue(&bodyForegroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "bodyBackgroundColor") == 0) {
+        setColorFromConfigValue(&bodyBackgroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "highlightForegroundColor") == 0) {
+        setColorFromConfigValue(&highlightForegroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "highlightBackgroundColor") == 0) {
+        setColorFromConfigValue(&highlightBackgroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "statusBarForegroundColor") == 0) {
+        setColorFromConfigValue(&statusBarForegroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "statusBarBackgroundColor") == 0) {
+        setColorFromConfigValue(&statusBarBackgroundColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "keywordColor") == 0) {
+        setColorFromConfigValue(&keywordColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "valueLiteralColor") == 0) {
+        setColorFromConfigValue(&valueLiteralColor, value);
+        output = true;
+    }
+    if (strcmp((char *)name, "commentColor") == 0) {
+        setColorFromConfigValue(&commentColor, value);
         output = true;
     }
     return output;

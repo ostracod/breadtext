@@ -40,6 +40,8 @@ int32_t valueLiteralColor;
 int32_t commentColor;
 
 void updateColorPairs();
+void setColorFromConfigValue(int32_t *destination, int32_t value);
+int32_t convertColorToConfigValue(int32_t color);
 void setColorScheme(int32_t number);
 int64_t getTextLineRowCount(textLine_t *line);
 int64_t getTextLinePosY(textLine_t *line);

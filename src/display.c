@@ -179,6 +179,62 @@ void updateColorPairs() {
     init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, statusBarBackgroundColor, statusBarForegroundColor);
 }
 
+void setColorFromConfigValue(int32_t *destination, int32_t value) {
+    if (value == 0) {
+        *destination = COLOR_BLACK;
+    }
+    if (value == 1) {
+        *destination = COLOR_RED;
+    }
+    if (value == 2) {
+        *destination = COLOR_GREEN;
+    }
+    if (value == 3) {
+        *destination = COLOR_YELLOW;
+    }
+    if (value == 4) {
+        *destination = COLOR_BLUE;
+    }
+    if (value == 5) {
+        *destination = COLOR_MAGENTA;
+    }
+    if (value == 6) {
+        *destination = COLOR_CYAN;
+    }
+    if (value == 7) {
+        *destination = COLOR_WHITE;
+    }
+    updateColorPairs();
+}
+
+int32_t convertColorToConfigValue(int32_t color) {
+    if (color == COLOR_BLACK) {
+        return 0;
+    }
+    if (color == COLOR_RED) {
+        return 1;
+    }
+    if (color == COLOR_GREEN) {
+        return 2;
+    }
+    if (color == COLOR_YELLOW) {
+        return 3;
+    }
+    if (color == COLOR_BLUE) {
+        return 4;
+    }
+    if (color == COLOR_MAGENTA) {
+        return 5;
+    }
+    if (color == COLOR_CYAN) {
+        return 6;
+    }
+    if (color == COLOR_WHITE) {
+        return 7;
+    }
+    return -1;
+}
+
 void setColorScheme(int32_t number) {
     colorScheme = number;
     if (colorScheme == 1) {
@@ -289,7 +345,7 @@ void eraseTextCommandCursor() {
     if (activityMode != TEXT_COMMAND_MODE) {
         return;
     }
-    attron(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
+    attron(COLOR_PAIR(STATUS_BAR_COLOR));
     int8_t tempCharacter;
     if (textCommandCursorIndex < strlen((char *)textCommandBuffer)) {
         tempCharacter = textCommandBuffer[textCommandCursorIndex];
@@ -297,7 +353,7 @@ void eraseTextCommandCursor() {
         tempCharacter = ' ';
     }
     mvaddch(windowHeight - 1, textCommandCursorIndex + 1, tempCharacter);
-    attroff(COLOR_PAIR(HIGHLIGHTED_STATUS_BAR_COLOR));
+    attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
 void displayTextCommandCursor() {
