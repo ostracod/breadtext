@@ -29,6 +29,17 @@ textLine_t *topTextLine;
 int64_t topTextLineRow;
 int32_t colorScheme;
 
+int32_t bodyForegroundColor;
+int32_t bodyBackgroundColor;
+int32_t highlightForegroundColor;
+int32_t highlightBackgroundColor;
+int32_t statusBarForegroundColor;
+int32_t statusBarBackgroundColor;
+int32_t keywordColor;
+int32_t valueLiteralColor;
+int32_t commentColor;
+
+void updateColorPairs();
 void setColorScheme(int32_t number);
 int64_t getTextLineRowCount(textLine_t *line);
 int64_t getTextLinePosY(textLine_t *line);

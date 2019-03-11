@@ -166,31 +166,40 @@ int8_t *helpText[] = {
     (int8_t *)"indentationWidth 4"
 };
 
+void updateColorPairs() {
+    init_pair(DEFAULT_COLOR, bodyForegroundColor, bodyBackgroundColor);
+    init_pair(COMMENT_COLOR, commentColor, bodyBackgroundColor);
+    init_pair(LITERAL_COLOR, valueLiteralColor, bodyBackgroundColor);
+    init_pair(KEYWORD_COLOR, keywordColor, bodyBackgroundColor);
+    init_pair(STATUS_BAR_COLOR, statusBarForegroundColor, statusBarBackgroundColor);
+    init_pair(HIGHLIGHTED_DEFAULT_COLOR, highlightForegroundColor, highlightBackgroundColor);
+    init_pair(HIGHLIGHTED_COMMENT_COLOR, commentColor, highlightBackgroundColor);
+    init_pair(HIGHLIGHTED_LITERAL_COLOR, valueLiteralColor, highlightBackgroundColor);
+    init_pair(HIGHLIGHTED_KEYWORD_COLOR, keywordColor, highlightBackgroundColor);
+    init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, statusBarBackgroundColor, statusBarForegroundColor);
+}
+
 void setColorScheme(int32_t number) {
     colorScheme = number;
     if (colorScheme == 1) {
-        init_pair(DEFAULT_COLOR, COLOR_WHITE, COLOR_BLACK);
-        init_pair(COMMENT_COLOR, COLOR_RED, COLOR_BLACK);
-        init_pair(LITERAL_COLOR, COLOR_GREEN, COLOR_BLACK);
-        init_pair(KEYWORD_COLOR, COLOR_CYAN, COLOR_BLACK);
-        init_pair(STATUS_BAR_COLOR, COLOR_WHITE, COLOR_BLACK);
-        init_pair(HIGHLIGHTED_DEFAULT_COLOR, COLOR_WHITE, COLOR_BLACK);
-        init_pair(HIGHLIGHTED_COMMENT_COLOR, COLOR_RED, COLOR_WHITE);
-        init_pair(HIGHLIGHTED_LITERAL_COLOR, COLOR_GREEN, COLOR_WHITE);
-        init_pair(HIGHLIGHTED_KEYWORD_COLOR, COLOR_CYAN, COLOR_WHITE);
-        init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, COLOR_WHITE, COLOR_BLACK);
+        bodyForegroundColor = COLOR_WHITE;
+        bodyBackgroundColor = COLOR_BLACK;
+        highlightForegroundColor = COLOR_BLACK;
+        highlightBackgroundColor = COLOR_WHITE;
+        statusBarForegroundColor = COLOR_BLACK;
+        statusBarBackgroundColor = COLOR_WHITE;
     } else {
-        init_pair(DEFAULT_COLOR, COLOR_BLACK, COLOR_WHITE);
-        init_pair(COMMENT_COLOR, COLOR_RED, COLOR_WHITE);
-        init_pair(LITERAL_COLOR, COLOR_GREEN, COLOR_WHITE);
-        init_pair(KEYWORD_COLOR, COLOR_CYAN, COLOR_WHITE);
-        init_pair(STATUS_BAR_COLOR, COLOR_BLACK, COLOR_WHITE);
-        init_pair(HIGHLIGHTED_DEFAULT_COLOR, COLOR_BLACK, COLOR_WHITE);
-        init_pair(HIGHLIGHTED_COMMENT_COLOR, COLOR_RED, COLOR_BLACK);
-        init_pair(HIGHLIGHTED_LITERAL_COLOR, COLOR_GREEN, COLOR_BLACK);
-        init_pair(HIGHLIGHTED_KEYWORD_COLOR, COLOR_CYAN, COLOR_BLACK);
-        init_pair(HIGHLIGHTED_STATUS_BAR_COLOR, COLOR_BLACK, COLOR_WHITE);
+        bodyForegroundColor = COLOR_BLACK;
+        bodyBackgroundColor = COLOR_WHITE;
+        highlightForegroundColor = COLOR_WHITE;
+        highlightBackgroundColor = COLOR_BLACK;
+        statusBarForegroundColor = COLOR_WHITE;
+        statusBarBackgroundColor = COLOR_BLACK;
     }
+    keywordColor = COLOR_CYAN;
+    valueLiteralColor = COLOR_GREEN;
+    commentColor = COLOR_RED;
+    updateColorPairs();
 }
 
 int64_t getTextLineRowCount(textLine_t *line) {
