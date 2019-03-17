@@ -738,7 +738,8 @@ void redrawEverything() {
     }
 }
 
-int8_t scrollCursorOntoScreen() {
+// Returns whether all lines should be redrawn.
+int8_t scrollCursorOntoScreenHelper() {
     int64_t tempPosY = getCursorPosY();
     int64_t tempScrollOffset = 8;
     if (tempScrollOffset > viewPortHeight / 2) {
@@ -758,7 +759,6 @@ int8_t scrollCursorOntoScreen() {
             }
             tempPosY += 1;
         }
-        displayAllTextLines();
         return true;
     }
     if (tempPosY >= viewPortHeight) {
@@ -777,10 +777,17 @@ int8_t scrollCursorOntoScreen() {
             }
             tempPosY -= 1;
         }
-        displayAllTextLines();
         return true;
     }
     return false;
+}
+
+int8_t scrollCursorOntoScreen() {
+    int8_t tempResult = scrollCursorOntoScreenHelper();
+    if (tempResult) {
+        displayAllTextLines();
+    }
+    return tempResult;
 }
 
 void redrawHighlightLines() {

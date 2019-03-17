@@ -198,16 +198,15 @@ void handleResize() {
     if (tempWidth == windowWidth && tempHeight == windowHeight) {
         return;
     }
+    int64_t tempLastCursorIndex = getTextPosIndex(&cursorTextPos);
     windowWidth = tempWidth;
     windowHeight = tempHeight;
     viewPortWidth = windowWidth;
     viewPortHeight = windowHeight - 1;
     topTextLineRow = 0;
-    cursorTextPos.line = topTextLine;
-    cursorTextPos.row = 0;
-    cursorTextPos.column = 0;
-    cursorSnapColumn = 0;
-    
+    setTextPosIndex(&cursorTextPos, tempLastCursorIndex);
+    cursorSnapColumn = cursorTextPos.column;
+    scrollCursorOntoScreenHelper();
     if (activityMode != HELP_MODE) {
         setActivityMode(COMMAND_MODE);
     }
