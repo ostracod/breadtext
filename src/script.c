@@ -472,6 +472,12 @@ scriptValue_t invokeFunction(scriptValue_t function, vector_t *argumentList) {
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_GET_TIMESTAMP:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = getTimestamp();
+                break;
+            }
             case SCRIPT_FUNCTION_PRESS_KEY:
             {
                 scriptValue_t tempValue;

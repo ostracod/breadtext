@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 #include <wordexp.h>
 #include <unistd.h>
 #include "vector.h"
@@ -226,6 +227,12 @@ void sleepMilliseconds(int32_t milliseconds) {
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
     nanosleep(&ts, NULL);
+}
+
+double getTimestamp() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
 int8_t *getFileExtension(int8_t *path) {

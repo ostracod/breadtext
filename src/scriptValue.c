@@ -65,6 +65,7 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {(int8_t *)"len", SCRIPT_FUNCTION_LEN, 1},
     {(int8_t *)"ins", SCRIPT_FUNCTION_INS, 3},
     {(int8_t *)"rem", SCRIPT_FUNCTION_REM, 2},
+    {(int8_t *)"getTimestamp", SCRIPT_FUNCTION_GET_TIMESTAMP, 0},
     {(int8_t *)"pressKey", SCRIPT_FUNCTION_PRESS_KEY, 1},
     {(int8_t *)"getMode", SCRIPT_FUNCTION_GET_MODE, 0},
     {(int8_t *)"setMode", SCRIPT_FUNCTION_SET_MODE, 1},
