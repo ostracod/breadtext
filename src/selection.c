@@ -274,8 +274,12 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
         int8_t *tempText;
         getVectorElement(&tempText, clipboard, tempClipboardLineIndex);
         tempClipboardLineIndex += 1;
+        int64_t tempBufferLength = strlen((char *)tempText) + 1;
+        int8_t tempBuffer[tempBufferLength];
+        memcpy(tempBuffer, tempText, tempBufferLength);
         int8_t tempContainsNewline;
-        int64_t tempCount = removeBadCharacters(tempText, &tempContainsNewline);
+        int64_t tempCount = removeBadCharacters(tempBuffer, &tempContainsNewline);
+        tempText = tempBuffer;
         int64_t index = getTextPosIndex(&cursorTextPos);
         recordTextLineDeleted(cursorTextPos.line);
         insertTextIntoTextAllocation(&(cursorTextPos.line->textAllocation), index, tempText, tempCount);
