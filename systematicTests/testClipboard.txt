@@ -704,4 +704,85 @@ ASSERT_LINE 10 "            two"
 ASSERT_LINE 11 "                three"
 ASSERT_LINE 12 "    six"
 
+TEST "Paste with indentation 2"
+ADD_LINE "one"
+ADD_LINE "            two"
+ADD_LINE "                three"
+ADD_LINE "    four"
+ADD_LINE "        five"
+ADD_LINE "    six"
+SET_POS 1 0
+PRESS_KEY y H DOWN DOWN c
+SET_POS 4 0
+PRESS_KEY P
+SET_POS 8 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 12
+ASSERT_LINE 1 "one"
+ASSERT_LINE 2 "            two"
+ASSERT_LINE 3 "                three"
+ASSERT_LINE 4 "    one"
+ASSERT_LINE 5 "        two"
+ASSERT_LINE 6 "            three"
+ASSERT_LINE 7 "    four"
+ASSERT_LINE 8 "        five"
+ASSERT_LINE 9 "        one"
+ASSERT_LINE 10 "            two"
+ASSERT_LINE 11 "                three"
+ASSERT_LINE 12 "    six"
+
+TEST "Paste with indentation 3"
+ADD_LINE "            one"
+ADD_LINE "                two"
+ADD_LINE "        three"
+ADD_LINE "    four"
+ADD_LINE "        five"
+ADD_LINE "    six"
+SET_POS 1 0
+PRESS_KEY y H DOWN DOWN c
+SET_POS 4 0
+PRESS_KEY P
+SET_POS 8 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 12
+ASSERT_LINE 1 "            one"
+ASSERT_LINE 2 "                two"
+ASSERT_LINE 3 "        three"
+ASSERT_LINE 4 "        one"
+ASSERT_LINE 5 "            two"
+ASSERT_LINE 6 "    three"
+ASSERT_LINE 7 "    four"
+ASSERT_LINE 8 "        five"
+ASSERT_LINE 9 "            one"
+ASSERT_LINE 10 "                two"
+ASSERT_LINE 11 "        three"
+ASSERT_LINE 12 "    six"
+
+TEST "Paste with indentation 4"
+ADD_LINE "one"
+ADD_LINE "                two"
+ADD_LINE "        three"
+ADD_LINE "    four"
+ADD_LINE "        five"
+ADD_LINE "    six"
+SET_POS 1 0
+PRESS_KEY y H DOWN DOWN c
+SET_POS 4 0
+PRESS_KEY P
+SET_POS 8 0
+PRESS_KEY p
+ASSERT_LINE_COUNT 12
+ASSERT_LINE 1 "one"
+ASSERT_LINE 2 "                two"
+ASSERT_LINE 3 "        three"
+ASSERT_LINE 4 "        one"
+ASSERT_LINE 5 "            two"
+ASSERT_LINE 6 "    three"
+ASSERT_LINE 7 "    four"
+ASSERT_LINE 8 "        five"
+ASSERT_LINE 9 "            one"
+ASSERT_LINE 10 "                two"
+ASSERT_LINE 11 "        three"
+ASSERT_LINE 12 "    six"
+
 
