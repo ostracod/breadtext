@@ -342,6 +342,29 @@ int8_t isHighlightingLines() {
     return (index == tempLength);
 }
 
+int32_t getSelectionBaseIndentationLevel() {
+    if (!isHighlighting) {
+        return getTextLineIndentationLevel(cursorTextPos.line);
+    }
+    textPos_t *tempFirstTextPos = getFirstHighlightTextPos();
+    textPos_t *tempLastTextPos = getLastHighlightTextPos();
+    int8_t tempHasSetOutput = false;
+    int32_t output;
+    textLine_t *tempLine = tempFirstTextPos->line;
+    while (true) {
+        int32_t tempIndentationLevel = getTextLineIndentationLevel(tempLine);
+        if (!tempHasSetOutput || tempIndentationLevel < output) {
+            output = tempIndentationLevel;
+            tempHasSetOutput = true;
+        }
+        if (tempLine == tempLastTextPos->line) {
+            break;
+        }
+        tempLine = getNextTextLine(tempLine);
+    }
+    return output;
+}
+
 void pasteBeforeCursor() {
     vector_t tempSystemClipboard;
     vector_t *tempClipboard;
@@ -351,7 +374,7 @@ void pasteBeforeCursor() {
     } else {
         tempClipboard = &internalClipboard;
     }
-    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    int32_t baseIndentationLevel = getSelectionBaseIndentationLevel();
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
@@ -386,7 +409,7 @@ void pasteAfterCursor() {
     } else {
         tempClipboard = &internalClipboard;
     }
-    int32_t baseIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
+    int32_t baseIndentationLevel = getSelectionBaseIndentationLevel();
     addHistoryFrame();
     int8_t tempLastIsHighlighting = isHighlighting;
     int8_t tempLastIsHighlightingLines;
