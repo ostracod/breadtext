@@ -180,6 +180,8 @@ greedy dirtbag
 
 `rem(sequence, index)` - Removes a value from the list or string.
 
+`getTimestamp()` - Returns the current Unix timestamp.
+
 ## BreadText-specific Built-in Functions
 
 `pressKey(key)` - Simulates a key press in the editor.
