@@ -677,6 +677,25 @@ ASSERT_LINE 2 "ghcdkl"
 ASSERT_LINE 3 "mnopqr"
 ASSERT_LINE 4 "ij"
 
+TEST "Swap with indentation"
+ADD_LINE "abcdef"
+ADD_LINE "    ghijkl"
+ADD_LINE "mnopqr"
+SET_POS 1 0
+PRESS_KEY y H c
+SET_POS 2 0
+PRESS_KEY H *
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "abcdef"
+ASSERT_LINE 2 "    abcdef"
+ASSERT_LINE 3 "mnopqr"
+SET_POS 1 0
+PRESS_KEY H P
+ASSERT_LINE_COUNT 3
+ASSERT_LINE 1 "ghijkl"
+ASSERT_LINE 2 "    abcdef"
+ASSERT_LINE 3 "mnopqr"
+
 TEST "Paste with indentation 1"
 ADD_LINE "        one"
 ADD_LINE "            two"

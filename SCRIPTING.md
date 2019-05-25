@@ -33,10 +33,6 @@ String literal: `"Hello"`
 
 List literal: `[1, 2, 3]`
 
-Variable declaration: `dec myNumber`
-
-Variable declaration and assignment: `dec myNumber = 5`
-
 Comment: `# comment`
 
 ## Operators

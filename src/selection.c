@@ -456,7 +456,6 @@ void pasteAfterCursor() {
 
 void swapSelection() {
     int8_t *tempText = allocateStringFromSelection();
-    deleteSelection();
     pasteBeforeCursor();
     copyString(tempText);
     free(tempText);
