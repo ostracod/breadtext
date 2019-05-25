@@ -9,6 +9,7 @@
 #include "utilities.h"
 #include "vector.h"
 #include "scriptValue.h"
+#include "scriptParse.h"
 #include "script.h"
 #include "display.h"
 #include "selection.h"
