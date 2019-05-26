@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <curses.h>
+#include "utilities.h"
 #include "scriptParse.h"
+#include "display.h"
 
 scriptConstant_t scriptConstantSet[] = {
     {(int8_t *)"KEY_ESCAPE", 27},
@@ -233,13 +236,13 @@ int8_t scriptBodyPosMatchesOperator(scriptBodyPos_t *scriptBodyPos, scriptOperat
     }
 }
 
-scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorType) {
+scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorArrangement) {
     int8_t tempLength = 3;
     while (tempLength >= 1) {
         int32_t index = 0;
         while (index < sizeof(scriptOperatorSet) / sizeof(*scriptOperatorSet)) {
             scriptOperator_t *tempOperator = scriptOperatorSet + index;
-            if (tempOperator->type == operatorType) {
+            if (tempOperator->arrangement == operatorArrangement) {
                 if (strlen((char *)(tempOperator->text)) == tempLength) {
                     if (scriptBodyPosMatchesOperator(scriptBodyPos, tempOperator)) {
                         return tempOperator;

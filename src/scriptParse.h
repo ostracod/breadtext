@@ -3,7 +3,6 @@
 #define SCRIPT_PARSE_HEADER_FILE
 
 #include "vector.h"
-#include "scriptValue.h"
 
 #define SCRIPT_OPERATOR_ARRANGEMENT_BINARY 1
 #define SCRIPT_OPERATOR_ARRANGEMENT_UNARY_PREFIX 2
@@ -134,7 +133,7 @@ typedef struct scriptOperator {
 typedef struct scriptVariable {
     int8_t *name;
     int8_t isGlobal;
-    int32_t scopeIndex
+    int32_t scopeIndex;
 } scriptVariable_t;
 
 typedef struct scriptScope {
@@ -180,7 +179,7 @@ typedef struct scriptListExpression {
 typedef struct scriptFunctionExpression {
     scriptBaseExpression_t base;
     scriptBaseFunction_t *function;
-} scriptNumberExpression_t;
+} scriptFunctionExpression_t;
 
 typedef struct scriptVariableExpression {
     scriptBaseExpression_t base;
@@ -240,7 +239,7 @@ typedef struct scriptReturnStatement {
 typedef struct scriptImportStatement {
     scriptBaseStatement_t base;
     scriptBaseExpression_t path;
-    vector_t variableList // Vector of scriptVariable_t.
+    vector_t variableList; // Vector of scriptVariable_t.
 } scriptImportStatement_t;
 
 typedef struct script {
@@ -258,7 +257,7 @@ int8_t isScriptIdentifierCharacter(int8_t character);
 int8_t isScriptNumberCharacter(int8_t character);
 void scriptBodyPosSeekEndOfIdentifier(scriptBodyPos_t *scriptBodyPos);
 void scriptBodyPosSeekEndOfNumber(scriptBodyPos_t *scriptBodyPos);
-scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorType);
+scriptOperator_t *scriptBodyPosGetOperator(scriptBodyPos_t *scriptBodyPos, int8_t operatorArrangement);
 void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t *operator);
 int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t *text);
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos);
