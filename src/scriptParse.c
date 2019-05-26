@@ -297,7 +297,7 @@ scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length) {
 }
 
 int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
-    // TODO: Everything.
+    // TODO: Implement.
     
     return true;
 }

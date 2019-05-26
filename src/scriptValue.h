@@ -3,6 +3,7 @@
 #define SCRIPT_VALUE_HEADER_FILE
 
 #include "vector.h"
+#include "scriptParse.h"
 
 #define SCRIPT_VALUE_TYPE_MISSING 0
 #define SCRIPT_VALUE_TYPE_NULL 1
@@ -33,7 +34,7 @@ typedef struct scriptHeapValue {
 
 typedef struct keyBinding {
     int32_t key;
-    scriptValue_t callback;
+    scriptBaseFunction_t *callback;
 } keyBinding_t;
 
 typedef struct keyMapping {
@@ -44,7 +45,7 @@ typedef struct keyMapping {
 
 typedef struct commandBinding {
     int8_t *commandName;
-    scriptValue_t callback;
+    scriptBaseFunction_t *callback;
 } commandBinding_t;
 
 scriptHeapValue_t *firstHeapValue;
