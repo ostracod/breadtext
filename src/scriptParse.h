@@ -177,6 +177,11 @@ typedef struct scriptListExpression {
     vector_t argumentList; // Vector of pointers to scriptBaseExpression_t.
 } scriptListExpression_t;
 
+typedef struct scriptFunctionExpression {
+    scriptBaseExpression_t base;
+    scriptBaseFunction_t *function;
+} scriptNumberExpression_t;
+
 typedef struct scriptVariableExpression {
     scriptBaseExpression_t base;
     scriptVariable_t variable;
@@ -197,7 +202,7 @@ typedef struct scriptBinaryExpression {
 
 typedef struct scriptInvocationExpression {
     scriptBaseExpression_t base;
-    scriptBaseFunction_t *function;
+    scriptBaseExpression_t *function;
     vector_t argumentList; // Vector of pointers to scriptBaseExpression_t.
 } scriptInvocationExpression_t;
 
