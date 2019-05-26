@@ -244,8 +244,14 @@ typedef struct scriptImportStatement {
 
 typedef struct script {
     scriptBody_t *scriptBody;
-    scriptCustomFunction_t *entryPointFunction;
+    scriptBaseFunction_t *entryPointFunction;
 } script_t;
+
+typedef struct scriptParser {
+    scriptScope_t *scope;
+    vector_t *statementList;
+    scriptBodyLine_t *scriptBodyLine;
+} scriptParser_t;
 
 int8_t loadScriptBody(scriptBody_t **destination, int8_t *path);
 void loadScriptBodyFromText(scriptBody_t **destination, int8_t *text);

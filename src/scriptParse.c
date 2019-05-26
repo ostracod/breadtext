@@ -296,9 +296,61 @@ scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length) {
     return NULL;
 }
 
-int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
+void createEmptyScriptScope(scriptScope_t *scope) {
+    createEmptyVector(&(scope->variableNameList), sizeof(int8_t *));
+}
+
+int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
+    scriptBaseStatement_t *tempStatement = NULL;
     // TODO: Implement.
     
+    if (tempStatement != NULL) {
+        pushVectorElement(parser->statementList, &tempStatement);
+    }
+    *hasReachedEnd = !seekNextScriptBodyLine(parser->scriptBodyLine);
+    return true;
+}
+
+int8_t parseScriptStatementList(scriptParser_t *parser) {
+    while (true) {
+        int8_t tempHasReachedEnd;
+        int8_t tempResult = parseScriptStatement(&tempHasReachedEnd, parser);
+        if (!tempResult) {
+            return false;
+        }
+        if (tempHasReachedEnd) {
+            break;
+        }
+    }
+    return true;
+}
+
+int8_t parseScriptFunctionBody(scriptBaseFunction_t **destination, scriptBodyLine_t *scriptBodyLine) {
+    scriptCustomFunction_t *tempFunction = malloc(sizeof(scriptCustomFunction_t));
+    createEmptyScriptScope(&(tempFunction->scope));
+    createEmptyVector(&(tempFunction->statementList), sizeof(scriptBaseStatement_t *));
+    *destination = (scriptBaseFunction_t *)tempFunction;
+    scriptParser_t tempParser;
+    tempParser.scope = &(tempFunction->scope);
+    tempParser.statementList = &(tempFunction->statementList);
+    tempParser.scriptBodyLine = scriptBodyLine;
+    return parseScriptStatementList(&tempParser);
+}
+
+int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
+    scriptBodyLine_t scriptBodyLine;
+    scriptBodyLine.scriptBody = scriptBody;
+    scriptBodyLine.index = 0;
+    scriptBodyLine.number = 1;
+    scriptBaseFunction_t *entryPointFunction;
+    int8_t tempResult = parseScriptFunctionBody(&entryPointFunction, &scriptBodyLine);
+    if (!tempResult) {
+        return false;
+    }
+    script_t *tempScript = malloc(sizeof(script_t));
+    tempScript->scriptBody = scriptBody;
+    tempScript->entryPointFunction = entryPointFunction;
+    *destination = tempScript;
     return true;
 }
 
