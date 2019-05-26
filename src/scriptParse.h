@@ -89,9 +89,11 @@
 #define SCRIPT_EXPRESSION_TYPE_NUMBER 2
 #define SCRIPT_EXPRESSION_TYPE_TEXT 3
 #define SCRIPT_EXPRESSION_TYPE_LIST 4
-#define SCRIPT_EXPRESSION_TYPE_UNARY 5
-#define SCRIPT_EXPRESSION_TYPE_BINARY 6
-#define SCRIPT_EXPRESSION_TYPE_INVOCATION 7
+#define SCRIPT_EXPRESSION_TYPE_FUNCTION 5
+#define SCRIPT_EXPRESSION_TYPE_VARIABLE 6
+#define SCRIPT_EXPRESSION_TYPE_UNARY 7
+#define SCRIPT_EXPRESSION_TYPE_BINARY 8
+#define SCRIPT_EXPRESSION_TYPE_INVOCATION 9
 
 #define SCRIPT_STATEMENT_TYPE_EXPRESSION 1
 #define SCRIPT_STATEMENT_TYPE_IF 2
@@ -253,6 +255,7 @@ typedef struct scriptParser {
     scriptBodyLine_t *scriptBodyLine;
 } scriptParser_t;
 
+void initializeScriptParsingEnvironment();
 int8_t loadScriptBody(scriptBody_t **destination, int8_t *path);
 void loadScriptBodyFromText(scriptBody_t **destination, int8_t *text);
 int8_t seekNextScriptBodyLine(scriptBodyLine_t *scriptBodyLine);

@@ -113,6 +113,13 @@ int8_t isWordCharacter(int8_t tempCharacter) {
          || tempCharacter == '_');
 }
 
+int8_t *mallocText(int8_t *text, int64_t length) {
+    int8_t *output = malloc(length + 1);
+    copyData(output, text, length);
+    output[length] = 0;
+    return output;
+}
+
 int8_t *mallocRealpath(int8_t *path) {
     int8_t tempText[50000];
     int64_t tempLength = strlen((char *)path);

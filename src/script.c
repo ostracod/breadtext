@@ -20,6 +20,7 @@ vector_t keyMappingList;
 vector_t commandBindingList;
 
 void initializeScriptingEnvironment() {
+    initializeScriptParsingEnvironment();
     firstHeapValue = NULL;
     createEmptyVector(&scriptList, sizeof(script_t *));
     createEmptyVector(&keyBindingList, sizeof(keyBinding_t));

@@ -4,11 +4,13 @@
 
 #include "vector.h"
 #include "scriptValue.h"
+#include "scriptParse.h"
 
 int8_t scriptHasError;
 vector_t scriptTestLogMessageList;
 
 void initializeScriptingEnvironment();
+void reportScriptError(int8_t *message, scriptBodyLine_t *line);
 int8_t runScript(int8_t *path);
 int8_t runScriptAsText(int8_t *text);
 int8_t invokeKeyBinding(int32_t key);

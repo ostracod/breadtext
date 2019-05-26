@@ -6,6 +6,7 @@
 #include <curses.h>
 #include "utilities.h"
 #include "scriptParse.h"
+#include "script.h"
 #include "display.h"
 
 scriptConstant_t scriptConstantSet[] = {
@@ -104,6 +105,20 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 0}, (int8_t *)"rand", SCRIPT_FUNCTION_RAND}
 };
+
+scriptOperator_t *scriptAssignmentOperator;
+
+void initializeScriptParsingEnvironment() {
+    int32_t index = 0;
+    while (true) {
+        scriptOperator_t *tempOperator = scriptOperatorSet + index;
+        if (tempOperator->number == SCRIPT_OPERATOR_ASSIGN) {
+            scriptAssignmentOperator = tempOperator;
+            break;
+        }
+        index += 1;
+    }
+}
 
 int8_t loadScriptBody(scriptBody_t **destination, int8_t *path) {
     FILE *tempFile = fopen((char *)path, "r");
@@ -260,12 +275,40 @@ void scriptBodyPosSkipOperator(scriptBodyPos_t *scriptBodyPos, scriptOperator_t 
     scriptBodyPos->index += strlen((char *)(operator->text));
 }
 
+int8_t scriptBodyPosTextMatchesIdentifier(scriptBodyPos_t *scriptBodyPos, int8_t *text) {
+    scriptBodyPos_t tempScriptBodyPos;
+    tempScriptBodyPos = *scriptBodyPos;
+    scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+    int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
+    int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
+    if (tempLength != strlen((char *)text)) {
+        return false;
+    }
+    if (equalData(text, tempText, tempLength)) {
+        *scriptBodyPos = tempScriptBodyPos;
+        return true;
+    }
+    return false;
+}
+
 int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBodyPos_t *endScriptBodyPos) {
     return endScriptBodyPos->index - startScriptBodyPos->index;
 }
 
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos) {
     return scriptBodyPos->scriptBodyLine->scriptBody->text + scriptBodyPos->index;
+}
+
+int8_t characterIsEndOfScriptLine(int8_t character) {
+    return (character == '\n' || character == 0 || character == '#');
+}
+
+void assertEndOfLine(scriptBodyPos_t scriptBodyPos) {
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+    if (!characterIsEndOfScriptLine(tempCharacter)) {
+        reportScriptError((int8_t *)"Expected end of line.", scriptBodyPos.scriptBodyLine);
+    }
 }
 
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length) {
@@ -300,12 +343,117 @@ void createEmptyScriptScope(scriptScope_t *scope) {
     createEmptyVector(&(scope->variableNameList), sizeof(int8_t *));
 }
 
-int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
-    scriptBaseStatement_t *tempStatement = NULL;
+int32_t scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
+    int32_t index = 0;
+    while (index < scope->variableNameList.length) {
+        int8_t *tempName = findVectorElement(&(scope->variableNameList), index);
+        if (strlen((char *)(tempName)) == length) {
+            if (equalData(tempName, name, length)) {
+                return index;
+            }
+        }
+        index += 1;
+    }
+    return -1;
+}
+
+int32_t scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
+    return scriptScopeFindVariableWithNameLength(scope, name, strlen((char *)name));
+}
+
+void scriptScopeAddVariable(scriptScope_t *scope, int8_t *name, int64_t length) {
+    pushVectorElement(&(scope->variableNameList), mallocText(name, length));
+}
+
+void scriptScopeAddVariableIfMissing(scriptScope_t *scope, int8_t *name, int64_t length) {
+    int32_t index = scriptScopeFindVariableWithNameLength(scope, name, length);
+    if (index < 0) {
+        scriptScopeAddVariable(scope, name, length);
+    }
+}
+
+scriptBaseExpression_t *createScriptVariableExpression(int8_t *name, int64_t length) {
+    scriptVariableExpression_t *output = malloc(sizeof(scriptVariableExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_VARIABLE;
+    output->variable.name = mallocText(name, length);
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptBinaryExpression(
+    scriptOperator_t *operator,
+    scriptBaseExpression_t *operand1,
+    scriptBaseExpression_t *operand2
+) {
+    scriptBinaryExpression_t *output = malloc(sizeof(scriptBinaryExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_BINARY;
+    output->operator = operator;
+    output->operand1 = operand1;
+    output->operand2 = operand2;
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseStatement_t *createScriptExpressionStatement(
+    scriptBodyLine_t *scriptBodyLine,
+    scriptBaseExpression_t *expression
+) {
+    scriptExpressionStatement_t *output = malloc(sizeof(scriptExpressionStatement_t));
+    output->base.type = SCRIPT_STATEMENT_TYPE_EXPRESSION;
+    output->base.scriptBodyLine = *scriptBodyLine;
+    output->expression = expression;
+    return (scriptBaseStatement_t *)output;
+}
+
+scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     // TODO: Implement.
     
-    if (tempStatement != NULL) {
-        pushVectorElement(parser->statementList, &tempStatement);
+    return NULL;
+}
+
+int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
+    scriptBodyLine_t *tempLine = parser->scriptBodyLine;
+    scriptBaseStatement_t *scriptStatement = NULL;
+    scriptBodyPos_t scriptBodyPos;
+    scriptBodyPos.scriptBodyLine = tempLine;
+    scriptBodyPos.index = parser->scriptBodyLine->index;
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dec")) {
+        scriptBodyPosSkipWhitespace(&scriptBodyPos);
+        int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+        if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            reportScriptError((int8_t *)"Missing declaration name.", tempLine);
+            return false;
+        }
+        scriptBodyPos_t tempScriptBodyPos;
+        tempScriptBodyPos = scriptBodyPos;
+        scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+        int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+        int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+        scriptScopeAddVariableIfMissing(parser->scope, tempText, tempLength);
+        scriptBodyPos = tempScriptBodyPos;
+        scriptBodyPosSkipWhitespace(&scriptBodyPos);
+        int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+        if (tempCharacter == '=') {
+            scriptBodyPos.index += 1;
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            scriptBaseExpression_t *tempExpression1 = parseScriptExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
+            scriptBaseExpression_t *tempExpression2 = createScriptBinaryExpression(
+                scriptAssignmentOperator,
+                createScriptVariableExpression(tempText, tempLength),
+                tempExpression1
+            );
+            scriptStatement = createScriptExpressionStatement(tempLine, tempExpression2);
+        }
+        assertEndOfLine(scriptBodyPos);
+        if (scriptHasError) {
+            return false;
+        }
+    }
+    // TODO: Reject malformed statements.
+    if (scriptStatement != NULL) {
+        pushVectorElement(parser->statementList, &scriptStatement);
     }
     *hasReachedEnd = !seekNextScriptBodyLine(parser->scriptBodyLine);
     return true;
@@ -327,6 +475,9 @@ int8_t parseScriptStatementList(scriptParser_t *parser) {
 
 int8_t parseScriptFunctionBody(scriptBaseFunction_t **destination, scriptBodyLine_t *scriptBodyLine) {
     scriptCustomFunction_t *tempFunction = malloc(sizeof(scriptCustomFunction_t));
+    // TODO: Decide when argument variables should be added.
+    tempFunction->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
+    tempFunction->base.argumentAmount = 0;
     createEmptyScriptScope(&(tempFunction->scope));
     createEmptyVector(&(tempFunction->statementList), sizeof(scriptBaseStatement_t *));
     *destination = (scriptBaseFunction_t *)tempFunction;

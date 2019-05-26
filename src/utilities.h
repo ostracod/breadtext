@@ -20,6 +20,7 @@ int8_t *skipWhitespace(int8_t *text);
 int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline);
 void convertTabsToSpaces(int8_t *text);
 int8_t isWordCharacter(int8_t tempCharacter);
+int8_t *mallocText(int8_t *text, int64_t length);
 int8_t *mallocRealpath(int8_t *path);
 void systemCopyClipboard(int8_t *text);
 // Returns a vector of malloced lines.
