@@ -12,12 +12,6 @@
 #define SCRIPT_VALUE_TYPE_CUSTOM_FUNCTION 5
 #define SCRIPT_VALUE_TYPE_BUILT_IN_FUNCTION 6
 
-#define SCRIPT_BRANCH_TYPE_ROOT 1
-#define SCRIPT_BRANCH_TYPE_IF 2
-#define SCRIPT_BRANCH_TYPE_WHILE 3
-#define SCRIPT_BRANCH_TYPE_FUNCTION 4
-#define SCRIPT_BRANCH_TYPE_IMPORT 5
-
 typedef struct scriptValue {
     int8_t type;
     // For null, data is unused.
@@ -39,23 +33,6 @@ typedef struct scriptHeapValue {
     // For custom functions, data points to a scriptCustomFunction_t.
     void *data;
 } scriptHeapValue_t;
-
-typedef struct scriptVariable {
-    int8_t *name;
-    scriptValue_t value;
-} scriptVariable_t;
-
-typedef struct scriptScope {
-    vector_t variableList;
-} scriptScope_t;
-
-typedef struct scriptBranch {
-    int8_t type;
-    int8_t shouldIgnore;
-    int8_t hasExecuted;
-    scriptBodyLine_t line;
-    scriptBody_t *importScriptBody;
-} scriptBranch_t;
 
 typedef struct keyBinding {
     int32_t key;

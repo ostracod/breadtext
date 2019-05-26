@@ -638,59 +638,6 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
-START_TEST "Greedy dirtbag statement"
-testLog(1)
-import "./scriptTestImport.btsl"
-    greedy dirtbag
-end
-testLog(2)
-testLog(value1)
-testLog(3)
-testLog(value2)
-testLog(4)
-testLog(value3)
-testLog(5)
-RUN_SCRIPT
-ASSERT_NO_ERROR
-ASSERT_OUTPUT
-1
-2
-10
-3
-20
-4
-30
-5
-END_TEST
-
-START_TEST "Bad greedy dirtbag statement 1"
-import "./scriptTestImport.btsl"
-    greedy
-end
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
-END_TEST
-
-START_TEST "Bad greedy dirtbag statement 2"
-import "./scriptTestImport.btsl"
-    greedy dirtbag bad
-end
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
-END_TEST
-
-START_TEST "Bad greedy dirtbag statement 2"
-dev value1 = 999
-import "./scriptTestImport.btsl"
-    greedy dirtbag
-end
-RUN_SCRIPT
-ASSERT_ERROR
-ASSERT_OUTPUT
-END_TEST
-
 START_TEST "Double function missing end statement"
 func action1()
 #end

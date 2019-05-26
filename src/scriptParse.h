@@ -86,11 +86,13 @@
 #define SCRIPT_FUNCTION_RAND 29
 #define SCRIPT_FUNCTION_GET_TIMESTAMP 30
 
-#define SCRIPT_EXPRESSION_TYPE_CONSTANT 1
-#define SCRIPT_EXPRESSION_TYPE_VARIABLE 2
-#define SCRIPT_EXPRESSION_TYPE_UNARY 3
-#define SCRIPT_EXPRESSION_TYPE_BINARY 4
-#define SCRIPT_EXPRESSION_TYPE_INVOCATION 5
+#define SCRIPT_EXPRESSION_TYPE_NULL 1
+#define SCRIPT_EXPRESSION_TYPE_NUMBER 2
+#define SCRIPT_EXPRESSION_TYPE_TEXT 3
+#define SCRIPT_EXPRESSION_TYPE_LIST 4
+#define SCRIPT_EXPRESSION_TYPE_UNARY 5
+#define SCRIPT_EXPRESSION_TYPE_BINARY 6
+#define SCRIPT_EXPRESSION_TYPE_INVOCATION 7
 
 #define SCRIPT_STATEMENT_TYPE_EXPRESSION 1
 #define SCRIPT_STATEMENT_TYPE_IF 2
@@ -129,6 +131,16 @@ typedef struct scriptOperator {
     int8_t precedence;
 } scriptOperator_t;
 
+typedef struct scriptVariable {
+    int8_t *name;
+    int8_t isGlobal;
+    int32_t scopeIndex
+} scriptVariable_t;
+
+typedef struct scriptScope {
+    vector_t variableNameList;
+} scriptScope_t;
+
 typedef struct scriptBaseFunction {
     int8_t type;
     int32_t argumentAmount;
@@ -142,24 +154,32 @@ typedef struct scriptBuiltInFunction {
 
 typedef struct scriptCustomFunction {
     scriptBaseFunction_t base;
+    scriptScope_t scope;
     vector_t statementList; // Vector of pointers to scriptBaseStatement_t.
-    // TODO: Define the rest of the struct members.
-    
 } scriptCustomFunction_t;
 
 typedef struct scriptBaseExpression {
     int8_t type;
 } scriptBaseExpression_t;
 
-typedef struct scriptConstantExpression {
+typedef struct scriptNumberExpression {
     scriptBaseExpression_t base;
-    scriptValue_t value;
-} scriptConstantExpression_t;
+    double value;
+} scriptNumberExpression_t;
+
+typedef struct scriptTextExpression {
+    scriptBaseExpression_t base;
+    int8_t *text;
+} scriptTextExpression_t;
+
+typedef struct scriptListExpression {
+    scriptBaseExpression_t base;
+    vector_t argumentList; // Vector of pointers to scriptBaseExpression_t.
+} scriptListExpression_t;
 
 typedef struct scriptVariableExpression {
     scriptBaseExpression_t base;
-    // TODO: Define the rest of the struct members.
-    
+    scriptVariable_t variable;
 } scriptVariableExpression_t;
 
 typedef struct scriptUnaryExpression {
@@ -194,7 +214,7 @@ typedef struct scriptBaseStatement {
 
 typedef struct scriptExpressionStatement {
     scriptBaseStatement_t base;
-    scriptExpression_t expression;
+    scriptBaseExpression_t *expression;
 } scriptExpressionStatement_t;
 
 typedef struct scriptIfStatement {
@@ -214,8 +234,8 @@ typedef struct scriptReturnStatement {
 
 typedef struct scriptImportStatement {
     scriptBaseStatement_t base;
-    // TODO: Define the rest of the struct members.
-    
+    scriptBaseExpression_t path;
+    vector_t variableList // Vector of scriptVariable_t.
 } scriptImportStatement_t;
 
 typedef struct script {
