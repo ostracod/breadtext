@@ -87,13 +87,14 @@
 
 #define SCRIPT_EXPRESSION_TYPE_NULL 1
 #define SCRIPT_EXPRESSION_TYPE_NUMBER 2
-#define SCRIPT_EXPRESSION_TYPE_TEXT 3
+#define SCRIPT_EXPRESSION_TYPE_STRING 3
 #define SCRIPT_EXPRESSION_TYPE_LIST 4
 #define SCRIPT_EXPRESSION_TYPE_FUNCTION 5
-#define SCRIPT_EXPRESSION_TYPE_VARIABLE 6
-#define SCRIPT_EXPRESSION_TYPE_UNARY 7
-#define SCRIPT_EXPRESSION_TYPE_BINARY 8
-#define SCRIPT_EXPRESSION_TYPE_INVOCATION 9
+#define SCRIPT_EXPRESSION_TYPE_IDENTIFIER 6
+#define SCRIPT_EXPRESSION_TYPE_VARIABLE 7
+#define SCRIPT_EXPRESSION_TYPE_UNARY 8
+#define SCRIPT_EXPRESSION_TYPE_BINARY 9
+#define SCRIPT_EXPRESSION_TYPE_INVOCATION 10
 
 #define SCRIPT_STATEMENT_TYPE_EXPRESSION 1
 #define SCRIPT_STATEMENT_TYPE_IF 2
@@ -182,6 +183,11 @@ typedef struct scriptFunctionExpression {
     scriptBaseExpression_t base;
     scriptBaseFunction_t *function;
 } scriptFunctionExpression_t;
+
+typedef struct scriptIdentifierExpression {
+    scriptBaseExpression_t base;
+    int8_t *name;
+} scriptIdentifierExpression_t;
 
 typedef struct scriptVariableExpression {
     scriptBaseExpression_t base;
