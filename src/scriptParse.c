@@ -375,7 +375,8 @@ int32_t scriptScopeFindVariable(scriptScope_t *scope, int8_t *name) {
 }
 
 void scriptScopeAddVariable(scriptScope_t *scope, int8_t *name, int64_t length) {
-    pushVectorElement(&(scope->variableNameList), mallocText(name, length));
+    int8_t *tempName = mallocText(name, length);
+    pushVectorElement(&(scope->variableNameList), &tempName);
 }
 
 void scriptScopeAddVariableIfMissing(scriptScope_t *scope, int8_t *name, int64_t length) {
@@ -828,34 +829,47 @@ int8_t parseScriptStatementList(scriptParser_t *parser) {
     return true;
 }
 
-int8_t parseScriptFunctionBody(scriptBaseFunction_t **destination, scriptBodyLine_t *scriptBodyLine) {
-    scriptCustomFunction_t *tempFunction = malloc(sizeof(scriptCustomFunction_t));
-    // TODO: Decide when argument variables should be added.
-    tempFunction->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
-    tempFunction->base.argumentAmount = 0;
-    createEmptyScriptScope(&(tempFunction->scope));
-    createEmptyVector(&(tempFunction->statementList), sizeof(scriptBaseStatement_t *));
-    *destination = (scriptBaseFunction_t *)tempFunction;
-    scriptParser_t tempParser;
-    tempParser.scope = &(tempFunction->scope);
-    tempParser.statementList = &(tempFunction->statementList);
-    tempParser.scriptBodyLine = scriptBodyLine;
-    return parseScriptStatementList(&tempParser);
+int8_t parseScriptFunctionBody(scriptCustomFunction_t *function, scriptParser_t *parser) {
+    parser->scope = &(function->scope);
+    parser->statementList = &(function->statementList);
+    return parseScriptStatementList(parser);
+}
+
+scriptCustomFunction_t *createEmptyCustomFunction() {
+    scriptCustomFunction_t *output = malloc(sizeof(scriptCustomFunction_t));
+    output->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
+    output->base.argumentAmount = 0;
+    createEmptyScriptScope(&(output->scope));
+    createEmptyVector(&(output->statementList), sizeof(scriptBaseStatement_t *));
+    return output;
+}
+
+int8_t parseScriptEntryPointFunction(scriptCustomFunction_t **destination, scriptParser_t *parser) {
+    scriptCustomFunction_t *tempFunction = createEmptyCustomFunction();
+    *destination = tempFunction;
+    pushVectorElement(parser->customFunctionList, &tempFunction);
+    return parseScriptFunctionBody(tempFunction, parser);
 }
 
 int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
+    vector_t customFunctionList;
+    createEmptyVector(&customFunctionList, sizeof(scriptCustomFunction_t *));
     scriptBodyLine_t scriptBodyLine;
     scriptBodyLine.scriptBody = scriptBody;
     scriptBodyLine.index = 0;
     scriptBodyLine.number = 1;
-    scriptBaseFunction_t *entryPointFunction;
-    int8_t tempResult = parseScriptFunctionBody(&entryPointFunction, &scriptBodyLine);
+    scriptParser_t parser;
+    parser.customFunctionList = &customFunctionList;
+    parser.scriptBodyLine = &scriptBodyLine;
+    scriptCustomFunction_t *entryPointFunction;
+    int8_t tempResult = parseScriptEntryPointFunction(&entryPointFunction, &parser);
     if (!tempResult) {
         return false;
     }
     script_t *tempScript = malloc(sizeof(script_t));
     tempScript->scriptBody = scriptBody;
     tempScript->entryPointFunction = entryPointFunction;
+    tempScript->customFunctionList = customFunctionList;
     *destination = tempScript;
     return true;
 }

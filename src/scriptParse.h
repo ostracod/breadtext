@@ -141,7 +141,7 @@ typedef struct scriptVariable {
 } scriptVariable_t;
 
 typedef struct scriptScope {
-    vector_t variableNameList;
+    vector_t variableNameList; // Vector of pointer to int8_t.
 } scriptScope_t;
 
 typedef struct scriptBaseFunction {
@@ -172,7 +172,7 @@ typedef struct scriptNumberExpression {
 
 typedef struct scriptStringExpression {
     scriptBaseExpression_t base;
-    vector_t text;
+    vector_t text; // Vector of int8_t.
 } scriptStringExpression_t;
 
 typedef struct scriptListExpression {
@@ -259,12 +259,14 @@ typedef struct scriptImportStatement {
 
 typedef struct script {
     scriptBody_t *scriptBody;
-    scriptBaseFunction_t *entryPointFunction;
+    scriptCustomFunction_t *entryPointFunction;
+    vector_t customFunctionList; // Vector of pointers to scriptCustomFunction_t.
 } script_t;
 
 typedef struct scriptParser {
+    vector_t *customFunctionList; // Vector of pointers to scriptCustomFunction_t.
     scriptScope_t *scope;
-    vector_t *statementList;
+    vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
 } scriptParser_t;
 
