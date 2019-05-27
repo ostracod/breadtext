@@ -94,7 +94,8 @@
 #define SCRIPT_EXPRESSION_TYPE_VARIABLE 7
 #define SCRIPT_EXPRESSION_TYPE_UNARY 8
 #define SCRIPT_EXPRESSION_TYPE_BINARY 9
-#define SCRIPT_EXPRESSION_TYPE_INVOCATION 10
+#define SCRIPT_EXPRESSION_TYPE_INDEX 10
+#define SCRIPT_EXPRESSION_TYPE_INVOCATION 11
 
 #define SCRIPT_STATEMENT_TYPE_EXPRESSION 1
 #define SCRIPT_STATEMENT_TYPE_IF 2
@@ -169,14 +170,14 @@ typedef struct scriptNumberExpression {
     double value;
 } scriptNumberExpression_t;
 
-typedef struct scriptTextExpression {
+typedef struct scriptStringExpression {
     scriptBaseExpression_t base;
-    int8_t *text;
-} scriptTextExpression_t;
+    vector_t text;
+} scriptStringExpression_t;
 
 typedef struct scriptListExpression {
     scriptBaseExpression_t base;
-    vector_t argumentList; // Vector of pointers to scriptBaseExpression_t.
+    vector_t expressionList; // Vector of pointers to scriptBaseExpression_t.
 } scriptListExpression_t;
 
 typedef struct scriptFunctionExpression {
@@ -206,6 +207,12 @@ typedef struct scriptBinaryExpression {
     scriptBaseExpression_t *operand1;
     scriptBaseExpression_t *operand2;
 } scriptBinaryExpression_t;
+
+typedef struct scriptIndexExpression {
+    scriptBaseExpression_t base;
+    scriptBaseExpression_t *list;
+    scriptBaseExpression_t *index;
+} scriptIndexExpression_t;
 
 typedef struct scriptInvocationExpression {
     scriptBaseExpression_t base;

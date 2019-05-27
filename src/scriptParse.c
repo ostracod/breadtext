@@ -385,10 +385,48 @@ void scriptScopeAddVariableIfMissing(scriptScope_t *scope, int8_t *name, int64_t
     }
 }
 
+scriptBaseExpression_t *createScriptNullExpression() {
+    scriptBaseExpression_t *output = malloc(sizeof(scriptBaseExpression_t));
+    output->type = SCRIPT_EXPRESSION_TYPE_NULL;
+    return output;
+}
+
+scriptBaseExpression_t *createScriptNumberExpression(double value) {
+    scriptNumberExpression_t *output = malloc(sizeof(scriptNumberExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_NUMBER;
+    output->value = value;
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptStringExpression(vector_t *text) {
+    scriptStringExpression_t *output = malloc(sizeof(scriptStringExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_STRING;
+    output->text = *text;
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptListExpression(vector_t *expressionList) {
+    scriptListExpression_t *output = malloc(sizeof(scriptListExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_LIST;
+    output->expressionList = *expressionList;
+    return (scriptBaseExpression_t *)output;
+}
+
 scriptBaseExpression_t *createScriptIdentifierExpression(int8_t *name, int64_t length) {
     scriptIdentifierExpression_t *output = malloc(sizeof(scriptIdentifierExpression_t));
     output->base.type = SCRIPT_EXPRESSION_TYPE_IDENTIFIER;
     output->name = mallocText(name, length);
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptUnaryExpression(
+    scriptOperator_t *operator,
+    scriptBaseExpression_t *operand
+) {
+    scriptUnaryExpression_t *output = malloc(sizeof(scriptUnaryExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_UNARY;
+    output->operator = operator;
+    output->operand = operand;
     return (scriptBaseExpression_t *)output;
 }
 
@@ -402,6 +440,28 @@ scriptBaseExpression_t *createScriptBinaryExpression(
     output->operator = operator;
     output->operand1 = operand1;
     output->operand2 = operand2;
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptIndexExpression(
+    scriptBaseExpression_t *list,
+    scriptBaseExpression_t *index
+) {
+    scriptIndexExpression_t *output = malloc(sizeof(scriptIndexExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_INDEX;
+    output->list = list;
+    output->index = index;
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptInvocationExpression(
+    scriptBaseExpression_t *function,
+    vector_t *argumentList
+) {
+    scriptInvocationExpression_t *output = malloc(sizeof(scriptInvocationExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_INVOCATION;
+    output->function = function;
+    output->argumentList = *argumentList;
     return (scriptBaseExpression_t *)output;
 }
 
@@ -454,18 +514,21 @@ void parseScriptExpressionList(vector_t *destination, scriptBodyPos_t *scriptBod
 scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence) {
     scriptBodyLine_t *tempLine = scriptBodyPos->scriptBodyLine;
     scriptBaseExpression_t *output = NULL;
+    scriptBodyPosSkipWhitespace(scriptBodyPos);
+    int8_t tempCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
+    if (characterIsEndOfScriptLine(tempCharacter)) {
+        reportScriptError((int8_t *)"Unexpected end of line.", tempLine);
+        return NULL;
+    }
     while (true) {
-        scriptBodyPosSkipWhitespace(scriptBodyPos);
         scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_ARRANGEMENT_UNARY_PREFIX);
         if (tempOperator != NULL) {
             scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
-            // TODO: parseScriptExpression
-            expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
+            scriptBaseExpression_t *tempExpression = parseScriptExpression(scriptBodyPos, tempOperator->precedence);
             if (scriptHasError) {
                 return NULL;
             }
-            // TODO: Construct the unary expression.
-            
+            output = createScriptUnaryExpression(tempOperator, tempExpression);
             break;
         }
         scriptBodyPosSkipWhitespace(scriptBodyPos);
@@ -504,8 +567,7 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 reportScriptError((int8_t *)"Malformed number.", tempLine);
                 return NULL;
             }
-            // TODO: Construct the number expression.
-            
+            output = createScriptNumberExpression(tempNumber);
             *scriptBodyPos = tempScriptBodyPos;
             break;
         }
@@ -514,14 +576,13 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
             int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
             int64_t tempLength = getDistanceToScriptBodyPos(scriptBodyPos, &tempScriptBodyPos);
-            // TODO: Construct the identifier expression.
-            
+            output = createScriptIdentifierExpression(tempText, tempLength);
             *scriptBodyPos = tempScriptBodyPos;
             break;
         }
         if (tempFirstCharacter == '"') {
-            vector_t *tempText = malloc(sizeof(vector_t));
-            createEmptyVector(tempText, 1);
+            vector_t tempText;
+            createEmptyVector(&tempText, 1);
             scriptBodyPos->index += 1;
             int8_t tempIsEscaped = false;
             while (true) {
@@ -532,7 +593,7 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 }
                 if (tempIsEscaped) {
                     tempCharacter = escapeScriptCharacter(tempCharacter);
-                    pushVectorElement(tempText, &tempCharacter);
+                    pushVectorElement(&tempText, &tempCharacter);
                     tempIsEscaped = false;
                 } else {
                     if (tempCharacter == '"') {
@@ -540,16 +601,13 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                     } else if (tempCharacter == '\\') {
                         tempIsEscaped = true;
                     } else {
-                        pushVectorElement(tempText, &tempCharacter);
+                        pushVectorElement(&tempText, &tempCharacter);
                     }
                 }
                 scriptBodyPos->index += 1;
             }
             scriptBodyPos->index += 1;
-            int8_t tempCharacter = 0;
-            pushVectorElement(tempText, &tempCharacter);
-            // TODO: Construct the string expression.
-            
+            output = createScriptStringExpression(&tempText);
             break;
         }
         if (tempFirstCharacter == '\'') {
@@ -575,14 +633,12 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 return NULL;
             }
             scriptBodyPos->index += 1;
-            // TODO: Construct the number expression.
-            
+            output = createScriptNumberExpression(tempCharacter);
             break;
         }
         if (tempFirstCharacter == '(') {
             scriptBodyPos->index += 1;
-            // TODO: parseScriptExpression
-            expressionResult = evaluateExpression(scriptBodyPos, 99);
+            output = parseScriptExpression(scriptBodyPos, 99);
             if (scriptHasError) {
                 return NULL;
             }
@@ -597,29 +653,24 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
         }
         if (tempFirstCharacter == '[') {
             scriptBodyPos->index += 1;
-            // TODO: parseScriptExpressionList
-            vector_t *tempList = malloc(sizeof(vector_t));
-            getScriptBodyValueList(tempList, scriptBodyPos, ']');
+            vector_t tempList;
+            parseScriptExpressionList(&tempList, scriptBodyPos, ']');
             if (scriptHasError) {
                 return NULL;
             }
-            // TODO: Construct the list expression.
-            
+            output = createScriptListExpression(&tempList);
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"true")) {
-            // TODO: Construct the number expression.
-            
+            output = createScriptNumberExpression(1);
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"false")) {
-            // TODO: Construct the number expression.
-            
+            output = createScriptNumberExpression(0);
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"null")) {
-            // TODO: Construct the null expression.
-            
+            output = createScriptNullExpression();
             break;
         }
         reportScriptError((int8_t *)"Unknown expression type.", tempLine);
@@ -632,21 +683,18 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
             int8_t tempFirstCharacter = scriptBodyPosGetCharacter(scriptBodyPos);
             if (tempFirstCharacter == '(') {
                 scriptBodyPos->index += 1;
-                // TODO: parseScriptExpressionList
                 vector_t tempArgumentList;
-                getScriptBodyValueList(&tempArgumentList, scriptBodyPos, ')');
+                parseScriptExpressionList(&tempArgumentList, scriptBodyPos, ']');
                 if (scriptHasError) {
                     return NULL;
                 }
-                // TODO: Construct the invocation expression.
-                
+                output = createScriptInvocationExpression(output, &tempArgumentList);
                 hasProcessedOperator = true;
                 break;
             }
             if (tempFirstCharacter == '[') {
                 scriptBodyPos->index += 1;
-                // TODO: parseScriptExpression
-                expressionResult_t tempResult = evaluateExpression(scriptBodyPos, 99);
+                scriptBaseExpression_t *tempExpression = parseScriptExpression(scriptBodyPos, 99);
                 if (scriptHasError) {
                     return NULL;
                 }
@@ -657,16 +705,14 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                     return NULL;
                 }
                 scriptBodyPos->index += 1;
-                // TODO: Construct the binary expression.
-                
+                output = createScriptIndexExpression(output, tempExpression);
                 hasProcessedOperator = true;
                 break;
             }
             scriptOperator_t *tempOperator = scriptBodyPosGetOperator(scriptBodyPos, SCRIPT_OPERATOR_ARRANGEMENT_UNARY_POSTFIX);
             if (tempOperator != NULL) {
                 scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
-                // TODO: Construct the unary expression.
-                
+                output = createScriptUnaryExpression(tempOperator, output);
                 hasProcessedOperator = true;
                 break;
             }
@@ -686,13 +732,11 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                     break;
                 }
                 scriptBodyPosSkipOperator(scriptBodyPos, tempOperator);
-                // TODO: parseScriptExpression
-                expressionResult_t tempResult = evaluateExpression(scriptBodyPos, tempOperator->precedence);
+                scriptBaseExpression_t *tempExpression = parseScriptExpression(scriptBodyPos, tempOperator->precedence);
                 if (scriptHasError) {
                     return NULL;
                 }
-                // TODO: Construct the binary operator expression.
-                
+                output = createScriptBinaryExpression(tempOperator, output, tempExpression);
                 hasProcessedOperator = true;
                 break;
             }
