@@ -13,8 +13,6 @@
 
 vector_t scriptList;
 int8_t scriptErrorMessage[1000];
-scriptBodyLine_t scriptErrorLine;
-int8_t scriptErrorHasLine = false;
 vector_t keyBindingList;
 vector_t keyMappingList;
 vector_t commandBindingList;

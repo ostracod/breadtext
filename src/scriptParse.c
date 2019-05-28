@@ -359,7 +359,8 @@ void createEmptyScriptScope(scriptScope_t *scope) {
 int32_t scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
     int32_t index = 0;
     while (index < scope->variableNameList.length) {
-        int8_t *tempName = findVectorElement(&(scope->variableNameList), index);
+        int8_t *tempName;
+        getVectorElement(&tempName, &(scope->variableNameList), index);
         if (strlen((char *)(tempName)) == length) {
             if (equalData(tempName, name, length)) {
                 return index;
@@ -851,6 +852,8 @@ int8_t parseScriptEntryPointFunction(scriptCustomFunction_t **destination, scrip
     return parseScriptFunctionBody(tempFunction, parser);
 }
 
+int8_t resolveScriptIdentifiers(script_t *script);
+
 int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
     vector_t customFunctionList;
     createEmptyVector(&customFunctionList, sizeof(scriptCustomFunction_t *));
@@ -870,7 +873,196 @@ int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
     tempScript->scriptBody = scriptBody;
     tempScript->entryPointFunction = entryPointFunction;
     tempScript->customFunctionList = customFunctionList;
+    tempResult = resolveScriptIdentifiers(tempScript);
+    if (!tempResult) {
+        return false;
+    }
     *destination = tempScript;
+    return true;
+}
+
+void resolveScriptIdentifier(scriptIdentifierExpression_t **expression, scriptScopePair_t scopes) {
+    int8_t *tempName = (*expression)->name;
+    // TODO: Implement.
+    
+}
+
+void resolveScriptExpressionListIdentifiers(vector_t *expressionList, scriptScopePair_t scopes);
+
+void resolveScriptExpressionIdentifiers(scriptBaseExpression_t **expression, scriptScopePair_t scopes) {
+    switch ((*expression)->type) {
+        case SCRIPT_EXPRESSION_TYPE_LIST:
+        {
+            scriptListExpression_t *tempExpression = *(scriptListExpression_t **)expression;
+            resolveScriptExpressionListIdentifiers(&(tempExpression->expressionList), scopes);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_IDENTIFIER:
+        {
+            resolveScriptIdentifier((scriptIdentifierExpression_t **)expression, scopes);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_UNARY:
+        {
+            scriptUnaryExpression_t *tempExpression = *(scriptUnaryExpression_t **)expression;
+            resolveScriptExpressionIdentifiers(&(tempExpression->operand), scopes);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_BINARY:
+        {
+            scriptBinaryExpression_t *tempExpression = *(scriptBinaryExpression_t **)expression;
+            resolveScriptExpressionIdentifiers(&(tempExpression->operand1), scopes);
+            if (scriptHasError) {
+                break;
+            }
+            resolveScriptExpressionIdentifiers(&(tempExpression->operand2), scopes);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_INDEX:
+        {
+            scriptIndexExpression_t *tempExpression = *(scriptIndexExpression_t **)expression;
+            resolveScriptExpressionIdentifiers(&(tempExpression->list), scopes);
+            if (scriptHasError) {
+                break;
+            }
+            resolveScriptExpressionIdentifiers(&(tempExpression->index), scopes);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_INVOCATION:
+        {
+            scriptInvocationExpression_t *tempExpression = *(scriptInvocationExpression_t **)expression;
+            resolveScriptExpressionIdentifiers(&(tempExpression->function), scopes);
+            if (scriptHasError) {
+                break;
+            }
+            resolveScriptExpressionListIdentifiers(&(tempExpression->argumentList), scopes);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+void resolveScriptExpressionListIdentifiers(vector_t *expressionList, scriptScopePair_t scopes) {
+    int32_t index = 0;
+    while (index < expressionList->length) {
+        scriptBaseExpression_t **tempExpression;
+        tempExpression = findVectorElement(expressionList, index);
+        resolveScriptExpressionIdentifiers(tempExpression, scopes);
+        if (scriptHasError) {
+            return;
+        }
+        index += 1;
+    }
+}
+
+int8_t resolveScriptStatementListIdentifiers(vector_t *statementList, scriptScopePair_t scopes);
+
+int8_t resolveScriptStatementIdentifiers(scriptBaseStatement_t *statement, scriptScopePair_t scopes) {
+    scriptBodyLine_t tempLine = statement->scriptBodyLine;
+    switch (statement->type) {
+        case SCRIPT_STATEMENT_TYPE_EXPRESSION:
+        {
+            scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
+            resolveScriptExpressionIdentifiers(&(tempStatement->expression), scopes);
+            break;
+        }
+        case SCRIPT_STATEMENT_TYPE_IF:
+        {
+            scriptIfStatement_t *tempStatement = (scriptIfStatement_t *)statement;
+            int32_t index = 0;
+            while (index < tempStatement->clauseList.length) {
+                scriptIfClause_t *tempClause = findVectorElement(&(tempStatement->clauseList), index);
+                if (tempClause->condition != NULL) {
+                    resolveScriptExpressionIdentifiers(&(tempClause->condition), scopes);
+                    if (scriptHasError) {
+                        scriptErrorLine = tempClause->scriptBodyLine;
+                        scriptErrorHasLine = true;
+                        return false;
+                    }
+                }
+                int8_t tempResult = resolveScriptStatementListIdentifiers(&(tempClause->statementList), scopes);
+                if (!tempResult) {
+                    return false;
+                }
+                index += 1;
+            }
+            break;
+        }
+        case SCRIPT_STATEMENT_TYPE_WHILE:
+        {
+            scriptWhileStatement_t *tempStatement = (scriptWhileStatement_t *)statement;
+            if (tempStatement->condition != NULL) {
+                resolveScriptExpressionIdentifiers(&(tempStatement->condition), scopes);
+                if (scriptHasError) {
+                    break;
+                }
+            }
+            int8_t tempResult = resolveScriptStatementListIdentifiers(&(tempStatement->statementList), scopes);
+            if (!tempResult) {
+                return false;
+            }
+            break;
+        }
+        case SCRIPT_STATEMENT_TYPE_RETURN:
+        {
+            scriptReturnStatement_t *tempStatement = (scriptReturnStatement_t *)statement;
+            if (tempStatement->expression != NULL) {
+                resolveScriptExpressionIdentifiers(&(tempStatement->expression), scopes);
+            }
+            break;
+        }
+        default:
+        {
+            return true;
+        }
+    }
+    if (scriptHasError) {
+        if (!scriptErrorHasLine) {
+            scriptErrorLine = tempLine;
+            scriptErrorHasLine = true;
+        }
+        return false;
+    } else {
+        return true;
+    }
+}
+
+int8_t resolveScriptStatementListIdentifiers(vector_t *statementList, scriptScopePair_t scopes) {
+    int32_t index = 0;
+    while (index < statementList->length) {
+        scriptBaseStatement_t *tempStatement;
+        getVectorElement(&tempStatement, statementList, index);
+        int8_t tempResult = resolveScriptStatementIdentifiers(tempStatement, scopes);
+        if (!tempResult) {
+            return false;
+        }
+        index += 1;
+    }
+    return true;
+}
+
+int8_t resolveScriptFunctionIdentifiers(scriptCustomFunction_t *function, scriptScope_t *globalScope) {
+    scriptScopePair_t scopes;
+    scopes.globalScope = globalScope;
+    scopes.localScope = &(function->scope);
+    return resolveScriptStatementListIdentifiers(&(function->statementList), scopes);
+}
+
+int8_t resolveScriptIdentifiers(script_t *script) {
+    scriptScope_t *globalScope = &(script->entryPointFunction->scope);
+    int32_t index = 0;
+    while (index < script->customFunctionList.length) {
+        scriptCustomFunction_t *tempFunction;
+        getVectorElement(&tempFunction, &(script->customFunctionList), index);
+        int8_t tempResult = resolveScriptFunctionIdentifiers(tempFunction, globalScope);
+        if (!tempResult) {
+            return false;
+        }
+        index += 1;
+    }
     return true;
 }
 

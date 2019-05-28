@@ -144,6 +144,11 @@ typedef struct scriptScope {
     vector_t variableNameList; // Vector of pointer to int8_t.
 } scriptScope_t;
 
+typedef struct scriptScopePair {
+    scriptScope_t *globalScope;
+    scriptScope_t *localScope;
+} scriptScopePair_t;
+
 typedef struct scriptBaseFunction {
     int8_t type;
     int32_t argumentAmount;
@@ -243,6 +248,7 @@ typedef struct scriptIfStatement {
 
 typedef struct scriptWhileStatement {
     scriptBaseStatement_t base;
+    scriptBaseExpression_t *condition;
     vector_t statementList; // Vector of pointers to scriptBaseStatement_t.
 } scriptWhileStatement_t;
 
@@ -255,6 +261,8 @@ typedef struct scriptImportStatement {
     scriptBaseStatement_t base;
     scriptBaseExpression_t path;
     vector_t variableList; // Vector of scriptVariable_t.
+    // variableList will be populated in parseScriptStatement
+    // (not in resolveScriptStatementIdentifiers).
 } scriptImportStatement_t;
 
 typedef struct script {

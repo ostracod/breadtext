@@ -7,6 +7,8 @@
 #include "scriptParse.h"
 
 int8_t scriptHasError;
+scriptBodyLine_t scriptErrorLine;
+int8_t scriptErrorHasLine;
 vector_t scriptTestLogMessageList;
 
 void initializeScriptingEnvironment();
