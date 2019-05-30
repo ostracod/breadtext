@@ -414,10 +414,30 @@ scriptBaseExpression_t *createScriptListExpression(vector_t *expressionList) {
     return (scriptBaseExpression_t *)output;
 }
 
+scriptBaseExpression_t *createScriptFunctionExpression(scriptBaseFunction_t *function) {
+    scriptFunctionExpression_t *output = malloc(sizeof(scriptFunctionExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_FUNCTION;
+    output->function = function;
+    return (scriptBaseExpression_t *)output;
+}
+
 scriptBaseExpression_t *createScriptIdentifierExpression(int8_t *name, int64_t length) {
     scriptIdentifierExpression_t *output = malloc(sizeof(scriptIdentifierExpression_t));
     output->base.type = SCRIPT_EXPRESSION_TYPE_IDENTIFIER;
     output->name = mallocText(name, length);
+    return (scriptBaseExpression_t *)output;
+}
+
+scriptBaseExpression_t *createScriptVariableExpression(
+    int8_t *name,
+    int8_t isGlobal,
+    int32_t scopeIndex
+) {
+    scriptVariableExpression_t *output = malloc(sizeof(scriptVariableExpression_t));
+    output->base.type = SCRIPT_EXPRESSION_TYPE_VARIABLE;
+    output->variable.name = name;
+    output->variable.isGlobal = isGlobal;
+    output->variable.scopeIndex = scopeIndex;
     return (scriptBaseExpression_t *)output;
 }
 
@@ -686,7 +706,7 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
             if (tempFirstCharacter == '(') {
                 scriptBodyPos->index += 1;
                 vector_t tempArgumentList;
-                parseScriptExpressionList(&tempArgumentList, scriptBodyPos, ']');
+                parseScriptExpressionList(&tempArgumentList, scriptBodyPos, ')');
                 if (scriptHasError) {
                     return NULL;
                 }
@@ -883,8 +903,50 @@ int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
 
 void resolveScriptIdentifier(scriptIdentifierExpression_t **expression, scriptScopePair_t scopes) {
     int8_t *tempName = (*expression)->name;
-    // TODO: Implement.
-    
+    int64_t tempLength = strlen((char *)tempName);
+    scriptBaseExpression_t **tempExpression = (scriptBaseExpression_t **)expression;
+    int32_t index;
+    index = scriptScopeFindVariableWithNameLength(
+        scopes.localScope,
+        tempName,
+        tempLength
+    );
+    if (index >= 0) {
+        *tempExpression = (scriptBaseExpression_t *)createScriptVariableExpression(
+            tempName,
+            false,
+            index
+        );
+        return;
+    }
+    index = scriptScopeFindVariableWithNameLength(
+        scopes.globalScope,
+        tempName,
+        tempLength
+    );
+    if (index >= 0) {
+        *tempExpression = (scriptBaseExpression_t *)createScriptVariableExpression(
+            tempName,
+            true,
+            index
+        );
+        return;
+    }
+    scriptBuiltInFunction_t *tempBuiltInFunction = findScriptBuiltInFunctionByName(tempName, tempLength);
+    if (tempBuiltInFunction != NULL) {
+        *tempExpression = (scriptBaseExpression_t *)createScriptFunctionExpression(
+            (scriptBaseFunction_t *)tempBuiltInFunction
+        );
+        return;
+    }
+    scriptConstant_t *tempConstant = getScriptConstantByName(tempName, tempLength);
+    if (tempConstant != NULL) {
+        *tempExpression = (scriptBaseExpression_t *)createScriptNumberExpression(
+            (double)(tempConstant->value)
+        );
+        return;
+    }
+    reportScriptError((int8_t *)"Unknown identifier.", NULL);
 }
 
 void resolveScriptExpressionListIdentifiers(vector_t *expressionList, scriptScopePair_t scopes);
