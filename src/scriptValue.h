@@ -59,6 +59,9 @@ typedef struct commandBinding {
 scriptHeapValue_t *firstHeapValue;
 
 scriptHeapValue_t *createScriptHeapValue();
+int8_t scriptValueIsInHeap(scriptValue_t *value);
+void lockScriptValue(scriptValue_t *value);
+void unlockScriptValue(scriptValue_t *value);
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);

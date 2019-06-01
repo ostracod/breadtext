@@ -18,6 +18,25 @@ scriptHeapValue_t *createScriptHeapValue() {
     return output;
 }
 
+int8_t scriptValueIsInHeap(scriptValue_t *value) {
+    int8_t tempType = value->type;
+    return (tempType == SCRIPT_VALUE_TYPE_STRING || tempType == SCRIPT_VALUE_TYPE_LIST);
+}
+
+void lockScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        tempHeapValue->lockDepth += 1;
+    }
+}
+
+void unlockScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        tempHeapValue->lockDepth -= 1;
+    }
+}
+
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {
     scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
     tempHeapValue->type = SCRIPT_VALUE_TYPE_STRING;

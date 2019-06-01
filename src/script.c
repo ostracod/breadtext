@@ -85,6 +85,62 @@ void displayScriptError() {
     notifyUser(tempText);
 }
 
+expressionResult_t evaluateExpression(scriptBaseExpression_t *expression);
+
+expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
+    expressionResult_t output;
+    output.value.type = SCRIPT_VALUE_TYPE_MISSING;
+    output.destinationType = DESTINATION_TYPE_NONE;
+    expressionResult_t tempResult1 = evaluateExpression(expression->operand1);
+    if (scriptHasError) {
+        return output;
+    }
+    lockScriptValue(&(tempResult1.value));
+    expressionResult_t tempResult2 = evaluateExpression(expression->operand2);
+    unlockScriptValue(&(tempResult1.value));
+    if (scriptHasError) {
+        return output;
+    }
+    scriptValue_t tempValue1 = tempResult1.value;
+    scriptValue_t tempValue2 = tempResult2.value;
+    int8_t tempType1 = tempValue1.type;
+    int8_t tempType2 = tempValue2.type;
+    switch (expression->operator->number) {
+        case SCRIPT_OPERATOR_ADD:
+        {
+            if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.value.data) = *(double *)(tempValue1.data) + *(double *)&(tempValue2.data);
+            } else if (tempType1 == SCRIPT_VALUE_TYPE_STRING && tempType2 == SCRIPT_VALUE_TYPE_STRING) {
+                scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(tempValue1.data);
+                scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(tempValue2.data);
+                vector_t *tempText1 = &(tempHeapValue1->data);
+                vector_t *tempText2 = &(tempHeapValue2->data);
+                vector_t tempText3;
+                copyVector(&tempText3, tempText1);
+                removeVectorElement(&tempText3, tempText3.length - 1);
+                pushVectorOntoVector(&tempText3, tempText2);
+                scriptHeapValue_t *tempHeapValue3 = createScriptHeapValue();
+                tempHeapValue3->type = SCRIPT_VALUE_TYPE_STRING;
+                tempHeapValue3->data = tempText3;
+                output.value.type = SCRIPT_VALUE_TYPE_STRING;
+                *(scriptHeapValue_t **)(output.value.data) = tempHeapValue3;
+            } else {
+                reportScriptError((int8_t *)"Bad operand types.", NULL);
+                return output;
+            }
+            break;
+        }
+        // TODO: Implement the rest of the binary operators.
+        
+        default:
+        {
+            break;
+        }
+    }
+    return output;
+}
+
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount);
 
 expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
@@ -166,6 +222,11 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 index += 1;
             }
             output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_BINARY:
+        {
+            output = evaluateBinaryExpression((scriptBinaryExpression_t *)expression);
             break;
         }
         // TODO: Implement all of the other expression types.
