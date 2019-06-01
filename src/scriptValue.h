@@ -16,8 +16,8 @@ typedef struct scriptValue {
     int8_t type;
     // For null, data is unused.
     // For numbers, data is a double.
-    // For strings and lists, data points to a scriptHeapValue_t.
-    // For functions, data points to a scriptBaseFunction_t.
+    // For strings and lists, data is a pointer to scriptHeapValue_t.
+    // For functions, data is a pointer to scriptBaseFunction_t.
     int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
 } scriptValue_t;
 
@@ -29,7 +29,9 @@ typedef struct scriptHeapValue {
     int32_t lockDepth;
     scriptHeapValue_t *previous;
     scriptHeapValue_t *next;
-    vector_t data; // Vector containing list elements or string characters.
+    // For strings, data is a vector of int8_t.
+    // For lists, data is a vector of scriptValue_t.
+    vector_t data;
 } scriptHeapValue_t;
 
 typedef struct scriptFrame {

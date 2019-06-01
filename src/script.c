@@ -110,6 +110,29 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             output.value = convertCharacterVectorToStringValue(tempExpression->text);
             break;
         }
+        case SCRIPT_EXPRESSION_TYPE_LIST:
+        {
+            scriptListExpression_t *tempExpression = (scriptListExpression_t *)expression;
+            vector_t tempValueList;
+            createEmptyVector(&tempValueList, sizeof(scriptValue_t));
+            int32_t index = 0;
+            while (index < tempExpression->expressionList.length) {
+                scriptBaseExpression_t *tempElementExpression;
+                getVectorElement(&tempElementExpression, &(tempExpression->expressionList), index);
+                expressionResult_t tempResult = evaluateExpression(tempElementExpression);
+                if (scriptHasError) {
+                    return output;
+                }
+                pushVectorElement(&tempValueList, &tempResult.value);
+                index += 1;
+            }
+            scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+            tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
+            tempHeapValue->data = tempValueList;
+            output.value.type = SCRIPT_VALUE_TYPE_LIST;
+            *(scriptHeapValue_t **)(output.value.data) = tempHeapValue;
+            break;
+        }
         case SCRIPT_EXPRESSION_TYPE_FUNCTION:
         {
             scriptFunctionExpression_t *tempExpression = (scriptFunctionExpression_t *)expression;
