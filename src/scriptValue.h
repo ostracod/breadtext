@@ -29,7 +29,7 @@ typedef struct scriptHeapValue {
     int32_t lockDepth;
     scriptHeapValue_t *previous;
     scriptHeapValue_t *next;
-    vector_t *data; // Vector of a string or list value.
+    vector_t data; // Vector containing list elements or string characters.
 } scriptHeapValue_t;
 
 typedef struct scriptFrame {
@@ -59,6 +59,7 @@ scriptHeapValue_t *firstHeapValue;
 scriptHeapValue_t *createScriptHeapValue();
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
+scriptValue_t convertScriptValueToString(scriptValue_t value);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

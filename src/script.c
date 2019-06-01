@@ -85,6 +85,76 @@ void displayScriptError() {
     notifyUser(tempText);
 }
 
+scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount);
+
+expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
+    expressionResult_t output;
+    output.value.type = SCRIPT_VALUE_TYPE_MISSING;
+    output.destinationType = DESTINATION_TYPE_NONE;
+    switch (expression->type) {
+        case SCRIPT_EXPRESSION_TYPE_NULL:
+        {
+            output.value.type = SCRIPT_VALUE_TYPE_NULL;
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_NUMBER:
+        {
+            scriptNumberExpression_t *tempExpression = (scriptNumberExpression_t *)expression;
+            output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)(output.value.data) = tempExpression->value;
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_STRING:
+        {
+            scriptStringExpression_t *tempExpression = (scriptStringExpression_t *)expression;
+            output.value = convertCharacterVectorToStringValue(tempExpression->text);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_FUNCTION:
+        {
+            scriptFunctionExpression_t *tempExpression = (scriptFunctionExpression_t *)expression;
+            output.value.type = SCRIPT_VALUE_TYPE_FUNCTION;
+            *(scriptBaseFunction_t **)(output.value.data) = tempExpression->function;
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_INVOCATION:
+        {
+            scriptInvocationExpression_t *tempExpression = (scriptInvocationExpression_t *)expression;
+            expressionResult_t tempResult = evaluateExpression(tempExpression->function);
+            if (scriptHasError) {
+                return output;
+            }
+            if (tempResult.value.type != SCRIPT_VALUE_TYPE_FUNCTION) {
+                reportScriptError((int8_t *)"Bad type for function invocation.", NULL);
+                return output;
+            }
+            scriptBaseFunction_t *tempFunction = *(scriptBaseFunction_t **)(tempResult.value.data);
+            int32_t tempArgumentAmount = tempExpression->argumentList.length;
+            scriptValue_t tempArgumentList[tempArgumentAmount];
+            int32_t index = 0;
+            while (index < tempArgumentAmount) {
+                scriptBaseExpression_t *tempArgumentExpression;
+                getVectorElement(&tempArgumentExpression, &(tempExpression->argumentList), index);
+                expressionResult_t tempResult = evaluateExpression(tempArgumentExpression);
+                if (scriptHasError) {
+                    return output;
+                }
+                tempArgumentList[index] = tempResult.value;
+                index += 1;
+            }
+            output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
+            break;
+        }
+        // TODO: Implement all of the other expression types.
+        
+        default:
+        {
+            break;
+        }
+    }
+    return output;
+}
+
 int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
     // TODO: Garbage collection.
     
@@ -93,11 +163,16 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         {
             scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
             scriptBaseExpression_t *tempExpression = tempStatement->expression;
-            // TODO: Implement.
-            
+            evaluateExpression(tempExpression);
+            if (scriptHasError) {
+                scriptErrorLine = statement->scriptBodyLine;
+                scriptErrorHasLine = true;
+                return false;
+            }
             break;
         }
         // TODO: Implement all the other stuff too.
+        
         default:
         {
             break;
@@ -106,10 +181,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
     return true;
 }
 
-scriptValue_t invokeFunction(scriptBaseFunction_t *function, vector_t *argumentList) {
+scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
-    if (argumentList->length != function->argumentAmount) {
+    if (argumentAmount != function->argumentAmount) {
         reportScriptError((int8_t *)"Incorrect number of arguments.", NULL);
         return output;
     }
@@ -147,16 +222,29 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, vector_t *argumentL
     }
     if (function->type == SCRIPT_FUNCTION_TYPE_BUILT_IN) {
         scriptBuiltInFunction_t *tempFunction = (scriptBuiltInFunction_t *)function;
-        // TODO: Implement.
+        switch (tempFunction->number) {
+            case SCRIPT_FUNCTION_NOTIFY_USER:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempStringValue.data);
+                vector_t *tempText = &(tempHeapValue->data);
+                notifyUser(tempText->data);
+                break;
+            }
+            // TODO: Implement all of the other built-in functions.
+            
+            default: {
+                break;
+            }
+        }
         
     }
     return output;
 }
 
 void evaluateScript(script_t *script) {
-    vector_t tempArgumentList;
-    createEmptyVector(&tempArgumentList, sizeof(scriptValue_t *));
-    invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), &tempArgumentList);
+    invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), NULL, 0);
 }
 
 void parseAndEvaluateScript(scriptBody_t *scriptBody) {

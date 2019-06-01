@@ -594,6 +594,18 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
             break;
         }
         if (isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"true")) {
+                output = createScriptNumberExpression(1);
+                break;
+            }
+            if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"false")) {
+                output = createScriptNumberExpression(0);
+                break;
+            }
+            if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"null")) {
+                output = createScriptNullExpression();
+                break;
+            }
             scriptBodyPos_t tempScriptBodyPos = *scriptBodyPos;
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
             int8_t *tempText = getScriptBodyPosPointer(scriptBodyPos);
@@ -629,6 +641,8 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 scriptBodyPos->index += 1;
             }
             scriptBodyPos->index += 1;
+            int8_t tempCharacter = 0;
+            pushVectorElement(&tempText, &tempCharacter);
             output = createScriptStringExpression(&tempText);
             break;
         }
@@ -681,18 +695,6 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 return NULL;
             }
             output = createScriptListExpression(&tempList);
-            break;
-        }
-        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"true")) {
-            output = createScriptNumberExpression(1);
-            break;
-        }
-        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"false")) {
-            output = createScriptNumberExpression(0);
-            break;
-        }
-        if (scriptBodyPosTextMatchesIdentifier(scriptBodyPos, (int8_t *)"null")) {
-            output = createScriptNullExpression();
             break;
         }
         reportScriptError((int8_t *)"Unknown expression type.", tempLine);
