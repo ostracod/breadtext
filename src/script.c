@@ -11,11 +11,25 @@
 #include "script.h"
 #include "display.h"
 
+#define DESTINATION_TYPE_NONE 0
+#define DESTINATION_TYPE_VARIABLE 1
+#define DESTINATION_TYPE_LIST 2
+#define DESTINATION_TYPE_STRING 3
+
+typedef struct expressionResult {
+    scriptValue_t value;
+    int8_t destinationType;
+    int64_t destinationIndex;
+    vector_t *destination;
+} expressionResult_t;
+
 vector_t scriptList;
 int8_t scriptErrorMessage[1000];
 vector_t keyBindingList;
 vector_t keyMappingList;
 vector_t commandBindingList;
+scriptFrame_t globalFrame;
+scriptFrame_t localFrame;
 
 void initializeScriptingEnvironment() {
     initializeScriptParsingEnvironment();
@@ -71,9 +85,78 @@ void displayScriptError() {
     notifyUser(tempText);
 }
 
-void evaluateScript(script_t *script) {
-    // TODO: Implement.
+int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
+    // TODO: Garbage collection.
     
+    switch (statement->type) {
+        case SCRIPT_STATEMENT_TYPE_EXPRESSION:
+        {
+            scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
+            scriptBaseExpression_t *tempExpression = tempStatement->expression;
+            // TODO: Implement.
+            
+            break;
+        }
+        // TODO: Implement all the other stuff too.
+        default:
+        {
+            break;
+        }
+    }
+    return true;
+}
+
+scriptValue_t invokeFunction(scriptBaseFunction_t *function, vector_t *argumentList) {
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_MISSING;
+    if (argumentList->length != function->argumentAmount) {
+        reportScriptError((int8_t *)"Incorrect number of arguments.", NULL);
+        return output;
+    }
+    if (function->type == SCRIPT_FUNCTION_TYPE_CUSTOM) {
+        scriptCustomFunction_t *tempFunction = (scriptCustomFunction_t *)function;
+        int32_t index;
+        int32_t tempLength = tempFunction->scope.variableNameList.length;
+        scriptValue_t frameValueList[tempLength];
+        index = 0;
+        while (index < tempLength) {
+            (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
+            index += 1;
+        }
+        // TODO: Populate argument variables.
+        
+        scriptFrame_t lastGlobalFrame = globalFrame;
+        scriptFrame_t lastLocalFrame = localFrame;
+        localFrame.valueList = frameValueList;
+        if (tempFunction->isEntryPoint) {
+            globalFrame.valueList = frameValueList;
+        }
+        index = 0;
+        while (index < tempFunction->statementList.length) {
+            scriptBaseStatement_t *tempStatement;
+            getVectorElement(&tempStatement, &(tempFunction->statementList), index);
+            int8_t tempResult = evaluateStatement(&output, tempStatement);
+            if (!tempResult) {
+                break;
+            }
+            index += 1;
+        }
+        globalFrame = lastGlobalFrame;
+        localFrame = lastLocalFrame;
+        return output;
+    }
+    if (function->type == SCRIPT_FUNCTION_TYPE_BUILT_IN) {
+        scriptBuiltInFunction_t *tempFunction = (scriptBuiltInFunction_t *)function;
+        // TODO: Implement.
+        
+    }
+    return output;
+}
+
+void evaluateScript(script_t *script) {
+    vector_t tempArgumentList;
+    createEmptyVector(&tempArgumentList, sizeof(scriptValue_t *));
+    invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), &tempArgumentList);
 }
 
 void parseAndEvaluateScript(scriptBody_t *scriptBody) {

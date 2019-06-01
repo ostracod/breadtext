@@ -819,6 +819,8 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             }
             break;
         }
+        // TODO: Parse all of the other statement types.
+        
         scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
         if (scriptHasError) {
             return false;
@@ -856,17 +858,18 @@ int8_t parseScriptFunctionBody(scriptCustomFunction_t *function, scriptParser_t 
     return parseScriptStatementList(parser);
 }
 
-scriptCustomFunction_t *createEmptyCustomFunction() {
+scriptCustomFunction_t *createEmptyCustomFunction(int8_t isEntryPoint) {
     scriptCustomFunction_t *output = malloc(sizeof(scriptCustomFunction_t));
     output->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
     output->base.argumentAmount = 0;
+    output->isEntryPoint = isEntryPoint;
     createEmptyScriptScope(&(output->scope));
     createEmptyVector(&(output->statementList), sizeof(scriptBaseStatement_t *));
     return output;
 }
 
 int8_t parseScriptEntryPointFunction(scriptCustomFunction_t **destination, scriptParser_t *parser) {
-    scriptCustomFunction_t *tempFunction = createEmptyCustomFunction();
+    scriptCustomFunction_t *tempFunction = createEmptyCustomFunction(true);
     *destination = tempFunction;
     pushVectorElement(parser->customFunctionList, &tempFunction);
     return parseScriptFunctionBody(tempFunction, parser);

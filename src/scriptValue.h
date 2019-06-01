@@ -32,6 +32,12 @@ typedef struct scriptHeapValue {
     vector_t *data; // Vector of a string or list value.
 } scriptHeapValue_t;
 
+typedef struct scriptFrame {
+    // The order of values corresponds to that
+    // of the scope of the invoked function.
+    scriptValue_t *valueList; // Array of scriptValue_t.
+} scriptFrame_t;
+
 typedef struct keyBinding {
     int32_t key;
     scriptBaseFunction_t *callback;

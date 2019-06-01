@@ -141,6 +141,9 @@ typedef struct scriptVariable {
 } scriptVariable_t;
 
 typedef struct scriptScope {
+    // Function argument variables will preceed any other
+    // variables in the scope. Argument variables will be
+    // populated in the same order as provided by invocation.
     vector_t variableNameList; // Vector of pointer to int8_t.
 } scriptScope_t;
 
@@ -162,6 +165,7 @@ typedef struct scriptBuiltInFunction {
 
 typedef struct scriptCustomFunction {
     scriptBaseFunction_t base;
+    int8_t isEntryPoint;
     scriptScope_t scope;
     vector_t statementList; // Vector of pointers to scriptBaseStatement_t.
 } scriptCustomFunction_t;
