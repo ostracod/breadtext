@@ -19,8 +19,12 @@
 typedef struct expressionResult {
     scriptValue_t value;
     int8_t destinationType;
+    // For variables, destinationIndex is unused.
+    // For lists and strings, destinationIndex is an index in the destination vector_t.
     int64_t destinationIndex;
-    vector_t *destination;
+    // For variables, destination is a pointer to scriptValue_t.
+    // For lists and strings, destination is a pointer to vector_t.
+    void *destination;
 } expressionResult_t;
 
 vector_t scriptList;
@@ -85,6 +89,34 @@ void displayScriptError() {
     notifyUser(tempText);
 }
 
+void storeValueInExpressionResultDestination(expressionResult_t *expressionResult, scriptValue_t value) {
+    int8_t tempType = expressionResult->destinationType;
+    if (tempType == DESTINATION_TYPE_NONE) {
+        reportScriptError((int8_t *)"Invalid destination.", NULL);
+        return;
+    }
+    if (tempType == DESTINATION_TYPE_VARIABLE) {
+        *(scriptValue_t *)(expressionResult->destination) = value;
+        return;
+    }
+    int64_t index = expressionResult->destinationIndex;
+    vector_t *tempVector = (vector_t *)(expressionResult->destination);
+    if (index < 0 || index >= tempVector->length) {
+        reportScriptError((int8_t *)"Index out of range.", NULL);
+        return;
+    }
+    if (tempType == DESTINATION_TYPE_LIST) {
+        setVectorElement(tempVector, index, &(value));
+    } else if (tempType == DESTINATION_TYPE_STRING) {
+        if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+            int8_t tempCharacter = (int8_t)*(double *)(value.data);
+            setVectorElement(tempVector, index, &tempCharacter);
+        } else {
+            reportScriptError((int8_t *)"Bad operand types.", NULL);
+        }
+    }
+}
+
 expressionResult_t evaluateExpression(scriptBaseExpression_t *expression);
 
 expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
@@ -129,6 +161,11 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
             }
+            break;
+        }
+        case SCRIPT_OPERATOR_ASSIGN:
+        {
+            storeValueInExpressionResultDestination(&tempResult1, tempValue2);
             break;
         }
         // TODO: Implement the rest of the binary operators.
@@ -196,6 +233,21 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             *(scriptBaseFunction_t **)(output.value.data) = tempExpression->function;
             break;
         }
+        case SCRIPT_EXPRESSION_TYPE_VARIABLE:
+        {
+            scriptVariableExpression_t *tempExpression = (scriptVariableExpression_t *)expression;
+            scriptFrame_t tempFrame;
+            if (tempExpression->variable.isGlobal) {
+                tempFrame = globalFrame;
+            } else {
+                tempFrame = localFrame;
+            }
+            scriptValue_t *tempValuePointer = tempFrame.valueList + tempExpression->variable.scopeIndex;
+            output.value = *tempValuePointer;
+            output.destinationType = DESTINATION_TYPE_VARIABLE;
+            output.destination = tempValuePointer;
+            break;
+        }
         case SCRIPT_EXPRESSION_TYPE_INVOCATION:
         {
             scriptInvocationExpression_t *tempExpression = (scriptInvocationExpression_t *)expression;
@@ -248,11 +300,6 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
             scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
             scriptBaseExpression_t *tempExpression = tempStatement->expression;
             evaluateExpression(tempExpression);
-            if (scriptHasError) {
-                scriptErrorLine = statement->scriptBodyLine;
-                scriptErrorHasLine = true;
-                return false;
-            }
             break;
         }
         // TODO: Implement all the other stuff too.
@@ -261,6 +308,11 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         {
             break;
         }
+    }
+    if (scriptHasError) {
+        scriptErrorLine = statement->scriptBodyLine;
+        scriptErrorHasLine = true;
+        return false;
     }
     return true;
 }
