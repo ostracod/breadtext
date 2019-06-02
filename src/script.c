@@ -734,6 +734,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             scriptListExpression_t *tempExpression = (scriptListExpression_t *)expression;
             vector_t tempValueList;
             createEmptyVector(&tempValueList, sizeof(scriptValue_t));
+            // TODO: Lock script values.
             int32_t index = 0;
             while (index < tempExpression->expressionList.length) {
                 scriptBaseExpression_t *tempElementExpression;
@@ -774,6 +775,69 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             output.destination = tempValuePointer;
             break;
         }
+        case SCRIPT_EXPRESSION_TYPE_UNARY:
+        {
+            output.value = evaluateUnaryExpression((scriptUnaryExpression_t *)expression);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_BINARY:
+        {
+            output.value = evaluateBinaryExpression((scriptBinaryExpression_t *)expression);
+            break;
+        }
+        case SCRIPT_EXPRESSION_TYPE_INDEX:
+        {
+            scriptIndexExpression_t *tempExpression = (scriptIndexExpression_t *)expression;
+            expressionResult_t tempResult1 = evaluateExpression(tempExpression->list);
+            if (scriptHasError) {
+                return output;
+            }
+            lockScriptValue(&(tempResult1.value));
+            expressionResult_t tempResult2 = evaluateExpression(tempExpression->index);
+            unlockScriptValue(&(tempResult1.value));
+            if (scriptHasError) {
+                return output;
+            }
+            int8_t tempType1 = tempResult1.value.type;
+            int8_t tempType2 = tempResult2.value.type;
+            if (tempType2 != SCRIPT_VALUE_TYPE_NUMBER) {
+                reportScriptError((int8_t *)"Bad operand types.", NULL);
+                return output;
+            }
+            int64_t index = (int64_t)*(double *)(tempResult2.value.data);
+            if (tempType1 == SCRIPT_VALUE_TYPE_STRING) {
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempResult1.value.data);
+                vector_t *tempText = &(tempHeapValue->data);
+                if (index < 0 || index >= tempText->length - 1) {
+                    reportScriptError((int8_t *)"Index out of range.", NULL);
+                    return output;
+                }
+                int8_t tempCharacter;
+                getVectorElement(&tempCharacter, tempText, index);
+                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.value.data) = (double)tempCharacter;
+                output.destinationType = DESTINATION_TYPE_STRING;
+                output.destinationIndex = index;
+                output.destination = tempText;
+            } else if (tempType1 == SCRIPT_VALUE_TYPE_LIST) {
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempResult1.value.data);
+                vector_t *tempList = &(tempHeapValue->data);
+                if (index < 0 || index > tempList->length - 1) {
+                    reportScriptError((int8_t *)"Index out of range.", NULL);
+                    return output;
+                }
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, tempList, index);
+                output.value = tempValue;
+                output.destinationType = DESTINATION_TYPE_LIST;
+                output.destinationIndex = index;
+                output.destination = tempList;
+            } else {
+                reportScriptError((int8_t *)"Bad operand types.", NULL);
+                return output;
+            }
+            break;
+        }
         case SCRIPT_EXPRESSION_TYPE_INVOCATION:
         {
             scriptInvocationExpression_t *tempExpression = (scriptInvocationExpression_t *)expression;
@@ -788,6 +852,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             scriptBaseFunction_t *tempFunction = *(scriptBaseFunction_t **)(tempResult.value.data);
             int32_t tempArgumentAmount = tempExpression->argumentList.length;
             scriptValue_t tempArgumentList[tempArgumentAmount];
+            // TODO: Lock script values.
             int32_t index = 0;
             while (index < tempArgumentAmount) {
                 scriptBaseExpression_t *tempArgumentExpression;
@@ -802,18 +867,6 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
             break;
         }
-        case SCRIPT_EXPRESSION_TYPE_UNARY:
-        {
-            output.value = evaluateUnaryExpression((scriptUnaryExpression_t *)expression);
-            break;
-        }
-        case SCRIPT_EXPRESSION_TYPE_BINARY:
-        {
-            output.value = evaluateBinaryExpression((scriptBinaryExpression_t *)expression);
-            break;
-        }
-        // TODO: Implement all of the other expression types.
-        
         default:
         {
             break;
