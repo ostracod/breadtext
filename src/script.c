@@ -120,10 +120,108 @@ void storeValueInExpressionResultDestination(expressionResult_t *expressionResul
 
 expressionResult_t evaluateExpression(scriptBaseExpression_t *expression);
 
-expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
-    expressionResult_t output;
-    output.value.type = SCRIPT_VALUE_TYPE_MISSING;
-    output.destinationType = DESTINATION_TYPE_NONE;
+scriptValue_t evaluateUnaryExpression(scriptUnaryExpression_t *expression) {
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_MISSING;
+    expressionResult_t tempResult = evaluateExpression(expression->operand);
+    if (scriptHasError) {
+        return output;
+    }
+    scriptValue_t tempValue = tempResult.value;
+    int8_t tempType = tempValue.type;
+    switch (expression->operator->number) {
+        case SCRIPT_OPERATOR_NEGATE:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = -*(double *)(tempValue.data);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_BOOLEAN_NOT:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (*(double *)(tempValue.data) == 0.0);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_BITWISE_NOT:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)~(uint32_t)*(double *)(tempValue.data);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_INCREMENT_PREFIX:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue.data) + 1;
+                storeValueInExpressionResultDestination(&tempResult, output);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_DECREMENT_PREFIX:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue.data) - 1;
+                storeValueInExpressionResultDestination(&tempResult, output);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_INCREMENT_POSTFIX:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output = tempValue;
+                *(double *)(tempValue.data) += 1;
+                storeValueInExpressionResultDestination(&tempResult, tempValue);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        case SCRIPT_OPERATOR_DECREMENT_POSTFIX:
+        {
+            if (tempType == SCRIPT_VALUE_TYPE_NUMBER) {
+                output = tempValue;
+                *(double *)(tempValue.data) -= 1;
+                storeValueInExpressionResultDestination(&tempResult, tempValue);
+            } else {
+                reportScriptError((int8_t *)"Bad operand type.", NULL);
+                return output;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    return output;
+}
+
+scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_MISSING;
     expressionResult_t tempResult1 = evaluateExpression(expression->operand1);
     if (scriptHasError) {
         return output;
@@ -142,8 +240,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_ADD:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) + *(double *)&(tempValue2.data);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) + *(double *)&(tempValue2.data);
             } else if (tempType1 == SCRIPT_VALUE_TYPE_STRING && tempType2 == SCRIPT_VALUE_TYPE_STRING) {
                 scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(tempValue1.data);
                 scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(tempValue2.data);
@@ -156,8 +254,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                 scriptHeapValue_t *tempHeapValue3 = createScriptHeapValue();
                 tempHeapValue3->type = SCRIPT_VALUE_TYPE_STRING;
                 tempHeapValue3->data = tempText3;
-                output.value.type = SCRIPT_VALUE_TYPE_STRING;
-                *(scriptHeapValue_t **)(output.value.data) = tempHeapValue3;
+                output.type = SCRIPT_VALUE_TYPE_STRING;
+                *(scriptHeapValue_t **)(output.data) = tempHeapValue3;
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -167,8 +265,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_SUBTRACT:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) - *(double *)&(tempValue2.data);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) - *(double *)&(tempValue2.data);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -178,8 +276,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_MULTIPLY:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) * *(double *)&(tempValue2.data);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) * *(double *)&(tempValue2.data);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -194,8 +292,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                     reportScriptError((int8_t *)"Divide by zero.", NULL);
                     return output;
                 }
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) / tempNumber2;
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) / tempNumber2;
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -210,8 +308,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                     reportScriptError((int8_t *)"Divide by zero.", NULL);
                     return output;
                 }
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = fmod(*(double *)(tempValue1.data), tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fmod(*(double *)(tempValue1.data), tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -223,8 +321,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 && tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 && tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -236,8 +334,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 || tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 || tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -249,8 +347,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(!!tempNumber1 ^ !!tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(!!tempNumber1 ^ !!tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -262,8 +360,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 & tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 & tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -275,8 +373,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 | tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 | tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -288,8 +386,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 ^ tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 ^ tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -301,8 +399,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 << tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 << tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -314,8 +412,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 >> tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 >> tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -327,8 +425,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 > tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 > tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -340,8 +438,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 < tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 < tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -351,15 +449,15 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_EQUAL:
         {
             int8_t tempConditionResult = scriptValuesAreEqualShallow(&tempValue1, &tempValue2);
-            output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-            *(double *)(output.value.data) = (double)tempConditionResult;
+            output.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)(output.data) = (double)tempConditionResult;
             break;
         }
         case SCRIPT_OPERATOR_NOT_EQUAL:
         {
             int8_t tempConditionResult = scriptValuesAreEqualShallow(&tempValue1, &tempValue2);
-            output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-            *(double *)(output.value.data) = (double)!tempConditionResult;
+            output.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)(output.data) = (double)!tempConditionResult;
             break;
         }
         case SCRIPT_OPERATOR_GREATER_OR_EQUAL:
@@ -367,8 +465,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 >= tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 >= tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -380,8 +478,8 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 <= tempNumber2);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 <= tempNumber2);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -391,29 +489,29 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_IDENTICAL:
         {
             int8_t tempConditionResult = scriptValuesAreIdentical(&tempValue1, &tempValue2);
-            output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-            *(double *)(output.value.data) = (double)tempConditionResult;
+            output.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)(output.data) = (double)tempConditionResult;
             break;
         }
         case SCRIPT_OPERATOR_NOT_IDENTICAL:
         {
             int8_t tempConditionResult = scriptValuesAreIdentical(&tempValue1, &tempValue2);
-            output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-            *(double *)(output.value.data) = (double)!tempConditionResult;
+            output.type = SCRIPT_VALUE_TYPE_NUMBER;
+            *(double *)(output.data) = (double)!tempConditionResult;
             break;
         }
         case SCRIPT_OPERATOR_ASSIGN:
         {
-            output.value = tempValue2;
-            storeValueInExpressionResultDestination(&tempResult1, output.value);
+            output = tempValue2;
+            storeValueInExpressionResultDestination(&tempResult1, output);
             break;
         }
         case SCRIPT_OPERATOR_ADD_ASSIGN:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) + *(double *)(tempValue2.data);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) + *(double *)(tempValue2.data);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else if (tempType1 == SCRIPT_VALUE_TYPE_STRING && tempType2 == SCRIPT_VALUE_TYPE_STRING) {
                 scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(tempValue1.data);
                 scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(tempValue2.data);
@@ -421,7 +519,7 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                 vector_t *tempText2 = &(tempHeapValue2->data);
                 removeVectorElement(tempText1, tempText1->length - 1);
                 pushVectorOntoVector(tempText1, tempText2);
-                output.value = tempValue1;
+                output = tempValue1;
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -431,9 +529,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_SUBTRACT_ASSIGN:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) - *(double *)(tempValue2.data);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) - *(double *)(tempValue2.data);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -443,9 +541,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
         case SCRIPT_OPERATOR_MULTIPLY_ASSIGN:
         {
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) * *(double *)(tempValue2.data);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) * *(double *)(tempValue2.data);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -460,9 +558,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                     reportScriptError((int8_t *)"Divide by zero.", NULL);
                     return output;
                 }
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = *(double *)(tempValue1.data) / tempNumber2;
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = *(double *)(tempValue1.data) / tempNumber2;
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -477,9 +575,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
                     reportScriptError((int8_t *)"Divide by zero.", NULL);
                     return output;
                 }
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = fmod(*(double *)(tempValue1.data), tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fmod(*(double *)(tempValue1.data), tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -491,9 +589,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 && tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 && tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -505,9 +603,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 || tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 || tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -519,9 +617,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 double tempNumber1 = *(double *)(tempValue1.data);
                 double tempNumber2 = *(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(!!tempNumber1 ^ !!tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(!!tempNumber1 ^ !!tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -533,9 +631,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 & tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 & tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -547,9 +645,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 | tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 | tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -561,9 +659,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 ^ tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 ^ tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -575,9 +673,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 << tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 << tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -589,9 +687,9 @@ expressionResult_t evaluateBinaryExpression(scriptBinaryExpression_t *expression
             if (tempType1 == SCRIPT_VALUE_TYPE_NUMBER && tempType2 == SCRIPT_VALUE_TYPE_NUMBER) {
                 uint32_t tempNumber1 = (uint32_t)*(double *)(tempValue1.data);
                 uint32_t tempNumber2 = (uint32_t)*(double *)(tempValue2.data);
-                output.value.type = SCRIPT_VALUE_TYPE_NUMBER;
-                *(double *)(output.value.data) = (double)(tempNumber1 >> tempNumber2);
-                storeValueInExpressionResultDestination(&tempResult1, output.value);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(tempNumber1 >> tempNumber2);
+                storeValueInExpressionResultDestination(&tempResult1, output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -704,9 +802,14 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
             break;
         }
+        case SCRIPT_EXPRESSION_TYPE_UNARY:
+        {
+            output.value = evaluateUnaryExpression((scriptUnaryExpression_t *)expression);
+            break;
+        }
         case SCRIPT_EXPRESSION_TYPE_BINARY:
         {
-            output = evaluateBinaryExpression((scriptBinaryExpression_t *)expression);
+            output.value = evaluateBinaryExpression((scriptBinaryExpression_t *)expression);
             break;
         }
         // TODO: Implement all of the other expression types.
