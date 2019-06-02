@@ -892,6 +892,27 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             scriptStatement = createScriptIfStatement(tempLine, &tempClauseList);
             break;
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"else")) {
+            if (parser->ifClauseList == NULL) {
+                reportScriptError((int8_t *)"Unexpected else statement", tempLine);
+                return false;
+            }
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            scriptBaseExpression_t *tempExpression;
+            if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+                scriptBodyPosSkipWhitespace(&scriptBodyPos);
+                tempExpression = parseScriptExpression(&scriptBodyPos, 99);
+                if (scriptHasError) {
+                    return false;
+                }
+            } else {
+                tempExpression = NULL;
+            }
+            scriptIfClause_t *tempClause = createScriptIfClause(tempLine, tempExpression);
+            pushVectorElement(parser->ifClauseList, &tempClause);
+            parser->statementList = &(tempClause->statementList);
+            break;
+        }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);

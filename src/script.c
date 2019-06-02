@@ -933,7 +933,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                 scriptBaseExpression_t *tempCondition = tempClause->condition;
                 int8_t tempShouldEvaluateStatements;
                 if (tempCondition == NULL) {
-                    tempShouldEvaluateStatements = false;
+                    tempShouldEvaluateStatements = true;
                 } else {
                     expressionResult_t tempResult = evaluateExpression(tempCondition);
                     if (tempResult.value.type != SCRIPT_VALUE_TYPE_NUMBER) {
