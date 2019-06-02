@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include "utilities.h"
 #include "scriptValue.h"
 
 scriptHeapValue_t *createScriptHeapValue() {
@@ -125,6 +126,94 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_NULL;
     return output;
+}
+
+int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2) {
+    int8_t type1 = value1->type;
+    int8_t type2 = value2->type;
+    if (type1 != type2) {
+        return false;
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_NULL || type1 == SCRIPT_VALUE_TYPE_MISSING) {
+        return true;
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_NUMBER) {
+        return (*(double *)(value1->data) == *(double *)(value2->data));
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_FUNCTION) {
+        return (*(scriptBaseFunction_t **)(value1->data) == *(scriptBaseFunction_t **)(value2->data));
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_STRING) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(value1->data);
+        scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(value2->data);
+        vector_t *tempText1 = &(tempHeapValue1->data);
+        vector_t *tempText2 = &(tempHeapValue2->data);
+        if (tempText1->length != tempText2->length) {
+            return false;
+        }
+        int64_t index = 0;
+        while (index < tempText1->length) {
+            int8_t tempCharacter1;
+            int8_t tempCharacter2;
+            getVectorElement(&tempCharacter1, tempText1, index);
+            getVectorElement(&tempCharacter2, tempText2, index);
+            if (tempCharacter1 != tempCharacter2) {
+                return false;
+            }
+            index += 1;
+        }
+        return true;
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_LIST) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(value1->data);
+        scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(value2->data);
+        vector_t *tempList1 = &(tempHeapValue1->data);
+        vector_t *tempList2 = &(tempHeapValue2->data);
+        if (tempList1->length != tempList2->length) {
+            return false;
+        }
+        int64_t index = 0;
+        while (index < tempList1->length) {
+            scriptValue_t tempValue1;
+            scriptValue_t tempValue2;
+            getVectorElement(&tempValue1, tempList1, index);
+            getVectorElement(&tempValue2, tempList2, index);
+            if (tempValue1.type != tempValue2.type) {
+                return false;
+            }
+            if (tempValue1.type == SCRIPT_VALUE_TYPE_LIST) {
+                if (*(scriptHeapValue_t **)(tempValue1.data) != *(scriptHeapValue_t **)(tempValue2.data)) {
+                    return false;
+                }
+            } else {
+                if (!scriptValuesAreEqualShallow(&tempValue1, &tempValue2)) {
+                    return false;
+                }
+            }
+            index += 1;
+        }
+        return true;
+    }
+    return true;
+}
+
+int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2) {
+    int8_t type1 = value1->type;
+    int8_t type2 = value2->type;
+    if (type1 != type2) {
+        return false;
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_NULL || type1 == SCRIPT_VALUE_TYPE_MISSING) {
+        return true;
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_NUMBER) {
+        return (*(double *)&(value1->data) == *(double *)&(value2->data));
+    }
+    if (type1 == SCRIPT_VALUE_TYPE_STRING || type1 == SCRIPT_VALUE_TYPE_LIST
+            || type1 == SCRIPT_VALUE_TYPE_FUNCTION) {
+        return (*(void **)&(value1->data) == *(void **)&(value2->data));
+    }
+    return true;
 }
 
 
