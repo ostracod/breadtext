@@ -11,6 +11,9 @@
 #include "scriptParse.h"
 #include "script.h"
 #include "display.h"
+#include "selection.h"
+#include "motion.h"
+#include "textCommand.h"
 
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VARIABLE 1
@@ -44,6 +47,12 @@ void initializeScriptingEnvironment() {
     createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
     createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
+}
+
+void addScriptTestLogMessage(int8_t *text) {
+    int8_t *tempText = malloc(strlen((char *)text) + 1);
+    strcpy((char *)tempText, (char *)text);
+    pushVectorElement(&scriptTestLogMessageList, &tempText);
 }
 
 void resetScriptError() {
@@ -88,6 +97,30 @@ void displayScriptError() {
         );
     }
     notifyUser(tempText);
+}
+
+keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
+    int64_t index = 0;
+    while (index < keyMappingList.length) {
+        keyMapping_t *tempKeyMapping = findVectorElement(&keyMappingList, index);
+        if (mode == tempKeyMapping->mode && oldKey == tempKeyMapping->oldKey) {
+            return tempKeyMapping;
+        }
+        index += 1;
+    }
+    return NULL;
+}
+
+commandBinding_t *findCommandBinding(int8_t *commandName) {
+    int64_t index = 0;
+    while (index < commandBindingList.length) {
+        commandBinding_t *tempCommandBinding = findVectorElement(&commandBindingList, index);
+        if (strcmp((char *)(tempCommandBinding->commandName), (char *)commandName) == 0) {
+            return tempCommandBinding;
+        }
+        index += 1;
+    }
+    return NULL;
 }
 
 void storeValueInExpressionResultDestination(expressionResult_t *expressionResult, scriptValue_t value) {
@@ -943,17 +976,401 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
     if (function->type == SCRIPT_FUNCTION_TYPE_BUILT_IN) {
         scriptBuiltInFunction_t *tempFunction = (scriptBuiltInFunction_t *)function;
         switch (tempFunction->number) {
-            case SCRIPT_FUNCTION_NOTIFY_USER:
+            case SCRIPT_FUNCTION_IS_NUM:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(argumentList[0].type == SCRIPT_VALUE_TYPE_NUMBER);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_STR:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(argumentList[0].type == SCRIPT_VALUE_TYPE_STRING);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_LIST:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(argumentList[0].type == SCRIPT_VALUE_TYPE_LIST);
+                break;
+            }
+            case SCRIPT_FUNCTION_IS_FUNC:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = (double)(argumentList[0].type == SCRIPT_VALUE_TYPE_FUNCTION);
+                break;
+            }
+            case SCRIPT_FUNCTION_COPY:
+            {
+                output = copyScriptValue(argumentList + 0);
+                break;
+            }
+            case SCRIPT_FUNCTION_STR:
+            {
+                output = convertScriptValueToString(argumentList[0]);
+                break;
+            }
+            case SCRIPT_FUNCTION_NUM:
+            {
+                output = convertScriptValueToNumber(argumentList[0]);
+                break;
+            }
+            case SCRIPT_FUNCTION_FLOOR:
             {
                 scriptValue_t tempValue = argumentList[0];
-                scriptValue_t tempStringValue = convertScriptValueToString(tempValue);
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = floor(*(double *)(tempValue.data));
+                break;
+            }
+            case SCRIPT_FUNCTION_RAND:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)&(output.data) = ((double)rand()) / ((double)RAND_MAX);
+                break;
+            }
+            case SCRIPT_FUNCTION_LEN:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                if (tempValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempValue.data);
+                    vector_t *tempText = &(tempHeapValue->data);
+                    output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)(output.data) = (double)(tempText->length - 1);
+                } else if (tempValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempValue.data);
+                    vector_t *tempList = &(tempHeapValue->data);
+                    output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)(output.data) = (double)(tempList->length);
+                } else {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_INS:
+            {
+                scriptValue_t tempSequenceValue = argumentList[0];
+                scriptValue_t tempIndexValue = argumentList[1];
+                scriptValue_t tempItemValue = argumentList[2];
+                if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int64_t index = (int64_t)*(double *)(tempIndexValue.data);
+                if (index < 0) {
+                    reportScriptError((int8_t *)"Index out of range.", NULL);
+                    return output;
+                }
+                if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    if (tempItemValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                        reportScriptError((int8_t *)"Bad argument type.", NULL);
+                        return output;
+                    }
+                    int8_t tempCharacter = (int8_t)*(double *)(tempItemValue.data);
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempText = &(tempHeapValue->data);
+                    if (index >= tempText->length) {
+                        reportScriptError((int8_t *)"Index out of range.", NULL);
+                        return output;
+                    }
+                    insertVectorElement(tempText, index, &tempCharacter);
+                } else if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempList = &(tempHeapValue->data);
+                    if (index > tempList->length) {
+                        reportScriptError((int8_t *)"Index out of range.", NULL);
+                        return output;
+                    }
+                    insertVectorElement(tempList, index, &tempItemValue);
+                } else {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_REM:
+            {
+                scriptValue_t tempSequenceValue = argumentList[0];
+                scriptValue_t tempIndexValue = argumentList[1];
+                if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int64_t index = (int64_t)*(double *)(tempIndexValue.data);
+                if (index < 0) {
+                    reportScriptError((int8_t *)"Index out of range.", NULL);
+                    return output;
+                }
+                if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempText = &(tempHeapValue->data);
+                    if (index >= tempText->length - 1) {
+                        reportScriptError((int8_t *)"Index out of range.", NULL);
+                        return output;
+                    }
+                    removeVectorElement(tempText, index);
+                } else if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempList = &(tempHeapValue->data);
+                    if (index >= tempList->length) {
+                        reportScriptError((int8_t *)"Index out of range.", NULL);
+                        return output;
+                    }
+                    removeVectorElement(tempList, index);
+                } else {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_TIMESTAMP:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = getTimestamp();
+                break;
+            }
+            case SCRIPT_FUNCTION_PRESS_KEY:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int32_t tempKey = (int32_t)*(double *)(tempValue.data);
+                handleKey(tempKey, false, false, false);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_MODE:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(activityMode);
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_MODE:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int32_t tempMode = (int32_t)*(double *)(tempValue.data);
+                if (tempMode < 1 || tempMode > 9) {
+                    reportScriptError((int8_t *)"Invalid mode.", NULL);
+                    return output;
+                }
+                if (tempMode != COMMAND_MODE && activityMode != COMMAND_MODE) {
+                    setActivityMode(COMMAND_MODE);
+                }
+                if (tempMode == HIGHLIGHT_CHARACTER_MODE || tempMode == HIGHLIGHT_STATIC_MODE) {
+                    highlightTextPos = cursorTextPos;
+                }
+                setActivityMode(tempMode);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_SELECTION_CONTENTS:
+            {
+                int8_t *tempText = allocateStringFromSelection();
+                output = convertTextToStringValue(tempText);
+                free(tempText);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_LINE_COUNT:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                textLine_t *tempLine = getRightmostTextLine(rootTextLine);
+                *(double *)(output.data) = (double)getTextLineNumber(tempLine);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_LINE_CONTENTS:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int64_t tempLineIndex = (int64_t)*(double *)(tempValue.data);
+                textLine_t *tempLine = getTextLineByNumber(tempLineIndex + 1);
+                if (tempLine == NULL) {
+                    reportScriptError((int8_t *)"Bad line index.", NULL);
+                    return output;
+                }
+                textAllocation_t *tempAllocation = &(tempLine->textAllocation);
+                int8_t tempBuffer[tempAllocation->length + 1];
+                copyData(tempBuffer, tempAllocation->text, tempAllocation->length);
+                tempBuffer[tempAllocation->length] = 0;
+                output = convertTextToStringValue(tempBuffer);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_CURSOR_CHAR_INDEX:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)getTextPosIndex(&cursorTextPos);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_CURSOR_LINE_INDEX:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(getTextLineNumber(cursorTextPos.line) - 1);
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_CURSOR_POS:
+            {
+                scriptValue_t tempCharIndexValue = argumentList[0];
+                scriptValue_t tempLineIndexValue = argumentList[1];
+                if (tempCharIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempLineIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int64_t tempCharIndex = (int64_t)*(double *)(tempCharIndexValue.data);
+                int64_t tempLineIndex = (int64_t)*(double *)(tempLineIndexValue.data);
+                textLine_t *tempLine = getTextLineByNumber(tempLineIndex + 1);
+                if (tempLine == NULL) {
+                    reportScriptError((int8_t *)"Bad line index.", NULL);
+                    return output;
+                }
+                textAllocation_t *tempAllocation = &(tempLine->textAllocation);
+                if (tempCharIndex < 0 || tempCharIndex > tempAllocation->length) {
+                    reportScriptError((int8_t *)"Bad char index.", NULL);
+                    return output;
+                }
+                textPos_t tempTextPos;
+                tempTextPos.line = tempLine;
+                setTextPosIndex(&tempTextPos, tempCharIndex);
+                moveCursor(&tempTextPos);
+                break;
+            }
+            case SCRIPT_FUNCTION_RUN_COMMAND:
+            {
+                scriptValue_t tempCommandNameValue = argumentList[0];
+                scriptValue_t tempArgumentsValue = argumentList[1];
+                if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING || tempArgumentsValue.type != SCRIPT_VALUE_TYPE_LIST) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(tempCommandNameValue.data);
+                scriptHeapValue_t *tempHeapValue2 = *(scriptHeapValue_t **)(tempArgumentsValue.data);
+                vector_t *tempName = &(tempHeapValue1->data);
+                vector_t *tempList = &(tempHeapValue2->data);
+                int8_t *tempTermList[tempList->length + 1];
+                tempTermList[0] = tempName->data;
+                int64_t index = 0;
+                while (index < tempList->length) {
+                    scriptValue_t tempArgumentValue;
+                    getVectorElement(&tempArgumentValue, tempList, index);
+                    scriptValue_t tempStringValue = convertScriptValueToString(tempArgumentValue);
+                    scriptHeapValue_t *tempHeapValue3 = *(scriptHeapValue_t **)(tempStringValue.data);
+                    vector_t *tempText = &(tempHeapValue3->data);
+                    tempTermList[index + 1] = tempText->data;
+                    index += 1;
+                }
+                executeTextCommandByTermList(&output, tempTermList, tempList->length + 1);
+                if (scriptHasError) {
+                    return output;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_NOTIFY_USER:
+            {
+                scriptValue_t tempStringValue = convertScriptValueToString(argumentList[0]);
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempStringValue.data);
                 vector_t *tempText = &(tempHeapValue->data);
                 notifyUser(tempText->data);
                 break;
             }
-            // TODO: Implement all of the other built-in functions.
-            
+            case SCRIPT_FUNCTION_PROMPT_KEY:
+            {
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = (double)(getch());
+                break;
+            }
+            case SCRIPT_FUNCTION_PROMPT_CHAR:
+            {
+                notifyUser((int8_t *)"Type a character.");
+                int32_t tempKey = getch();
+                if (tempKey < 32 || tempKey > 126) {
+                    output.type = SCRIPT_VALUE_TYPE_NULL;
+                } else {
+                    output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                    *(double *)(output.data) = (double)(tempKey);
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_BIND_KEY:
+            {
+                scriptValue_t tempKeyValue = argumentList[0];
+                scriptValue_t tempCallbackValue = argumentList[1];
+                if (tempKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempCallbackValue.type != SCRIPT_VALUE_TYPE_FUNCTION) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int32_t tempKey = (int32_t)*(double *)(tempKeyValue.data);
+                scriptBaseFunction_t *tempCallback = *(scriptBaseFunction_t **)(tempCallbackValue.data);
+                keyBinding_t tempKeyBinding;
+                tempKeyBinding.key = tempKey;
+                tempKeyBinding.callback = tempCallback;
+                pushVectorElement(&keyBindingList, &tempKeyBinding);
+                break;
+            }
+            case SCRIPT_FUNCTION_MAP_KEY:
+            {
+                scriptValue_t tempOldKeyValue = argumentList[0];
+                scriptValue_t tempNewKeyValue = argumentList[1];
+                scriptValue_t tempModeValue = argumentList[2];
+                if (tempOldKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempNewKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER
+                        || tempModeValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                int32_t tempOldKey = (int32_t)*(double *)(tempOldKeyValue.data);
+                int32_t tempNewKey = (int32_t)*(double *)(tempNewKeyValue.data);
+                int32_t tempMode = (int32_t)*(double *)(tempModeValue.data);
+                keyMapping_t *tempOldKeyMapping = findKeyMapping(tempOldKey, tempMode);
+                if (tempOldKeyMapping == NULL) {
+                    keyMapping_t tempNewKeyMapping;
+                    tempNewKeyMapping.oldKey = tempOldKey;
+                    tempNewKeyMapping.newKey = tempNewKey;
+                    tempNewKeyMapping.mode = tempMode;
+                    pushVectorElement(&keyMappingList, &tempNewKeyMapping);
+                } else {
+                    tempOldKeyMapping->newKey = tempNewKey;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_BIND_COMMAND:
+            {
+                scriptValue_t tempCommandNameValue = argumentList[0];
+                scriptValue_t tempCallbackValue = argumentList[1];
+                if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING || tempCallbackValue.type != SCRIPT_VALUE_TYPE_FUNCTION) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempCommandNameValue.data);
+                vector_t *tempText = &(tempHeapValue->data);
+                scriptBaseFunction_t *tempCallback = *(scriptBaseFunction_t **)(tempCallbackValue.data);
+                commandBinding_t *tempOldCommandBinding = findCommandBinding(tempText->data);
+                if (tempOldCommandBinding == NULL) {
+                    commandBinding_t tempNewCommandBinding;
+                    tempNewCommandBinding.commandName = malloc(tempText->length);
+                    strcpy((char *)(tempNewCommandBinding.commandName), (char *)(tempText->data));
+                    tempNewCommandBinding.callback = tempCallback;
+                    pushVectorElement(&commandBindingList, &tempNewCommandBinding);
+                } else {
+                    tempOldCommandBinding->callback = tempCallback;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_TEST_LOG:
+            {
+                scriptValue_t tempStringValue = convertScriptValueToString(argumentList[0]);
+                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempStringValue.data);
+                vector_t *tempText = &(tempHeapValue->data);
+                addScriptTestLogMessage(tempText->data);
+                break;
+            }
             default: {
                 break;
             }

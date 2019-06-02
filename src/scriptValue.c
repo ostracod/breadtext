@@ -128,6 +128,29 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
     return output;
 }
 
+scriptValue_t convertScriptValueToNumber(scriptValue_t value) {
+    if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+        return value;
+    }
+    if (value.type == SCRIPT_VALUE_TYPE_STRING) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value.data);
+        vector_t *tempText = &(tempHeapValue->data);
+        double tempNumber;
+        int32_t tempResult = sscanf((char *)(tempText->data), "%lf", &tempNumber);
+        scriptValue_t output;
+        if (tempResult < 1) {
+            output.type = SCRIPT_VALUE_TYPE_NULL;
+            return output;
+        }
+        output.type = SCRIPT_VALUE_TYPE_NUMBER;
+        *(double *)&(output.data) = tempNumber;
+        return output;
+    }
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_NULL;
+    return output;
+}
+
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2) {
     int8_t type1 = value1->type;
     int8_t type2 = value2->type;
@@ -214,6 +237,39 @@ int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2) {
         return (*(void **)&(value1->data) == *(void **)&(value2->data));
     }
     return true;
+}
+
+scriptValue_t copyScriptValue(scriptValue_t *value) {
+    int8_t tempType = value->type;
+    if (tempType == SCRIPT_VALUE_TYPE_NULL || tempType == SCRIPT_VALUE_TYPE_MISSING) {
+        return *value;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_NUMBER || tempType == SCRIPT_VALUE_TYPE_FUNCTION) {
+        return *value;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_STRING) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(value->data);
+        vector_t *tempText = &(tempHeapValue1->data);
+        scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
+        scriptValue_t output;
+        tempHeapValue2->type = SCRIPT_VALUE_TYPE_STRING;
+        copyVector(&(tempHeapValue2->data), tempText);
+        output.type = SCRIPT_VALUE_TYPE_STRING;
+        *(scriptHeapValue_t **)(output.data) = tempHeapValue2;
+        return output;
+    }
+    if (tempType == SCRIPT_VALUE_TYPE_LIST) {
+        scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(value->data);
+        vector_t *tempList = &(tempHeapValue1->data);
+        scriptHeapValue_t *tempHeapValue2 = createScriptHeapValue();
+        scriptValue_t output;
+        tempHeapValue2->type = SCRIPT_VALUE_TYPE_LIST;
+        copyVector(&(tempHeapValue2->data), tempList);
+        output.type = SCRIPT_VALUE_TYPE_LIST;
+        *(scriptHeapValue_t **)(output.data) = tempHeapValue2;
+        return output;
+    }
+    return *value;
 }
 
 
