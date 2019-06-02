@@ -908,15 +908,40 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
     return output;
 }
 
+int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList);
+
 int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
     // TODO: Garbage collection.
     
+    scriptBodyLine_t *tempLine = &(statement->scriptBodyLine);
     switch (statement->type) {
         case SCRIPT_STATEMENT_TYPE_EXPRESSION:
         {
             scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
             scriptBaseExpression_t *tempExpression = tempStatement->expression;
             evaluateExpression(tempExpression);
+            break;
+        }
+        case SCRIPT_STATEMENT_TYPE_WHILE:
+        {
+            scriptWhileStatement_t *tempStatement = (scriptWhileStatement_t *)statement;
+            scriptBaseExpression_t *tempCondition = tempStatement->condition;
+            while (true) {
+                expressionResult_t tempResult = evaluateExpression(tempCondition);
+                if (tempResult.value.type == SCRIPT_VALUE_TYPE_NUMBER) {
+                    double tempCondition = *(double *)(tempResult.value.data);
+                    if (tempCondition == 0) {
+                        break;
+                    }
+                } else {
+                    reportScriptError((int8_t *)"Invalid condition type.", tempLine);
+                    return false;
+                }
+                int8_t tempResult2 = evaluateStatementList(returnValue, &(tempStatement->statementList));
+                if (!tempResult2) {
+                    return false;
+                }
+            }
             break;
         }
         // TODO: Implement all the other stuff too.
@@ -930,6 +955,20 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         scriptErrorLine = statement->scriptBodyLine;
         scriptErrorHasLine = true;
         return false;
+    }
+    return true;
+}
+
+int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList) {
+    int32_t index = 0;
+    while (index < statementList->length) {
+        scriptBaseStatement_t *tempStatement;
+        getVectorElement(&tempStatement, statementList, index);
+        int8_t tempResult = evaluateStatement(returnValue, tempStatement);
+        if (!tempResult) {
+            return false;
+        }
+        index += 1;
     }
     return true;
 }
@@ -959,16 +998,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
         if (tempFunction->isEntryPoint) {
             globalFrame.valueList = frameValueList;
         }
-        index = 0;
-        while (index < tempFunction->statementList.length) {
-            scriptBaseStatement_t *tempStatement;
-            getVectorElement(&tempStatement, &(tempFunction->statementList), index);
-            int8_t tempResult = evaluateStatement(&output, tempStatement);
-            if (!tempResult) {
-                break;
-            }
-            index += 1;
-        }
+        evaluateStatementList(&output, &tempFunction->statementList);
         globalFrame = lastGlobalFrame;
         localFrame = lastLocalFrame;
         return output;

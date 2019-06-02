@@ -280,6 +280,7 @@ typedef struct scriptParser {
     scriptScope_t *scope;
     vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
+    int8_t isExpectingEndStatement;
 } scriptParser_t;
 
 void initializeScriptParsingEnvironment();

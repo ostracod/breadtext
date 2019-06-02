@@ -498,6 +498,19 @@ scriptBaseStatement_t *createScriptExpressionStatement(
     return (scriptBaseStatement_t *)output;
 }
 
+scriptBaseStatement_t *createScriptWhileStatement(
+    scriptBodyLine_t *scriptBodyLine,
+    scriptBaseExpression_t *condition,
+    vector_t *statementList
+) {
+    scriptWhileStatement_t *output = malloc(sizeof(scriptWhileStatement_t));
+    output->base.type = SCRIPT_STATEMENT_TYPE_WHILE;
+    output->base.scriptBodyLine = *scriptBodyLine;
+    output->condition = condition;
+    output->statementList = *statementList;
+    return (scriptBaseStatement_t *)output;
+}
+
 scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 void parseScriptExpressionList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
@@ -773,6 +786,8 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
     return output;
 }
 
+int8_t parseScriptStatementList(scriptParser_t *parser);
+
 int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
     scriptBodyLine_t *tempLine = parser->scriptBodyLine;
     scriptBaseStatement_t *scriptStatement = NULL;
@@ -784,6 +799,14 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
         int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
         if (characterIsEndOfScriptLine(tempCharacter)) {
             break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"end")) {
+            if (!parser->isExpectingEndStatement) {
+                reportScriptError((int8_t *)"Unexpected end statement", tempLine);
+                return false;
+            }
+            *hasReachedEnd = true;
+            return true;
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"dec")) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
@@ -815,10 +838,33 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 );
                 scriptStatement = createScriptExpressionStatement(tempLine, tempExpression2);
             }
-            ;
             if (!assertEndOfLine(scriptBodyPos)) {
                 return false;
             }
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
+            int8_t tempResult;
+            vector_t tempStatementList;
+            createEmptyVector(&tempStatementList, sizeof(scriptBaseStatement_t *));
+            scriptParser_t tempParser = *parser;
+            tempParser.statementList = &tempStatementList;
+            tempParser.isExpectingEndStatement = true;
+            tempResult = seekNextScriptBodyLine(parser->scriptBodyLine);
+            if (!tempResult) {
+                reportScriptError((int8_t *)"Expected statement list.", tempLine);
+                return false;
+            }
+            tempResult = parseScriptStatementList(&tempParser);
+            if (!tempResult) {
+                return false;
+            }
+            scriptStatement = createScriptWhileStatement(tempLine, tempExpression, &tempStatementList);
             break;
         }
         // TODO: Parse all of the other statement types.
@@ -836,7 +882,12 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
     if (scriptStatement != NULL) {
         pushVectorElement(parser->statementList, &scriptStatement);
     }
-    *hasReachedEnd = !seekNextScriptBodyLine(parser->scriptBodyLine);
+    int8_t tempHasReachedEnd = !seekNextScriptBodyLine(parser->scriptBodyLine);
+    *hasReachedEnd = tempHasReachedEnd;
+    if (tempHasReachedEnd && parser->isExpectingEndStatement) {
+        reportScriptError((int8_t *)"Expected end statement.", tempLine);
+        return false;
+    }
     return true;
 }
 
@@ -873,8 +924,10 @@ scriptCustomFunction_t *createEmptyCustomFunction(int8_t isEntryPoint) {
 int8_t parseScriptEntryPointFunction(scriptCustomFunction_t **destination, scriptParser_t *parser) {
     scriptCustomFunction_t *tempFunction = createEmptyCustomFunction(true);
     *destination = tempFunction;
-    pushVectorElement(parser->customFunctionList, &tempFunction);
-    return parseScriptFunctionBody(tempFunction, parser);
+    scriptParser_t tempParser = *parser;
+    pushVectorElement(tempParser.customFunctionList, &tempFunction);
+    tempParser.isExpectingEndStatement = false;
+    return parseScriptFunctionBody(tempFunction, &tempParser);
 }
 
 int8_t resolveScriptIdentifiers(script_t *script);
