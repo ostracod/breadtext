@@ -247,7 +247,7 @@ typedef struct scriptExpressionStatement {
 
 typedef struct scriptIfStatement {
     scriptBaseStatement_t base;
-    vector_t clauseList; // Vector of scriptIfClause_t.
+    vector_t clauseList; // Vector of pointers to scriptIfClause_t.
 } scriptIfStatement_t;
 
 typedef struct scriptWhileStatement {
@@ -281,6 +281,7 @@ typedef struct scriptParser {
     vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
     int8_t isExpectingEndStatement;
+    vector_t *ifClauseList; // Vector of pointers to scriptIfClause_t.
 } scriptParser_t;
 
 void initializeScriptParsingEnvironment();

@@ -922,6 +922,38 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
             evaluateExpression(tempExpression);
             break;
         }
+        case SCRIPT_STATEMENT_TYPE_IF:
+        {
+            scriptIfStatement_t *tempStatement = (scriptIfStatement_t *)statement;
+            vector_t *tempClauseList = &(tempStatement->clauseList);
+            int32_t index = 0;
+            while (index < tempClauseList->length) {
+                scriptIfClause_t *tempClause;
+                getVectorElement(&tempClause, tempClauseList, index);
+                scriptBaseExpression_t *tempCondition = tempClause->condition;
+                int8_t tempShouldEvaluateStatements;
+                if (tempCondition == NULL) {
+                    tempShouldEvaluateStatements = false;
+                } else {
+                    expressionResult_t tempResult = evaluateExpression(tempCondition);
+                    if (tempResult.value.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                        reportScriptError((int8_t *)"Invalid condition type.", tempLine);
+                        return false;
+                    }
+                    double tempCondition = *(double *)(tempResult.value.data);
+                    tempShouldEvaluateStatements = (tempCondition != 0.0);
+                }
+                if (tempShouldEvaluateStatements) {
+                    int8_t tempResult2 = evaluateStatementList(returnValue, &(tempClause->statementList));
+                    if (!tempResult2) {
+                        return false;
+                    }
+                    break;
+                }
+                index += 1;
+            }
+            break;
+        }
         case SCRIPT_STATEMENT_TYPE_WHILE:
         {
             scriptWhileStatement_t *tempStatement = (scriptWhileStatement_t *)statement;
@@ -930,7 +962,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                 expressionResult_t tempResult = evaluateExpression(tempCondition);
                 if (tempResult.value.type == SCRIPT_VALUE_TYPE_NUMBER) {
                     double tempCondition = *(double *)(tempResult.value.data);
-                    if (tempCondition == 0) {
+                    if (tempCondition == 0.0) {
                         break;
                     }
                 } else {

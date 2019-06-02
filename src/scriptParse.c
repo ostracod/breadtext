@@ -487,6 +487,17 @@ scriptBaseExpression_t *createScriptInvocationExpression(
     return (scriptBaseExpression_t *)output;
 }
 
+scriptIfClause_t *createScriptIfClause(
+    scriptBodyLine_t *scriptBodyLine,
+    scriptBaseExpression_t *condition
+) {
+    scriptIfClause_t *output = malloc(sizeof(scriptIfClause_t));
+    output->scriptBodyLine = *scriptBodyLine;
+    output->condition = condition;
+    createEmptyVector(&(output->statementList), sizeof(scriptBaseStatement_t *));
+    return output;
+}
+
 scriptBaseStatement_t *createScriptExpressionStatement(
     scriptBodyLine_t *scriptBodyLine,
     scriptBaseExpression_t *expression
@@ -495,6 +506,17 @@ scriptBaseStatement_t *createScriptExpressionStatement(
     output->base.type = SCRIPT_STATEMENT_TYPE_EXPRESSION;
     output->base.scriptBodyLine = *scriptBodyLine;
     output->expression = expression;
+    return (scriptBaseStatement_t *)output;
+}
+
+scriptBaseStatement_t *createScriptIfStatement(
+    scriptBodyLine_t *scriptBodyLine,
+    vector_t *clauseList
+) {
+    scriptIfStatement_t *output = malloc(sizeof(scriptIfStatement_t));
+    output->base.type = SCRIPT_STATEMENT_TYPE_IF;
+    output->base.scriptBodyLine = *scriptBodyLine;
+    output->clauseList = *clauseList;
     return (scriptBaseStatement_t *)output;
 }
 
@@ -843,6 +865,33 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             }
             break;
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"if")) {
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
+            if (scriptHasError) {
+                return false;
+            }
+            int8_t tempResult;
+            vector_t tempClauseList;
+            createEmptyVector(&tempClauseList, sizeof(scriptIfClause_t *));
+            scriptIfClause_t *tempClause = createScriptIfClause(tempLine, tempExpression);
+            pushVectorElement(&tempClauseList, &tempClause);
+            scriptParser_t tempParser = *parser;
+            tempParser.statementList = &(tempClause->statementList);
+            tempParser.isExpectingEndStatement = true;
+            tempParser.ifClauseList = &tempClauseList;
+            tempResult = seekNextScriptBodyLine(parser->scriptBodyLine);
+            if (!tempResult) {
+                reportScriptError((int8_t *)"Expected statement list.", tempLine);
+                return false;
+            }
+            tempResult = parseScriptStatementList(&tempParser);
+            if (!tempResult) {
+                return false;
+            }
+            scriptStatement = createScriptIfStatement(tempLine, &tempClauseList);
+            break;
+        }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"while")) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
@@ -855,6 +904,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             scriptParser_t tempParser = *parser;
             tempParser.statementList = &tempStatementList;
             tempParser.isExpectingEndStatement = true;
+            tempParser.ifClauseList = NULL;
             tempResult = seekNextScriptBodyLine(parser->scriptBodyLine);
             if (!tempResult) {
                 reportScriptError((int8_t *)"Expected statement list.", tempLine);
@@ -908,6 +958,7 @@ int8_t parseScriptStatementList(scriptParser_t *parser) {
 int8_t parseScriptFunctionBody(scriptCustomFunction_t *function, scriptParser_t *parser) {
     parser->scope = &(function->scope);
     parser->statementList = &(function->statementList);
+    parser->ifClauseList = NULL;
     return parseScriptStatementList(parser);
 }
 
@@ -1094,7 +1145,8 @@ int8_t resolveScriptStatementIdentifiers(scriptBaseStatement_t *statement, scrip
             scriptIfStatement_t *tempStatement = (scriptIfStatement_t *)statement;
             int32_t index = 0;
             while (index < tempStatement->clauseList.length) {
-                scriptIfClause_t *tempClause = findVectorElement(&(tempStatement->clauseList), index);
+                scriptIfClause_t *tempClause;
+                getVectorElement(&tempClause, &(tempStatement->clauseList), index);
                 if (tempClause->condition != NULL) {
                     resolveScriptExpressionIdentifiers(&(tempClause->condition), scopes);
                     if (scriptHasError) {
