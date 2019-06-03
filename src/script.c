@@ -15,6 +15,12 @@
 #include "motion.h"
 #include "textCommand.h"
 
+#define STATEMENT_JUMP_NONE 0
+#define STATEMENT_JUMP_ERROR 1
+#define STATEMENT_JUMP_BREAK 2
+#define STATEMENT_JUMP_CONTINUE 3
+#define STATEMENT_JUMP_RETURN 3
+
 #define DESTINATION_TYPE_NONE 0
 #define DESTINATION_TYPE_VARIABLE 1
 #define DESTINATION_TYPE_LIST 2
@@ -938,15 +944,15 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                     expressionResult_t tempResult = evaluateExpression(tempCondition);
                     if (tempResult.value.type != SCRIPT_VALUE_TYPE_NUMBER) {
                         reportScriptError((int8_t *)"Invalid condition type.", tempLine);
-                        return false;
+                        return STATEMENT_JUMP_ERROR;
                     }
                     double tempCondition = *(double *)(tempResult.value.data);
                     tempShouldEvaluateStatements = (tempCondition != 0.0);
                 }
                 if (tempShouldEvaluateStatements) {
                     int8_t tempResult2 = evaluateStatementList(returnValue, &(tempClause->statementList));
-                    if (!tempResult2) {
-                        return false;
+                    if (tempResult2 != STATEMENT_JUMP_NONE) {
+                        return tempResult2;
                     }
                     break;
                 }
@@ -967,14 +973,25 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                     }
                 } else {
                     reportScriptError((int8_t *)"Invalid condition type.", tempLine);
-                    return false;
+                    return STATEMENT_JUMP_ERROR;
                 }
                 int8_t tempResult2 = evaluateStatementList(returnValue, &(tempStatement->statementList));
-                if (!tempResult2) {
-                    return false;
+                if (tempResult2 == STATEMENT_JUMP_BREAK) {
+                    break;
+                } else if (tempResult2 != STATEMENT_JUMP_CONTINUE
+                        && tempResult2 != STATEMENT_JUMP_NONE) {
+                    return tempResult2;
                 }
             }
             break;
+        }
+        case SCRIPT_STATEMENT_TYPE_BREAK:
+        {
+            return STATEMENT_JUMP_BREAK;
+        }
+        case SCRIPT_STATEMENT_TYPE_CONTINUE:
+        {
+            return STATEMENT_JUMP_CONTINUE;
         }
         // TODO: Implement all the other stuff too.
         
@@ -986,9 +1003,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
     if (scriptHasError) {
         scriptErrorLine = statement->scriptBodyLine;
         scriptErrorHasLine = true;
-        return false;
+        return STATEMENT_JUMP_ERROR;
     }
-    return true;
+    return STATEMENT_JUMP_NONE;
 }
 
 int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList) {
@@ -997,12 +1014,12 @@ int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList
         scriptBaseStatement_t *tempStatement;
         getVectorElement(&tempStatement, statementList, index);
         int8_t tempResult = evaluateStatement(returnValue, tempStatement);
-        if (!tempResult) {
-            return false;
+        if (tempResult != STATEMENT_JUMP_NONE) {
+            return tempResult;
         }
         index += 1;
     }
-    return true;
+    return STATEMENT_JUMP_NONE;
 }
 
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount) {

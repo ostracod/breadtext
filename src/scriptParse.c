@@ -533,6 +533,20 @@ scriptBaseStatement_t *createScriptWhileStatement(
     return (scriptBaseStatement_t *)output;
 }
 
+scriptBaseStatement_t *createScriptBreakStatement(scriptBodyLine_t *scriptBodyLine) {
+    scriptBaseStatement_t *output = malloc(sizeof(scriptBaseStatement_t));
+    output->type = SCRIPT_STATEMENT_TYPE_BREAK;
+    output->scriptBodyLine = *scriptBodyLine;
+    return output;
+}
+
+scriptBaseStatement_t *createScriptContinueStatement(scriptBodyLine_t *scriptBodyLine) {
+    scriptBaseStatement_t *output = malloc(sizeof(scriptBaseStatement_t));
+    output->type = SCRIPT_STATEMENT_TYPE_CONTINUE;
+    output->scriptBodyLine = *scriptBodyLine;
+    return output;
+}
+
 scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 void parseScriptExpressionList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
@@ -926,6 +940,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             tempParser.statementList = &tempStatementList;
             tempParser.isExpectingEndStatement = true;
             tempParser.ifClauseList = NULL;
+            tempParser.isInWhileLoop = true;
             tempResult = seekNextScriptBodyLine(parser->scriptBodyLine);
             if (!tempResult) {
                 reportScriptError((int8_t *)"Expected statement list.", tempLine);
@@ -936,6 +951,22 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 return false;
             }
             scriptStatement = createScriptWhileStatement(tempLine, tempExpression, &tempStatementList);
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"break")) {
+            if (!parser->isInWhileLoop) {
+                reportScriptError((int8_t *)"Unexpected break statement.", tempLine);
+                return false;
+            }
+            scriptStatement = createScriptBreakStatement(tempLine);
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"continue")) {
+            if (!parser->isInWhileLoop) {
+                reportScriptError((int8_t *)"Unexpected continue statement.", tempLine);
+                return false;
+            }
+            scriptStatement = createScriptContinueStatement(tempLine);
             break;
         }
         // TODO: Parse all of the other statement types.
@@ -980,6 +1011,7 @@ int8_t parseScriptFunctionBody(scriptCustomFunction_t *function, scriptParser_t 
     parser->scope = &(function->scope);
     parser->statementList = &(function->statementList);
     parser->ifClauseList = NULL;
+    parser->isInWhileLoop = false;
     return parseScriptStatementList(parser);
 }
 
