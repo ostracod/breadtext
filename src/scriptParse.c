@@ -551,6 +551,17 @@ scriptBaseStatement_t *createScriptContinueStatement(scriptBodyLine_t *scriptBod
     return output;
 }
 
+scriptBaseStatement_t *createScriptReturnStatement(
+    scriptBodyLine_t *scriptBodyLine,
+    scriptBaseExpression_t *expression
+) {
+    scriptReturnStatement_t *output = malloc(sizeof(scriptReturnStatement_t));
+    output->base.type = SCRIPT_STATEMENT_TYPE_RETURN;
+    output->base.scriptBodyLine = *scriptBodyLine;
+    output->expression = expression;
+    return (scriptBaseStatement_t *)output;
+}
+
 scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, int8_t precedence);
 
 void parseScriptExpressionList(vector_t *destination, scriptBodyPos_t *scriptBodyPos, int8_t endCharacter) {
@@ -939,6 +950,9 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 reportScriptError((int8_t *)"Unexpected end statement", tempLine);
                 return false;
             }
+            if (!assertEndOfLine(scriptBodyPos)) {
+                return false;
+            }
             *hasReachedEnd = true;
             return true;
         }
@@ -983,6 +997,9 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             if (scriptHasError) {
                 return false;
             }
+            if (!assertEndOfLine(scriptBodyPos)) {
+                return false;
+            }
             int8_t tempResult;
             vector_t tempClauseList;
             createEmptyVector(&tempClauseList, sizeof(scriptIfClause_t *));
@@ -1020,6 +1037,9 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             } else {
                 tempExpression = NULL;
             }
+            if (!assertEndOfLine(scriptBodyPos)) {
+                return false;
+            }
             scriptIfClause_t *tempClause = createScriptIfClause(tempLine, tempExpression);
             pushVectorElement(parser->ifClauseList, &tempClause);
             parser->statementList = &(tempClause->statementList);
@@ -1029,6 +1049,9 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
             if (scriptHasError) {
+                return false;
+            }
+            if (!assertEndOfLine(scriptBodyPos)) {
                 return false;
             }
             int8_t tempResult;
@@ -1056,12 +1079,18 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 reportScriptError((int8_t *)"Unexpected break statement.", tempLine);
                 return false;
             }
+            if (!assertEndOfLine(scriptBodyPos)) {
+                return false;
+            }
             scriptStatement = createScriptBreakStatement(tempLine);
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"continue")) {
             if (!parser->isInWhileLoop) {
                 reportScriptError((int8_t *)"Unexpected continue statement.", tempLine);
+                return false;
+            }
+            if (!assertEndOfLine(scriptBodyPos)) {
                 return false;
             }
             scriptStatement = createScriptContinueStatement(tempLine);
@@ -1076,6 +1105,24 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             if (!tempResult) {
                 return false;
             }
+            break;
+        }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"ret")) {
+            scriptBaseExpression_t *tempExpression;
+            scriptBodyPosSkipWhitespace(&scriptBodyPos);
+            int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+            if (characterIsEndOfScriptLine(tempCharacter)) {
+                tempExpression = NULL;
+            } else {
+                tempExpression = parseScriptExpression(&scriptBodyPos, 99);
+                if (scriptHasError) {
+                    return false;
+                }
+            }
+            if (!assertEndOfLine(scriptBodyPos)) {
+                return false;
+            }
+            scriptStatement = createScriptReturnStatement(tempLine, tempExpression);
             break;
         }
         // TODO: Parse all of the other statement types.
