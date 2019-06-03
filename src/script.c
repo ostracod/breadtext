@@ -1036,11 +1036,13 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
         scriptValue_t frameValueList[tempLength];
         index = 0;
         while (index < tempLength) {
-            (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
+            if (index < function->argumentAmount) {
+                frameValueList[index] = argumentList[index];
+            } else {
+                (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
+            }
             index += 1;
         }
-        // TODO: Populate argument variables.
-        
         scriptFrame_t lastGlobalFrame = globalFrame;
         scriptFrame_t lastLocalFrame = localFrame;
         localFrame.valueList = frameValueList;

@@ -352,8 +352,12 @@ scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length) {
     return NULL;
 }
 
-void createEmptyScriptScope(scriptScope_t *scope) {
-    createEmptyVector(&(scope->variableNameList), sizeof(int8_t *));
+void createScriptScope(scriptScope_t *scope, vector_t *argumentNameList) {
+    if (argumentNameList == NULL) {
+        createEmptyVector(&(scope->variableNameList), sizeof(int8_t *));
+    } else {
+        copyVector(&(scope->variableNameList), argumentNameList);
+    }
 }
 
 int32_t scriptScopeFindVariableWithNameLength(scriptScope_t *scope, int8_t *name, int64_t length) {
@@ -822,6 +826,100 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
     return output;
 }
 
+int8_t parseScriptCustomFunctionBody(
+    scriptCustomFunction_t **destination,
+    scriptParser_t *parser,
+    int isEntryPoint,
+    vector_t *argumentNameList
+);
+
+int8_t parseScriptFunctionStatement(
+    scriptBaseStatement_t **destination,
+    scriptParser_t *parser,
+    scriptBodyPos_t scriptBodyPos
+) {
+    scriptBodyLine_t *tempLine = parser->scriptBodyLine;
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+    if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+        reportScriptError((int8_t *)"Missing declaration name.", tempLine);
+        return false;
+    }
+    scriptBodyPos_t tempScriptBodyPos;
+    tempScriptBodyPos = scriptBodyPos;
+    scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+    int8_t *tempFunctionName = getScriptBodyPosPointer(&scriptBodyPos);
+    int64_t tempFunctionNameLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+    scriptScopeAddVariableIfMissing(parser->scope, tempFunctionName, tempFunctionNameLength);
+    scriptBodyPos = tempScriptBodyPos;
+    scriptBodyPosSkipWhitespace(&scriptBodyPos);
+    int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+    scriptBodyPos.index += 1;
+    if (tempCharacter != '(') {
+        reportScriptError((int8_t *)"Invalid function declaration.", tempLine);
+        return false;
+    }
+    vector_t tempArgumentNameList;
+    createEmptyVector(&tempArgumentNameList, sizeof(int8_t *));
+    while (true) {
+        scriptBodyPosSkipWhitespace(&scriptBodyPos);
+        int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+        if (characterIsEndOfScriptLine(tempCharacter)) {
+            reportScriptError((int8_t *)"Unexpected end of argument list.", tempLine);
+            return false;
+        }
+        if (tempCharacter == ')') {
+            scriptBodyPos.index += 1;
+            break;
+        }
+        int8_t tempFirstCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+        if (!isFirstScriptIdentifierCharacter(tempFirstCharacter)) {
+            reportScriptError((int8_t *)"Bad argument name.", tempLine);
+            return false;
+        }
+        scriptBodyPos_t tempScriptBodyPos = scriptBodyPos;
+        scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
+        int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
+        int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
+        int8_t *tempArgumentName = mallocText(tempText, tempLength);
+        pushVectorElement(&tempArgumentNameList, &tempArgumentName);
+        scriptBodyPos = tempScriptBodyPos;
+        scriptBodyPosSkipWhitespace(&scriptBodyPos);
+        tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
+        scriptBodyPos.index += 1;
+        if (tempCharacter == ')') {
+            break;
+        } else if (tempCharacter != ',') {
+            reportScriptError((int8_t *)"Bad argument list.", tempLine);
+            return false;
+        }
+    }
+    assertEndOfLine(scriptBodyPos);
+    if (scriptHasError) {
+        return false;
+    }
+    int8_t tempResult;
+    tempResult = seekNextScriptBodyLine(parser->scriptBodyLine);
+    if (!tempResult) {
+        reportScriptError((int8_t *)"Expected statement list.", tempLine);
+        return false;
+    }
+    scriptCustomFunction_t *tempFunction;
+    tempResult = parseScriptCustomFunctionBody(
+        &tempFunction,
+        parser,
+        false,
+        &tempArgumentNameList
+    );
+    scriptBaseExpression_t *tempExpression = createScriptBinaryExpression(
+        scriptAssignmentOperator,
+        createScriptIdentifierExpression(tempFunctionName, tempFunctionNameLength),
+        createScriptFunctionExpression((scriptBaseFunction_t *)tempFunction)
+    );
+    *destination = createScriptExpressionStatement(tempLine, tempExpression);
+    return true;
+}
+
 int8_t parseScriptStatementList(scriptParser_t *parser);
 
 int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
@@ -969,6 +1067,17 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             scriptStatement = createScriptContinueStatement(tempLine);
             break;
         }
+        if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"func")) {
+            int8_t tempResult = parseScriptFunctionStatement(
+                &scriptStatement,
+                parser,
+                scriptBodyPos
+            );
+            if (!tempResult) {
+                return false;
+            }
+            break;
+        }
         // TODO: Parse all of the other statement types.
         
         scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
@@ -1007,31 +1116,42 @@ int8_t parseScriptStatementList(scriptParser_t *parser) {
     return true;
 }
 
-int8_t parseScriptFunctionBody(scriptCustomFunction_t *function, scriptParser_t *parser) {
-    parser->scope = &(function->scope);
-    parser->statementList = &(function->statementList);
-    parser->ifClauseList = NULL;
-    parser->isInWhileLoop = false;
-    return parseScriptStatementList(parser);
-}
-
-scriptCustomFunction_t *createEmptyCustomFunction(int8_t isEntryPoint) {
+scriptCustomFunction_t *createScriptCustomFunction(
+    int8_t isEntryPoint,
+    vector_t *argumentNameList
+) {
     scriptCustomFunction_t *output = malloc(sizeof(scriptCustomFunction_t));
     output->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
-    output->base.argumentAmount = 0;
+    if (argumentNameList == NULL) {
+        output->base.argumentAmount = 0;
+    } else {
+        output->base.argumentAmount = argumentNameList->length;
+    }
     output->isEntryPoint = isEntryPoint;
-    createEmptyScriptScope(&(output->scope));
+    createScriptScope(&(output->scope), argumentNameList);
     createEmptyVector(&(output->statementList), sizeof(scriptBaseStatement_t *));
     return output;
 }
 
-int8_t parseScriptEntryPointFunction(scriptCustomFunction_t **destination, scriptParser_t *parser) {
-    scriptCustomFunction_t *tempFunction = createEmptyCustomFunction(true);
+int8_t parseScriptCustomFunctionBody(
+    scriptCustomFunction_t **destination,
+    scriptParser_t *parser,
+    int isEntryPoint,
+    vector_t *argumentNameList
+) {
+    scriptCustomFunction_t *tempFunction = createScriptCustomFunction(
+        isEntryPoint,
+        argumentNameList
+    );
     *destination = tempFunction;
     scriptParser_t tempParser = *parser;
     pushVectorElement(tempParser.customFunctionList, &tempFunction);
-    tempParser.isExpectingEndStatement = false;
-    return parseScriptFunctionBody(tempFunction, &tempParser);
+    tempParser.scope = &(tempFunction->scope);
+    tempParser.statementList = &(tempFunction->statementList);
+    tempParser.ifClauseList = NULL;
+    tempParser.isExpectingEndStatement = !isEntryPoint;
+    tempParser.isInWhileLoop = false;
+    return parseScriptStatementList(&tempParser);
 }
 
 int8_t resolveScriptIdentifiers(script_t *script);
@@ -1047,7 +1167,12 @@ int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
     parser.customFunctionList = &customFunctionList;
     parser.scriptBodyLine = &scriptBodyLine;
     scriptCustomFunction_t *entryPointFunction;
-    int8_t tempResult = parseScriptEntryPointFunction(&entryPointFunction, &parser);
+    int8_t tempResult = parseScriptCustomFunctionBody(
+        &entryPointFunction,
+        &parser,
+        true,
+        NULL
+    );
     if (!tempResult) {
         return false;
     }
