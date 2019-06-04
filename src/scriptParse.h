@@ -277,7 +277,7 @@ typedef struct script {
 
 typedef struct scriptParser {
     vector_t *customFunctionList; // Vector of pointers to scriptCustomFunction_t.
-    scriptScope_t *scope;
+    scriptCustomFunction_t *function;
     vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
     vector_t *ifClauseList; // Vector of pointers to scriptIfClause_t.

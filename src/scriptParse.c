@@ -861,7 +861,11 @@ int8_t parseScriptFunctionStatement(
     scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
     int8_t *tempFunctionName = getScriptBodyPosPointer(&scriptBodyPos);
     int64_t tempFunctionNameLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
-    scriptScopeAddVariableIfMissing(parser->scope, tempFunctionName, tempFunctionNameLength);
+    scriptScopeAddVariableIfMissing(
+        &(parser->function->scope),
+        tempFunctionName,
+        tempFunctionNameLength
+    );
     scriptBodyPos = tempScriptBodyPos;
     scriptBodyPosSkipWhitespace(&scriptBodyPos);
     int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
@@ -872,6 +876,7 @@ int8_t parseScriptFunctionStatement(
     }
     vector_t tempArgumentNameList;
     createEmptyVector(&tempArgumentNameList, sizeof(int8_t *));
+    int32_t index = 0;
     while (true) {
         scriptBodyPosSkipWhitespace(&scriptBodyPos);
         int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
@@ -879,7 +884,7 @@ int8_t parseScriptFunctionStatement(
             reportScriptError((int8_t *)"Unexpected end of argument list.", tempLine);
             return false;
         }
-        if (tempCharacter == ')') {
+        if (tempCharacter == ')' && index <= 0) {
             scriptBodyPos.index += 1;
             break;
         }
@@ -904,6 +909,7 @@ int8_t parseScriptFunctionStatement(
             reportScriptError((int8_t *)"Bad argument list.", tempLine);
             return false;
         }
+        index += 1;
     }
     assertEndOfLine(scriptBodyPos);
     if (scriptHasError) {
@@ -968,7 +974,11 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             scriptBodyPosSeekEndOfIdentifier(&tempScriptBodyPos);
             int8_t *tempText = getScriptBodyPosPointer(&scriptBodyPos);
             int64_t tempLength = getDistanceToScriptBodyPos(&scriptBodyPos, &tempScriptBodyPos);
-            scriptScopeAddVariableIfMissing(parser->scope, tempText, tempLength);
+            scriptScopeAddVariableIfMissing(
+                &(parser->function->scope),
+                tempText,
+                tempLength
+            );
             scriptBodyPos = tempScriptBodyPos;
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
@@ -1108,6 +1118,10 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"ret")) {
+            if (parser->function->isEntryPoint) {
+                reportScriptError((int8_t *)"Unexpected return statement.", tempLine);
+                return false;
+            }
             scriptBaseExpression_t *tempExpression;
             scriptBodyPosSkipWhitespace(&scriptBodyPos);
             int8_t tempCharacter = scriptBodyPosGetCharacter(&scriptBodyPos);
@@ -1193,7 +1207,7 @@ int8_t parseScriptCustomFunctionBody(
     *destination = tempFunction;
     scriptParser_t tempParser = *parser;
     pushVectorElement(tempParser.customFunctionList, &tempFunction);
-    tempParser.scope = &(tempFunction->scope);
+    tempParser.function = tempFunction;
     tempParser.statementList = &(tempFunction->statementList);
     tempParser.ifClauseList = NULL;
     tempParser.isExpectingEndStatement = !isEntryPoint;
