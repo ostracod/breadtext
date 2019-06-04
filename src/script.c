@@ -942,6 +942,11 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                     tempShouldEvaluateStatements = true;
                 } else {
                     expressionResult_t tempResult = evaluateExpression(tempCondition);
+                    if (scriptHasError) {
+                        scriptErrorLine = tempClause->scriptBodyLine;
+                        scriptErrorHasLine = true;
+                        return STATEMENT_JUMP_ERROR;
+                    }
                     if (tempResult.value.type != SCRIPT_VALUE_TYPE_NUMBER) {
                         reportScriptError((int8_t *)"Invalid condition type.", tempLine);
                         return STATEMENT_JUMP_ERROR;
@@ -966,6 +971,9 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
             scriptBaseExpression_t *tempCondition = tempStatement->condition;
             while (true) {
                 expressionResult_t tempResult = evaluateExpression(tempCondition);
+                if (scriptHasError) {
+                    break;
+                }
                 if (tempResult.value.type == SCRIPT_VALUE_TYPE_NUMBER) {
                     double tempCondition = *(double *)(tempResult.value.data);
                     if (tempCondition == 0.0) {
@@ -993,6 +1001,19 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         {
             return STATEMENT_JUMP_CONTINUE;
         }
+        case SCRIPT_STATEMENT_TYPE_RETURN:
+        {
+            scriptReturnStatement_t *tempStatement = (scriptReturnStatement_t *)statement;
+            scriptBaseExpression_t *tempExpression = tempStatement->expression;
+            if (tempExpression != NULL) {
+                expressionResult_t tempResult = evaluateExpression(tempExpression);
+                if (scriptHasError) {
+                    break;
+                }
+                *returnValue = tempResult.value;
+            }
+            return STATEMENT_JUMP_RETURN;
+        }
         // TODO: Implement all the other stuff too.
         
         default:
@@ -1001,8 +1022,10 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         }
     }
     if (scriptHasError) {
-        scriptErrorLine = statement->scriptBodyLine;
-        scriptErrorHasLine = true;
+        if (!scriptErrorHasLine) {
+            scriptErrorLine = statement->scriptBodyLine;
+            scriptErrorHasLine = true;
+        }
         return STATEMENT_JUMP_ERROR;
     }
     return STATEMENT_JUMP_NONE;
