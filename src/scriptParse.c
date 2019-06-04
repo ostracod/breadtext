@@ -733,7 +733,7 @@ scriptBaseExpression_t *parseScriptExpression(scriptBodyPos_t *scriptBodyPos, in
                 return NULL;
             }
             scriptBodyPos->index += 1;
-            output = createScriptNumberExpression(tempCharacter);
+            output = createScriptNumberExpression(tempValue);
             break;
         }
         if (tempFirstCharacter == '(') {
