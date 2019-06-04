@@ -263,7 +263,7 @@ typedef struct scriptReturnStatement {
 
 typedef struct scriptImportStatement {
     scriptBaseStatement_t base;
-    scriptBaseExpression_t path;
+    scriptBaseExpression_t *path;
     vector_t variableList; // Vector of scriptVariable_t.
     // variableList will be populated in parseScriptStatement
     // (not in resolveScriptStatementIdentifiers).
@@ -281,6 +281,7 @@ typedef struct scriptParser {
     vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
     vector_t *ifClauseList; // Vector of pointers to scriptIfClause_t.
+    vector_t *importVariableList; // Vector of scriptVariable_t.
     int8_t isExpectingEndStatement;
     int8_t isInWhileLoop;
 } scriptParser_t;
