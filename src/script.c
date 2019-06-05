@@ -26,6 +26,8 @@
 #define DESTINATION_TYPE_LIST 2
 #define DESTINATION_TYPE_STRING 3
 
+#define KEY_HASH_TABLE_SIZE 31
+
 typedef struct expressionResult {
     scriptValue_t value;
     int8_t destinationType;
@@ -39,7 +41,7 @@ typedef struct expressionResult {
 
 vector_t scriptList;
 int8_t scriptErrorMessage[1000];
-vector_t keyBindingList;
+vector_t keyBindingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t keyMappingList;
 vector_t commandBindingList;
 scriptFrame_t globalFrame;
@@ -49,10 +51,15 @@ void initializeScriptingEnvironment() {
     initializeScriptParsingEnvironment();
     firstHeapValue = NULL;
     createEmptyVector(&scriptList, sizeof(script_t *));
-    createEmptyVector(&keyBindingList, sizeof(keyBinding_t));
     createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
     createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
+    int32_t index;
+    index = 0;
+    while (index < KEY_HASH_TABLE_SIZE) {
+        createEmptyVector(keyBindingHashTable + index, sizeof(keyBinding_t));
+        index += 1;
+    }
 }
 
 void addScriptTestLogMessage(int8_t *text) {
@@ -1454,7 +1461,8 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 keyBinding_t tempKeyBinding;
                 tempKeyBinding.key = tempKey;
                 tempKeyBinding.callback = tempCallback;
-                pushVectorElement(&keyBindingList, &tempKeyBinding);
+                vector_t *tempKeyBindingList = keyBindingHashTable + tempKey % KEY_HASH_TABLE_SIZE;
+                pushVectorElement(tempKeyBindingList, &tempKeyBinding);
                 break;
             }
             case SCRIPT_FUNCTION_MAP_KEY:
@@ -1594,9 +1602,34 @@ int8_t runScriptAsText(int8_t *text) {
 }
 
 int8_t invokeKeyBinding(int32_t key) {
-    // TODO: Implement.
-    
-    return false;
+    resetScriptError();
+    int8_t output = false;
+    vector_t *tempKeyBindingList = keyBindingHashTable + key % KEY_HASH_TABLE_SIZE;
+    int64_t index = 0;
+    while (index < tempKeyBindingList->length) {
+        keyBinding_t tempKeyBinding;
+        getVectorElement(&tempKeyBinding, tempKeyBindingList, index);
+        if (tempKeyBinding.key == key) {
+            scriptValue_t tempResult = invokeFunction(tempKeyBinding.callback, NULL, 0);
+            if (scriptHasError) {
+                displayScriptError();
+                output = true;
+                break;
+            }
+            if (tempResult.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                notifyUser((int8_t *)"ERROR: Key binding must return boolean.");
+                output = true;
+                break;
+            }
+            int8_t tempShouldOverride = (*(double *)(tempResult.data) != 0.0);
+            if (tempShouldOverride) {
+                output = true;
+                break;
+            }
+        }
+        index += 1;
+    }
+    return output;
 }
 
 int32_t invokeKeyMapping(int32_t key) {
