@@ -42,7 +42,7 @@ typedef struct expressionResult {
 vector_t scriptList;
 int8_t scriptErrorMessage[1000];
 vector_t keyBindingHashTable[KEY_HASH_TABLE_SIZE];
-vector_t keyMappingList;
+vector_t keyMappingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t commandBindingList;
 scriptFrame_t globalFrame;
 scriptFrame_t localFrame;
@@ -51,13 +51,13 @@ void initializeScriptingEnvironment() {
     initializeScriptParsingEnvironment();
     firstHeapValue = NULL;
     createEmptyVector(&scriptList, sizeof(script_t *));
-    createEmptyVector(&keyMappingList, sizeof(keyMapping_t));
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
     createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
     int32_t index;
     index = 0;
     while (index < KEY_HASH_TABLE_SIZE) {
         createEmptyVector(keyBindingHashTable + index, sizeof(keyBinding_t));
+        createEmptyVector(keyMappingHashTable + index, sizeof(keyMapping_t));
         index += 1;
     }
 }
@@ -113,9 +113,10 @@ void displayScriptError() {
 }
 
 keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
+    vector_t *tempKeyMapingList = keyMappingHashTable + oldKey % KEY_HASH_TABLE_SIZE;
     int64_t index = 0;
-    while (index < keyMappingList.length) {
-        keyMapping_t *tempKeyMapping = findVectorElement(&keyMappingList, index);
+    while (index < tempKeyMapingList->length) {
+        keyMapping_t *tempKeyMapping = findVectorElement(tempKeyMapingList, index);
         if (mode == tempKeyMapping->mode && oldKey == tempKeyMapping->oldKey) {
             return tempKeyMapping;
         }
@@ -1480,11 +1481,12 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 int32_t tempMode = (int32_t)*(double *)(tempModeValue.data);
                 keyMapping_t *tempOldKeyMapping = findKeyMapping(tempOldKey, tempMode);
                 if (tempOldKeyMapping == NULL) {
+                    vector_t *tempKeyMapingList = keyMappingHashTable + tempOldKey % KEY_HASH_TABLE_SIZE;
                     keyMapping_t tempNewKeyMapping;
                     tempNewKeyMapping.oldKey = tempOldKey;
                     tempNewKeyMapping.newKey = tempNewKey;
                     tempNewKeyMapping.mode = tempMode;
-                    pushVectorElement(&keyMappingList, &tempNewKeyMapping);
+                    pushVectorElement(tempKeyMapingList, &tempNewKeyMapping);
                 } else {
                     tempOldKeyMapping->newKey = tempNewKey;
                 }
@@ -1633,8 +1635,10 @@ int8_t invokeKeyBinding(int32_t key) {
 }
 
 int32_t invokeKeyMapping(int32_t key) {
-    // TODO: Implement.
-    
+    keyMapping_t *tempKeyMapping = findKeyMapping(key, activityMode);
+    if (tempKeyMapping != NULL) {
+        return tempKeyMapping->newKey;
+    }
     return key;
 }
 
