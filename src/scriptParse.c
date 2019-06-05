@@ -5,7 +5,6 @@
 #include <string.h>
 #include <curses.h>
 #include "utilities.h"
-#include "scriptParse.h"
 #include "script.h"
 #include "display.h"
 
@@ -1269,7 +1268,8 @@ int8_t parseScriptStatementList(scriptParser_t *parser) {
 
 scriptCustomFunction_t *createScriptCustomFunction(
     int8_t isEntryPoint,
-    vector_t *argumentNameList
+    vector_t *argumentNameList,
+    script_t *script
 ) {
     scriptCustomFunction_t *output = malloc(sizeof(scriptCustomFunction_t));
     output->base.type = SCRIPT_FUNCTION_TYPE_CUSTOM;
@@ -1281,6 +1281,7 @@ scriptCustomFunction_t *createScriptCustomFunction(
     output->isEntryPoint = isEntryPoint;
     createScriptScope(&(output->scope), argumentNameList);
     createEmptyVector(&(output->statementList), sizeof(scriptBaseStatement_t *));
+    output->script = script;
     return output;
 }
 
@@ -1292,11 +1293,12 @@ int8_t parseScriptCustomFunctionBody(
 ) {
     scriptCustomFunction_t *tempFunction = createScriptCustomFunction(
         isEntryPoint,
-        argumentNameList
+        argumentNameList,
+        parser->script
     );
     *destination = tempFunction;
     scriptParser_t tempParser = *parser;
-    pushVectorElement(tempParser.customFunctionList, &tempFunction);
+    pushVectorElement(&(tempParser.script->customFunctionList), &tempFunction);
     tempParser.function = tempFunction;
     tempParser.statementList = &(tempFunction->statementList);
     tempParser.ifClauseList = NULL;
@@ -1311,12 +1313,15 @@ int8_t resolveScriptIdentifiers(script_t *script);
 int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
     vector_t customFunctionList;
     createEmptyVector(&customFunctionList, sizeof(scriptCustomFunction_t *));
+    script_t *tempScript = malloc(sizeof(script_t));
+    tempScript->scriptBody = scriptBody;
+    tempScript->customFunctionList = customFunctionList;
     scriptBodyLine_t scriptBodyLine;
     scriptBodyLine.scriptBody = scriptBody;
     scriptBodyLine.index = 0;
     scriptBodyLine.number = 1;
     scriptParser_t parser;
-    parser.customFunctionList = &customFunctionList;
+    parser.script = tempScript;
     parser.scriptBodyLine = &scriptBodyLine;
     scriptCustomFunction_t *entryPointFunction;
     int8_t tempResult = parseScriptCustomFunctionBody(
@@ -1328,10 +1333,7 @@ int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody) {
     if (!tempResult) {
         return false;
     }
-    script_t *tempScript = malloc(sizeof(script_t));
-    tempScript->scriptBody = scriptBody;
     tempScript->entryPointFunction = entryPointFunction;
-    tempScript->customFunctionList = customFunctionList;
     tempResult = resolveScriptIdentifiers(tempScript);
     if (!tempResult) {
         return false;

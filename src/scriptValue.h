@@ -2,6 +2,21 @@
 #ifndef SCRIPT_VALUE_HEADER_FILE
 #define SCRIPT_VALUE_HEADER_FILE
 
+typedef struct scriptValue {
+    int8_t type;
+    // For null, data is unused.
+    // For numbers, data is a double.
+    // For strings and lists, data is a pointer to scriptHeapValue_t.
+    // For functions, data is a pointer to scriptBaseFunction_t.
+    int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
+} scriptValue_t;
+
+typedef struct scriptFrame {
+    // The order of values corresponds to that
+    // of the scope of the invoked function.
+    scriptValue_t *valueList; // Array of scriptValue_t.
+} scriptFrame_t;
+
 #include "vector.h"
 #include "scriptParse.h"
 
@@ -11,15 +26,6 @@
 #define SCRIPT_VALUE_TYPE_STRING 3
 #define SCRIPT_VALUE_TYPE_LIST 4
 #define SCRIPT_VALUE_TYPE_FUNCTION 5
-
-typedef struct scriptValue {
-    int8_t type;
-    // For null, data is unused.
-    // For numbers, data is a double.
-    // For strings and lists, data is a pointer to scriptHeapValue_t.
-    // For functions, data is a pointer to scriptBaseFunction_t.
-    int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
-} scriptValue_t;
 
 typedef struct scriptHeapValue scriptHeapValue_t;
 
@@ -33,12 +39,6 @@ typedef struct scriptHeapValue {
     // For lists, data is a vector of scriptValue_t.
     vector_t data;
 } scriptHeapValue_t;
-
-typedef struct scriptFrame {
-    // The order of values corresponds to that
-    // of the scope of the invoked function.
-    scriptValue_t *valueList; // Array of scriptValue_t.
-} scriptFrame_t;
 
 typedef struct keyBinding {
     int32_t key;

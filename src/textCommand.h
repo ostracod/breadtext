@@ -2,7 +2,7 @@
 #ifndef TEXT_COMMAND_HEADER_FILE
 #define TEXT_COMMAND_HEADER_FILE
 
-#include "scriptValue.h"
+#include "script.h"
 
 int8_t compileRegexes();
 void insertTextCommandCharacter(int8_t character);

@@ -3,6 +3,7 @@
 #define SCRIPT_PARSE_HEADER_FILE
 
 #include "vector.h"
+#include "scriptValue.h"
 
 #define SCRIPT_OPERATOR_ARRANGEMENT_BINARY 1
 #define SCRIPT_OPERATOR_ARRANGEMENT_UNARY_PREFIX 2
@@ -163,11 +164,14 @@ typedef struct scriptBuiltInFunction {
     int32_t number;
 } scriptBuiltInFunction_t;
 
+typedef struct script script_t;
+
 typedef struct scriptCustomFunction {
     scriptBaseFunction_t base;
     int8_t isEntryPoint;
     scriptScope_t scope;
     vector_t statementList; // Vector of pointers to scriptBaseStatement_t.
+    script_t *script;
 } scriptCustomFunction_t;
 
 typedef struct scriptBaseExpression {
@@ -273,10 +277,11 @@ typedef struct script {
     scriptBody_t *scriptBody;
     scriptCustomFunction_t *entryPointFunction;
     vector_t customFunctionList; // Vector of pointers to scriptCustomFunction_t.
+    scriptFrame_t globalFrame;
 } script_t;
 
 typedef struct scriptParser {
-    vector_t *customFunctionList; // Vector of pointers to scriptCustomFunction_t.
+    script_t *script;
     scriptCustomFunction_t *function;
     vector_t *statementList; // Vector of pointers to scriptBaseStatement_t.
     scriptBodyLine_t *scriptBodyLine;
@@ -304,6 +309,7 @@ int64_t getDistanceToScriptBodyPos(scriptBodyPos_t *startScriptBodyPos, scriptBo
 int8_t *getScriptBodyPosPointer(scriptBodyPos_t *scriptBodyPos);
 scriptBuiltInFunction_t *findScriptBuiltInFunctionByName(int8_t *name, int64_t length);
 scriptConstant_t *getScriptConstantByName(int8_t *name, int64_t length);
+int32_t scriptScopeFindVariable(scriptScope_t *scope, int8_t *name);
 int8_t parseScriptBody(script_t **destination, scriptBody_t *scriptBody);
 
 // SCRIPT_PARSE_HEADER_FILE

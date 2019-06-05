@@ -915,6 +915,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
 }
 
 int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList);
+script_t *importScript(int8_t *path);
 
 int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
     // TODO: Garbage collection.
@@ -1014,8 +1015,43 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
             }
             return STATEMENT_JUMP_RETURN;
         }
-        // TODO: Implement all the other stuff too.
-        
+        case SCRIPT_STATEMENT_TYPE_IMPORT:
+        {
+            scriptImportStatement_t *tempStatement = (scriptImportStatement_t *)statement;
+            scriptBaseExpression_t *tempExpression = tempStatement->path;
+            expressionResult_t tempResult = evaluateExpression(tempExpression);
+            if (scriptHasError) {
+                break;
+            }
+            if (tempResult.value.type != SCRIPT_VALUE_TYPE_STRING) {
+                reportScriptError((int8_t *)"Invalid path type.", tempLine);
+                break;
+            }
+            scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempResult.value.data);
+            vector_t *tempPath = &(tempHeapValue->data);
+            script_t *tempScript = importScript(tempPath->data);
+            if (scriptHasError) {
+                break;
+            }
+            scriptScope_t *tempGlobalScope = &(tempScript->entryPointFunction->scope);
+            int32_t index = 0;
+            while (index < tempStatement->variableList.length) {
+                scriptVariable_t tempVariable;
+                getVectorElement(&tempVariable, &(tempStatement->variableList), index);
+                int32_t tempScopeIndex = scriptScopeFindVariable(
+                    tempGlobalScope,
+                    tempVariable.name
+                );
+                if (tempScopeIndex < 0) {
+                    reportScriptError((int8_t *)"Missing import variable.", tempLine);
+                    return STATEMENT_JUMP_ERROR;
+                }
+                scriptValue_t tempValue = tempScript->globalFrame.valueList[tempScopeIndex];
+                localFrame.valueList[tempVariable.scopeIndex] = tempValue;
+                index += 1;
+            }
+            break;
+        }
         default:
         {
             break;
@@ -1054,25 +1090,27 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
     }
     if (function->type == SCRIPT_FUNCTION_TYPE_CUSTOM) {
         scriptCustomFunction_t *tempFunction = (scriptCustomFunction_t *)function;
-        int32_t index;
-        int32_t tempLength = tempFunction->scope.variableNameList.length;
-        scriptValue_t frameValueList[tempLength];
-        index = 0;
-        while (index < tempLength) {
-            if (index < function->argumentAmount) {
-                frameValueList[index] = argumentList[index];
-            } else {
-                (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
-            }
-            index += 1;
-        }
         scriptFrame_t lastGlobalFrame = globalFrame;
         scriptFrame_t lastLocalFrame = localFrame;
-        localFrame.valueList = frameValueList;
+        globalFrame = tempFunction->script->globalFrame;
         if (tempFunction->isEntryPoint) {
-            globalFrame.valueList = frameValueList;
+            localFrame = globalFrame;
+            evaluateStatementList(&output, &tempFunction->statementList);
+        } else {
+            int32_t tempLength = tempFunction->scope.variableNameList.length;
+            scriptValue_t frameValueList[tempLength];
+            int32_t index = 0;
+            while (index < tempLength) {
+                if (index < function->argumentAmount) {
+                    frameValueList[index] = argumentList[index];
+                } else {
+                    (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
+                }
+                index += 1;
+            }
+            localFrame.valueList = frameValueList;
+            evaluateStatementList(&output, &tempFunction->statementList);
         }
-        evaluateStatementList(&output, &tempFunction->statementList);
         globalFrame = lastGlobalFrame;
         localFrame = lastLocalFrame;
         return output;
@@ -1485,27 +1523,37 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
 }
 
 void evaluateScript(script_t *script) {
+    scriptScope_t *tempGlobalScope = &(script->entryPointFunction->scope);
+    int32_t tempLength = tempGlobalScope->variableNameList.length;
+    scriptValue_t *frameValueList = malloc(sizeof(scriptValue_t) * tempLength);
+    int32_t index = 0;
+    while (index < tempLength) {
+        (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
+        index += 1;
+    }
+    script->globalFrame.valueList = frameValueList;
     invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), NULL, 0);
 }
 
-void parseAndEvaluateScript(scriptBody_t *scriptBody) {
+script_t *parseAndEvaluateScript(scriptBody_t *scriptBody) {
     script_t *tempScript;
     int8_t tempResult = parseScriptBody(&tempScript, scriptBody);
     if (!tempResult) {
-        return;
+        return NULL;
     }
     pushVectorElement(&scriptList, &tempScript);
     evaluateScript(tempScript);
+    return tempScript;
 }
 
-void importScriptHelper(int8_t *path) {
+script_t *importScriptHelper(int8_t *path) {
     int32_t index = 0;
     while (index < scriptList.length) {
         script_t *tempScript;
         getVectorElement(&tempScript, &scriptList, index);
         int8_t *tempPath = tempScript->scriptBody->path;
         if (strcmp((char *)tempPath, (char *)path) == 0) {
-            return;
+            return NULL;
         }
         index += 1;
     }
@@ -1513,15 +1561,16 @@ void importScriptHelper(int8_t *path) {
     int8_t tempResult = loadScriptBody(&tempScriptBody, path);
     if (!tempResult) {
         reportScriptError((int8_t *)"Import file missing.", NULL);
-        return;
+        return NULL;
     }
-    parseAndEvaluateScript(tempScriptBody);
+    return parseAndEvaluateScript(tempScriptBody);
 }
 
-void importScript(int8_t *path) {
+script_t *importScript(int8_t *path) {
     path = mallocRealpath(path);
-    importScriptHelper(path);
+    script_t *output = importScriptHelper(path);
     free(path);
+    return output;
 }
 
 int8_t runScript(int8_t *path) {
