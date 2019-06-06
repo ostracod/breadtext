@@ -773,7 +773,9 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
         case SCRIPT_EXPRESSION_TYPE_STRING:
         {
             scriptStringExpression_t *tempExpression = (scriptStringExpression_t *)expression;
-            output.value = convertCharacterVectorToStringValue(tempExpression->text);
+            vector_t tempText;
+            copyVector(&tempText, &tempExpression->text);
+            output.value = convertCharacterVectorToStringValue(tempText);
             break;
         }
         case SCRIPT_EXPRESSION_TYPE_LIST:
