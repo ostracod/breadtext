@@ -21,7 +21,7 @@ func pushElement(sequence, element)
 end
 
 func convertTilePosToCharPos(posX, posY)
-    ret [posX * 5 + 1, posY * 3 + 1]
+    ret [posX * 5 + 2, posY * 3 + 1]
 end
 
 func drawTileText(posX, posY, text)
@@ -107,9 +107,15 @@ func slidePuzzle(argList)
     scramble()
     setMode(MODE_TEXT_ENTRY)
     setCursorPos(0, 0)
+    dec emptyLine = "|"
+    while len(emptyLine) < boardSize * 5 + 1
+        pushElement(emptyLine, ' ')
+    end
+    pushElement(emptyLine, '|')
     dec index = 0
     dec posY = 0
     while posY < boardSize
+        writeText(emptyLine)
         pressKey(KEY_NEWLINE)
         dec text = ""
         dec posX = 0
@@ -125,17 +131,9 @@ func slidePuzzle(argList)
             index += 1
             posX += 1
         end
-        writeText(text)
+        writeText("|" + text + "|")
         pressKey(KEY_NEWLINE)
-        dec text = getLineContents(getCursorLineIndex())
-        if len(text) > 0
-            setMode(MODE_COMMAND)
-            pressKey(']')
-            pressKey(KEY_LEFT)
-            pressKey('h')
-            pressKey('[')
-            pressKey('D')
-        end
+        writeText(emptyLine)
         pressKey(KEY_NEWLINE)
         posY += 1
     end

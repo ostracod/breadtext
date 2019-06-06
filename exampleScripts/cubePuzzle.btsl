@@ -179,13 +179,13 @@ func cubePuzzle(argList)
     dec posX = 0
     dec posY = 0
     while posY < 11
-        if posX == 0
+        if posX == 0 || posX == 18
             pressKey('|')
         else
             pressKey(' ')
         end
         posX += 1
-        if posX >= 17
+        if posX > 18
             pressKey(KEY_NEWLINE)
             posX = 0
             posY += 1
