@@ -1128,6 +1128,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 return false;
             }
             int8_t tempResult;
+            scriptBodyLine_t tempFirstLine = *tempLine;
             vector_t tempStatementList;
             createEmptyVector(&tempStatementList, sizeof(scriptBaseStatement_t *));
             scriptParser_t tempParser = *parser;
@@ -1144,7 +1145,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             if (!tempResult) {
                 return false;
             }
-            scriptStatement = createScriptWhileStatement(tempLine, tempExpression, &tempStatementList);
+            scriptStatement = createScriptWhileStatement(&tempFirstLine, tempExpression, &tempStatementList);
             break;
         }
         if (scriptBodyPosTextMatchesIdentifier(&scriptBodyPos, (int8_t *)"break")) {
@@ -1212,6 +1213,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
                 return false;
             }
             int8_t tempResult;
+            scriptBodyLine_t tempFirstLine = *tempLine;
             vector_t tempVariableList;
             createEmptyVector(&tempVariableList, sizeof(scriptVariable_t));
             scriptParser_t tempParser = *parser;
@@ -1227,7 +1229,7 @@ int8_t parseScriptStatement(int8_t *hasReachedEnd, scriptParser_t *parser) {
             if (!tempResult) {
                 return false;
             }
-            scriptStatement = createScriptImportStatement(tempLine, tempExpression, &tempVariableList);
+            scriptStatement = createScriptImportStatement(&tempFirstLine, tempExpression, &tempVariableList);
             break;
         }
         scriptBaseExpression_t *tempExpression = parseScriptExpression(&scriptBodyPos, 99);
@@ -1516,6 +1518,12 @@ int8_t resolveScriptStatementIdentifiers(scriptBaseStatement_t *statement, scrip
             if (tempStatement->expression != NULL) {
                 resolveScriptExpressionIdentifiers(&(tempStatement->expression), scopes);
             }
+            break;
+        }
+        case SCRIPT_STATEMENT_TYPE_IMPORT:
+        {
+            scriptImportStatement_t *tempStatement = (scriptImportStatement_t *)statement;
+            resolveScriptExpressionIdentifiers(&(tempStatement->path), scopes);
             break;
         }
         default:
