@@ -43,7 +43,7 @@ vector_t scriptList;
 int8_t scriptErrorMessage[1000];
 vector_t keyBindingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t keyMappingHashTable[KEY_HASH_TABLE_SIZE];
-vector_t commandBindingList;
+vector_t commandBindingList; // TODO: Order by commandName for binary search.
 scriptFrame_t globalFrame;
 scriptFrame_t localFrame;
 
@@ -1643,9 +1643,38 @@ int32_t invokeKeyMapping(int32_t key) {
 }
 
 int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
-    // TODO: Implement.
-    
-    return false;
+    commandBinding_t *tempCommandBinding = findCommandBinding(termList[0]);
+    if (tempCommandBinding == NULL) {
+        return false;
+    }
+    if (activityMode == TEXT_COMMAND_MODE) {
+        setActivityMode(PREVIOUS_MODE);
+    }
+    vector_t tempArgumentList;
+    createEmptyVector(&tempArgumentList, sizeof(scriptValue_t));
+    int64_t index = 1;
+    while (index < termListLength) {
+        scriptValue_t tempValue = convertTextToStringValue(termList[index]);
+        pushVectorElement(&tempArgumentList, &tempValue);
+        index += 1;
+    }
+    scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
+    tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
+    tempHeapValue->data = tempArgumentList;
+    scriptValue_t tempListValue;
+    tempListValue.type = SCRIPT_VALUE_TYPE_LIST;
+    *(scriptHeapValue_t **)(tempListValue.data) = tempHeapValue;
+    scriptValue_t tempSingleArgumentList[1];
+    tempSingleArgumentList[0] = tempListValue;
+    resetScriptError();
+    scriptValue_t tempResult = invokeFunction(tempCommandBinding->callback, tempSingleArgumentList, 1);
+    if (scriptHasError) {
+        displayScriptError();
+    }
+    if (destination != NULL) {
+        *destination = tempResult;
+    }
+    return true;
 }
 
 
