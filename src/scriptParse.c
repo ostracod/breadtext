@@ -81,6 +81,9 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"str", SCRIPT_FUNCTION_STR},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"num", SCRIPT_FUNCTION_NUM},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"floor", SCRIPT_FUNCTION_FLOOR},
+    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 0}, (int8_t *)"rand", SCRIPT_FUNCTION_RAND},
+    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 2}, (int8_t *)"pow", SCRIPT_FUNCTION_POW},
+    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 2}, (int8_t *)"log", SCRIPT_FUNCTION_LOG},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"len", SCRIPT_FUNCTION_LEN},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 3}, (int8_t *)"ins", SCRIPT_FUNCTION_INS},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 2}, (int8_t *)"push", SCRIPT_FUNCTION_PUSH},
@@ -103,8 +106,7 @@ scriptBuiltInFunction_t scriptBuiltInFunctionSet[] = {
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 2}, (int8_t *)"bindKey", SCRIPT_FUNCTION_BIND_KEY},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 3}, (int8_t *)"mapKey", SCRIPT_FUNCTION_MAP_KEY},
     {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 2}, (int8_t *)"bindCommand", SCRIPT_FUNCTION_BIND_COMMAND},
-    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG},
-    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 0}, (int8_t *)"rand", SCRIPT_FUNCTION_RAND}
+    {{SCRIPT_FUNCTION_TYPE_BUILT_IN, 1}, (int8_t *)"testLog", SCRIPT_FUNCTION_TEST_LOG}
 };
 
 scriptOperator_t *scriptAssignmentOperator;

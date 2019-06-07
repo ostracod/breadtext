@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include <inttypes.h>
 #include "utilities.h"
 #include "vector.h"
@@ -1199,6 +1200,44 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             {
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)&(output.data) = ((double)rand()) / ((double)RAND_MAX);
+                break;
+            }
+            case SCRIPT_FUNCTION_POW:
+            {
+                scriptValue_t tempValue1 = argumentList[0];
+                scriptValue_t tempValue2 = argumentList[1];
+                if (tempValue1.type != SCRIPT_VALUE_TYPE_NUMBER || tempValue2.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                double tempNumber1 = *(double *)(tempValue1.data);
+                double tempNumber2 = *(double *)(tempValue2.data);
+                double tempResult = pow(tempNumber1, tempNumber2);
+                if (isnan(tempResult)) {
+                    reportScriptError((int8_t *)"Exponentiation error.", NULL);
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = tempResult;
+                break;
+            }
+            case SCRIPT_FUNCTION_LOG:
+            {
+                scriptValue_t tempValue1 = argumentList[0];
+                scriptValue_t tempValue2 = argumentList[1];
+                if (tempValue1.type != SCRIPT_VALUE_TYPE_NUMBER || tempValue2.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                double tempNumber1 = *(double *)(tempValue1.data);
+                double tempNumber2 = *(double *)(tempValue2.data);
+                double tempResult = log(tempNumber1) / log(tempNumber2);
+                if (isnan(tempResult)) {
+                    reportScriptError((int8_t *)"Logarithm error.", NULL);
+                    return output;
+                }
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = tempResult;
                 break;
             }
             case SCRIPT_FUNCTION_LEN:

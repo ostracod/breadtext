@@ -164,6 +164,10 @@ share <name>, <name>, <name>...
 
 `rand()` - Generates a random number between 0 and 1.
 
+`pow(num, exponent)` - Raises a number to a power.
+
+`log(num, base)` - Finds the logarithm of a number.
+
 `len(sequence)` - Returns the length of a list or string.
 
 `ins(sequence, index, item)` - Inserts a value into the list or string.
