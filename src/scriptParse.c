@@ -944,6 +944,9 @@ int8_t parseScriptFunctionStatement(
         false,
         &tempArgumentNameList
     );
+    if (!tempResult) {
+        return false;
+    }
     scriptBaseExpression_t *tempExpression = createScriptBinaryExpression(
         scriptAssignmentOperator,
         createScriptIdentifierExpression(tempFunctionName, tempFunctionNameLength),
