@@ -58,15 +58,11 @@ end
 
 bindCommand("fizzBuzz", fizzBuzz)
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func getSubstring(text, startIndex, endIndex)
     dec output = ""
     dec index = startIndex
     while index < endIndex
-        pushElement(output, text[index])
+        push(output, text[index])
         index += 1
     end
     ret output
@@ -139,7 +135,7 @@ func sortLines(argList)
         end
         if shouldAddLine
             dec line = getSubstring(contents, startIndex, endIndex)
-            pushElement(lineList, line)
+            push(lineList, line)
             startIndex = endIndex + 1
         end
         if isAtEnd

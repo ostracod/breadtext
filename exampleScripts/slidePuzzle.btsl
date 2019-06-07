@@ -7,10 +7,6 @@ dec cursorPosY
 
 dec offsetSet = [[0, -1], [1, 0], [0, 1], [-1, 0]]
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func convertTilePosToCharPos(posX, posY)
     ret [posX * 5 + 2, posY * 3 + 1]
 end
@@ -87,9 +83,9 @@ func slidePuzzle(argList)
     dec number = 1
     while len(board) < boardLength
         if number < boardLength
-            pushElement(board, number)
+            push(board, number)
         else
-            pushElement(board, 0)
+            push(board, 0)
         end
         number += 1
     end
@@ -100,9 +96,9 @@ func slidePuzzle(argList)
     setCursorPos(0, 0)
     dec emptyLine = "|"
     while len(emptyLine) < boardSize * 5 + 1
-        pushElement(emptyLine, ' ')
+        push(emptyLine, ' ')
     end
-    pushElement(emptyLine, '|')
+    push(emptyLine, '|')
     dec index = 0
     dec posY = 0
     while posY < boardSize
@@ -113,11 +109,11 @@ func slidePuzzle(argList)
         while posX < boardSize
             dec number = board[index]
             if number > 0
-                pushElement(text, ' ')
+                push(text, ' ')
                 text += str(number)
             end
             while len(text) < (posX + 1) * 5
-                pushElement(text, ' ')
+                push(text, ' ')
             end
             index += 1
             posX += 1

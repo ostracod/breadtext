@@ -46,10 +46,6 @@ dec selectionPos
 dec boardHeight = 24
 dec suitCharacterSet = ['s', 'c', 'H', 'D']
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func popElement(sequence)
     dec index = len(sequence) - 1
     dec output = sequence[index]
@@ -62,7 +58,7 @@ func populateDeck()
     dec value = 1
     dec suit = 0
     while suit < 4
-        pushElement(cardList, [value, suit, true])
+        push(cardList, [value, suit, true])
         value += 1
         if value > 13
             value = 1
@@ -73,7 +69,7 @@ func populateDeck()
         dec index = floor(rand() * len(cardList))
         dec card = cardList[index]
         rem(cardList, index)
-        pushElement(deck, card)
+        push(deck, card)
     end
 end
 
@@ -108,7 +104,7 @@ func dealTableau()
         while index < 7
             dec pile = tableau[index]
             dec card = popElement(deck)
-            pushElement(pile, card)
+            push(pile, card)
             index += 1
         end
         count += 1
@@ -484,7 +480,7 @@ func moveSelectionToCursor()
                 while selectionPileIndex < len(selectionPile)
                     dec card = selectionPile[selectionPileIndex]
                     rem(selectionPile, selectionPileIndex)
-                    pushElement(cursorPile, card)
+                    push(cursorPile, card)
                 end
                 eraseTableauPile(cursorIndex)
                 drawTableauPile(cursorIndex)
@@ -495,7 +491,7 @@ func moveSelectionToCursor()
                     && canPlaceCardOnFoundationCard(selectionCard, cursorCard)
                 rem(selectionPile, selectionPileIndex)
                 dec cursorPile = foundations[cursorIndex]
-                pushElement(cursorPile, selectionCard)
+                push(cursorPile, selectionCard)
                 drawFoundations()
             end
         end
@@ -508,7 +504,7 @@ func moveSelectionToCursor()
             if canPlaceCardOnTableauCard(selectionCard, cursorCard)
                 dec cursorPile = tableau[cursorIndex]
                 removeDeckCard()
-                pushElement(cursorPile, selectionCard)
+                push(cursorPile, selectionCard)
                 eraseTableauPile(cursorIndex)
                 drawTableauPile(cursorIndex)
             end
@@ -518,7 +514,7 @@ func moveSelectionToCursor()
                     && canPlaceCardOnFoundationCard(selectionCard, cursorCard)
                 removeDeckCard()
                 dec cursorPile = foundations[cursorIndex]
-                pushElement(cursorPile, selectionCard)
+                push(cursorPile, selectionCard)
                 drawFoundations()
             end
         end
@@ -531,7 +527,7 @@ func moveSelectionToCursor()
             if canPlaceCardOnTableauCard(selectionCard, cursorCard)
                 dec cursorPile = tableau[cursorIndex]
                 rem(selectionPile, len(selectionPile) - 1)
-                pushElement(cursorPile, selectionCard)
+                push(cursorPile, selectionCard)
                 eraseTableauPile(cursorIndex)
                 drawTableauPile(cursorIndex)
             end
@@ -612,4 +608,5 @@ func solitaire(argList)
 end
 
 bindCommand("solitaire", solitaire)
+
 

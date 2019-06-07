@@ -16,10 +16,6 @@ dec cursorPosY
 dec revealedPos1
 dec revealedPos2
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func convertCardPosToCharPos(posX, posY)
     ret [3 + posX * 5, 1 + posY * 2]
 end
@@ -143,7 +139,7 @@ func memoryGame(argList)
     dec value = 0
     dec count = 0
     while len(cardList) < boardLength
-        pushElement(cardList, [value, false])
+        push(cardList, [value, false])
         count += 1
         if count >= 2
             value += 1
@@ -155,7 +151,7 @@ func memoryGame(argList)
         dec index = floor(rand() * len(cardList))
         dec card = cardList[index]
         rem(cardList, index)
-        pushElement(board, card)
+        push(board, card)
     end
     dec posX = 0
     dec posY = 0

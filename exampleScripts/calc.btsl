@@ -3,10 +3,6 @@ dec inputLine
 dec inputLineIndex
 dec hasError
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func isAtEnd()
     ret (inputLineIndex >= len(inputLine))
 end
@@ -50,7 +46,7 @@ func digestNumberText()
         if !isNumberChar(character)
             break
         end
-        pushElement(text, character)
+        push(text, character)
         inputLineIndex += 1
     end
     ret num(text)

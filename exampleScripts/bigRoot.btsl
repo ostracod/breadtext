@@ -2,10 +2,6 @@
 # Big num structure:
 # [exponent, digit, digit, digit, digit...]
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func convertIntegerIntoBigNum(integer)
     if integer == 0
         ret [0, 0]
@@ -32,9 +28,9 @@ func convertBigNumToText(bigNum)
         else
             digit = 0
         end
-        pushElement(output, digit + '0')
+        push(output, digit + '0')
         if index - 1 == bigNum[0]
-            pushElement(output, '.')
+            push(output, '.')
         end
         index += 1
     end
@@ -48,7 +44,7 @@ end
 
 func padBigNum(bigNum, length)
     while len(bigNum) < length
-        pushElement(bigNum, 0)
+        push(bigNum, 0)
     end
 end
 

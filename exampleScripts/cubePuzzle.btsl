@@ -44,10 +44,6 @@ dec faceCharPosSet = [ \
     [7, 9] \
 ]
 
-func pushElement(sequence, element)
-    ins(sequence, len(sequence), element)
-end
-
 func createFace(color)
     ret [color, color, color, color, color, color, color, color, color]
 end
@@ -142,7 +138,7 @@ func rotateLayer(faceIndex)
     while index < len(tripletPosSet)
         dec tripletPos = tripletPosSet[index]
         dec triplet = getTriplet(tripletPos)
-        pushElement(tripletList, triplet)
+        push(tripletList, triplet)
         index += 1
     end
     dec index = 0
