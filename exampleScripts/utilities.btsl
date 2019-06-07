@@ -1,13 +1,4 @@
 
-func writeText(text)
-    text = str(text)
-    dec index = 0
-    while index < len(text)
-        pressKey(text[index])
-        index += 1
-    end
-end
-
 func toggleCase(argList)
     dec text = getSelectionContents()
     pressKey('D')
@@ -49,15 +40,15 @@ func fizzBuzz(argList)
     while number <= amount
         dec shouldWriteNumber = true
         if number % 3 == 0
-            writeText("FIZZ")
+            pressKeys("FIZZ")
             shouldWriteNumber = false
         end
         if number % 5 == 0
-            writeText("BUZZ")
+            pressKeys("BUZZ")
             shouldWriteNumber = false
         end
         if shouldWriteNumber
-            writeText(str(number))
+            pressKeys(str(number))
         end
         pressKey(KEY_NEWLINE)
         number += 1
@@ -160,7 +151,7 @@ func sortLines(argList)
     dec index = 0
     while len(lineList) > 0
         dec line = removeLowestComparisonString(lineList)
-        writeText(line)
+        pressKeys(line)
         pressKey(KEY_NEWLINE)
         index += 1
     end
@@ -187,17 +178,17 @@ func beer(argList)
     dec count = 99
     while true
         dec shouldBreak = false
-        writeText(stateBeerCount(count) + " on the wall\n")
-        writeText(stateBeerCount(count) + "\n")
+        pressKeys(stateBeerCount(count) + " on the wall\n")
+        pressKeys(stateBeerCount(count) + "\n")
         if count > 0
-            writeText("Take one down, pass it around\n")
+            pressKeys("Take one down, pass it around\n")
             count -= 1
         else
-            writeText("Go to the store, by some more\n")
+            pressKeys("Go to the store, by some more\n")
             count = 99
             shouldBreak = true
         end
-        writeText(stateBeerCount(count) + " on the wall\n\n")
+        pressKeys(stateBeerCount(count) + " on the wall\n\n")
         if shouldBreak
             break
         end
@@ -354,7 +345,7 @@ func convertBase(argList)
         number = floor(number / destinationBase)
     end
     pressKey('D')
-    writeText(outputText)
+    pressKeys(outputText)
     setMode(MODE_COMMAND)
 end
 

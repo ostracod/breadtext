@@ -176,6 +176,8 @@ share <name>, <name>, <name>...
 
 `pressKey(key)` - Simulates a key press in the editor.
 
+`pressKeys(sequence)` - Simulates multiple key presses.
+
 `getMode()` - Returns the editor operation mode.
 
 `setMode(mode)` - Sets the editor operation mode.

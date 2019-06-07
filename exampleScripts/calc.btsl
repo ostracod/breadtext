@@ -3,15 +3,6 @@ dec inputLine
 dec inputLineIndex
 dec hasError
 
-func writeText(text)
-    text = str(text)
-    dec index = 0
-    while index < len(text)
-        pressKey(text[index])
-        index += 1
-    end
-end
-
 func pushElement(sequence, element)
     ins(sequence, len(sequence), element)
 end
@@ -164,7 +155,7 @@ func calculateCommand(argList)
     else
         setMode(MODE_COMMAND)
         pressKey('o')
-        writeText(str(result))
+        pressKeys(str(result))
         setMode(MODE_COMMAND)
     end
 end

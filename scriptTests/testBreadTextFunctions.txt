@@ -19,6 +19,32 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
+START_TEST "pressKeys"
+pressKey('t')
+pressKeys("abc")
+pressKeys(['0', '1', '2'])
+pressKey(KEY_ESCAPE)
+testLog(getLineContents(0))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+abc012
+END_TEST
+
+START_TEST "Bad pressKeys 1"
+pressKeys(2)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad pressKeys 2"
+pressKeys(["Bad stuff"])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
 START_TEST "getMode"
 pressKey('t')
 testLog(getMode() == MODE_TEXT_ENTRY)

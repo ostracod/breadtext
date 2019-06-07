@@ -21,14 +21,6 @@ dec tetrominoSet = [\
 [[0, 2], [1, 2], [2, 2], [1, 1]]\
 ]
 
-func writeText(text)
-    dec index = 0
-    while index < len(text)
-        pressKey(text[index])
-        index += 1
-    end
-end
-
 func setUpBoard()
     setCursorPos(0, 0)
     while getCursorLineIndex() < boardHeight
@@ -37,7 +29,7 @@ func setUpBoard()
             pressKey(KEY_NEWLINE)
         end
     end
-    writeText("SCORE: 0")
+    pressKeys("SCORE: 0")
     pressKey(KEY_NEWLINE)
 end
 
@@ -48,7 +40,7 @@ func drawScore()
     pressKey(KEY_LEFT)
     pressKey('w')
     pressKey('D')
-    writeText(str(score))
+    pressKeys(str(score))
 end
 
 func copyTetromino(tetromino)
@@ -198,7 +190,7 @@ func playTetrominoGame(argList)
             setMode(MODE_COMMAND)
             setCursorPos(0, boardHeight)
             pressKey('o')
-            writeText("YOU DIED!!!")
+            pressKeys("YOU DIED!!!")
             break
         end
         drawTetromino(false)

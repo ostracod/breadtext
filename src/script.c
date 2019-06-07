@@ -1313,6 +1313,40 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 handleKey(tempKey, false, false, false);
                 break;
             }
+            case SCRIPT_FUNCTION_PRESS_KEYS:
+            {
+                scriptValue_t tempValue = argumentList[0];
+                if (tempValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempValue.data);
+                    vector_t *tempText = &(tempHeapValue->data);
+                    int32_t index = 0;
+                    while (index < tempText->length) {
+                        int8_t tempKey;
+                        getVectorElement(&tempKey, tempText, index);
+                        handleKey(tempKey, false, false, false);
+                        index += 1;
+                    }
+                } else if (tempValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempValue.data);
+                    vector_t *tempList = &(tempHeapValue->data);
+                    int32_t index = 0;
+                    while (index < tempList->length) {
+                        scriptValue_t tempValue;
+                        getVectorElement(&tempValue, tempList, index);
+                        if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                            reportScriptError((int8_t *)"Bad key type.", NULL);
+                            return output;
+                        }
+                        int32_t tempKey = (int32_t)*(double *)(tempValue.data);
+                        handleKey(tempKey, false, false, false);
+                        index += 1;
+                    }
+                } else {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                break;
+            }
             case SCRIPT_FUNCTION_GET_MODE:
             {
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;

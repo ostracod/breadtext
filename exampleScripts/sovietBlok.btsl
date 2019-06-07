@@ -12,14 +12,6 @@ dec currentBlokPosX
 dec score
 dec hasLost
 
-func writeText(text)
-    dec index = 0
-    while index < len(text)
-        pressKey(text[index])
-        index += 1
-    end
-end
-
 func drawScore()
     setCursorPos(0, boardHeight + 1)
     setMode(MODE_COMMAND)
@@ -27,7 +19,7 @@ func drawScore()
     pressKey(KEY_LEFT)
     pressKey('w')
     pressKey('D')
-    writeText(str(score))
+    pressKeys(str(score))
     setMode(MODE_COMMAND)
 end
 
@@ -148,7 +140,7 @@ func dropBlok()
         hasLost = true
         setCursorPos(0, boardHeight + 1)
         pressKey('o')
-        writeText("BLOK OVERFLOW!!!")
+        pressKeys("BLOK OVERFLOW!!!")
         setMode(MODE_COMMAND)
         ret
     end
@@ -176,7 +168,7 @@ func sovietBlok(argList)
             posY += 1
         end
     end
-    writeText("SCORE: 0")
+    pressKeys("SCORE: 0")
     pressKey(KEY_NEWLINE)
     setMode(MODE_COMMAND)
     score = 0

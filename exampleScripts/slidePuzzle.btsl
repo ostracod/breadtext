@@ -7,15 +7,6 @@ dec cursorPosY
 
 dec offsetSet = [[0, -1], [1, 0], [0, 1], [-1, 0]]
 
-func writeText(text)
-    text = str(text)
-    dec index = 0
-    while index < len(text)
-        pressKey(text[index])
-        index += 1
-    end
-end
-
 func pushElement(sequence, element)
     ins(sequence, len(sequence), element)
 end
@@ -36,7 +27,7 @@ func drawTileText(posX, posY, text)
         pressKey(' ')
         pressKey(' ')
     else
-        writeText(text)
+        pressKeys(text)
         dec count = 3 - len(text)
         while count > 0
             pressKey(' ')
@@ -115,7 +106,7 @@ func slidePuzzle(argList)
     dec index = 0
     dec posY = 0
     while posY < boardSize
-        writeText(emptyLine)
+        pressKeys(emptyLine)
         pressKey(KEY_NEWLINE)
         dec text = ""
         dec posX = 0
@@ -131,9 +122,9 @@ func slidePuzzle(argList)
             index += 1
             posX += 1
         end
-        writeText("|" + text + "|")
+        pressKeys("|" + text + "|")
         pressKey(KEY_NEWLINE)
-        writeText(emptyLine)
+        pressKeys(emptyLine)
         pressKey(KEY_NEWLINE)
         posY += 1
     end
