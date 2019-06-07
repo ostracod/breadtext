@@ -7,7 +7,7 @@ if [ ! -d "./failures" ]; then
 fi
 
 while [ $FAILURE_COUNT -lt 100 ]; do
-	breadtext --fuzz
+	./build/breadtext --fuzz
 	if [ -f "./failure.txt" ]; then
 		mv ./failure.txt "./failures/failure${FAILURE_COUNT}.txt"
 		((FAILURE_COUNT++))

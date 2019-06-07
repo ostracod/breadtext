@@ -168,6 +168,8 @@ share <name>, <name>, <name>...
 
 `ins(sequence, index, item)` - Inserts a value into the list or string.
 
+`push(sequence, item)` - Appends a value to the end of the list or string.
+
 `rem(sequence, index)` - Removes a value from the list or string.
 
 `getTimestamp()` - Returns the current Unix timestamp.

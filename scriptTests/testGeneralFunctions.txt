@@ -315,6 +315,36 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
+START_TEST "push"
+dec value1 = "hello"
+dec value2 = [10, 20, 30]
+push(value1, 'X')
+push(value2, 997)
+testLog(value1)
+testLog(value2)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+helloX
+[10, 20, 30, 997]
+END_TEST
+
+START_TEST "Bad push 1"
+dec value = 3
+push(value, 1)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad push 2"
+dec value = "hello"
+push(value, [])
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
 START_TEST "rem"
 dec value1 = "abcde"
 dec value2 = [10, 20, 30, 40, 50]

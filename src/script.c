@@ -1261,6 +1261,29 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_PUSH:
+            {
+                scriptValue_t tempSequenceValue = argumentList[0];
+                scriptValue_t tempItemValue = argumentList[1];
+                if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
+                    if (tempItemValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                        reportScriptError((int8_t *)"Bad argument type.", NULL);
+                        return output;
+                    }
+                    int8_t tempCharacter = (int8_t)*(double *)(tempItemValue.data);
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempText = &(tempHeapValue->data);
+                    insertVectorElement(tempText, tempText->length - 1, &tempCharacter);
+                } else if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_LIST) {
+                    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
+                    vector_t *tempList = &(tempHeapValue->data);
+                    pushVectorElement(tempList, &tempItemValue);
+                } else {
+                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    return output;
+                }
+                break;
+            }
             case SCRIPT_FUNCTION_REM:
             {
                 scriptValue_t tempSequenceValue = argumentList[0];

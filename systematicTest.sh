@@ -14,7 +14,7 @@ for FILE in ./systematicTests/*; do
 	echo "Running test:"
 	echo $FILE
 	echo $DESTINATION
-	breadtext --test $FILE
+	./build/breadtext --test $FILE
 	if [ $? -eq 0 ]; then
 		echo "PASSED"
 	else

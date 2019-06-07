@@ -14,7 +14,7 @@ for FILE in ./scriptTests/*; do
 	echo "Running test:"
 	echo $FILE
 	echo $DESTINATION
-	breadtext --script-test $FILE
+	./build/breadtext --script-test $FILE
 	if [ $? -eq 0 ]; then
 		echo "PASSED"
 	else
