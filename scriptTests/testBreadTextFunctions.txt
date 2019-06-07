@@ -386,7 +386,7 @@ ASSERT_ERROR
 ASSERT_OUTPUT
 END_TEST
 
-START_TEST "bindCommand"
+START_TEST "bindCommand 1"
 func action(argList)
     dec value = num(argList[0]) + num(argList[1])
     testLog(value)
@@ -401,6 +401,42 @@ ASSERT_OUTPUT
 8
 9
 30
+END_TEST
+
+START_TEST "bindCommand 2"
+func action1(argList)
+    testLog(10)
+end
+func action2(argList)
+    testLog(20)
+end
+func action3(argList)
+    testLog(30)
+end
+func action4(argList)
+    testLog(40)
+end
+func action5(argList)
+    testLog(50)
+end
+bindCommand("action1", action1)
+bindCommand("action2", action2)
+bindCommand("action3", action3)
+bindCommand("action4", action4)
+bindCommand("action5", action5)
+RUN_SCRIPT
+PRESS_KEY / a c t i o n 5 NEWLINE
+PRESS_KEY / a c t i o n 3 NEWLINE
+PRESS_KEY / a c t i o n 4 NEWLINE
+PRESS_KEY / a c t i o n 2 NEWLINE
+PRESS_KEY / a c t i o n 1 NEWLINE
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+50
+30
+40
+20
+10
 END_TEST
 
 START_TEST "Bad bindCommand"

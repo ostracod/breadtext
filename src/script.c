@@ -43,7 +43,7 @@ vector_t scriptList;
 int8_t scriptErrorMessage[1000];
 vector_t keyBindingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t keyMappingHashTable[KEY_HASH_TABLE_SIZE];
-vector_t commandBindingList; // TODO: Order by commandName for binary search.
+vector_t commandBindingList;
 scriptFrame_t globalFrame;
 scriptFrame_t localFrame;
 
@@ -125,16 +125,33 @@ keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
     return NULL;
 }
 
-commandBinding_t *findCommandBinding(int8_t *commandName) {
-    int64_t index = 0;
-    while (index < commandBindingList.length) {
-        commandBinding_t *tempCommandBinding = findVectorElement(&commandBindingList, index);
-        if (strcmp((char *)(tempCommandBinding->commandName), (char *)commandName) == 0) {
-            return tempCommandBinding;
+// insertIndex denotes where the command should be inserted
+// if the command is not found.
+commandBinding_t *findCommandBinding(int32_t *insertIndex, int8_t *commandName) {
+    commandBinding_t *output = NULL;
+    int32_t tempMinimumIndex = 0; // Inclusive.
+    int32_t tempMaximumIndex = commandBindingList.length; // Exclusive.
+    while (tempMinimumIndex < tempMaximumIndex) {
+        int32_t tempMiddleIndex = tempMinimumIndex + (tempMaximumIndex - tempMaximumIndex) / 2;
+        commandBinding_t *tempCommandBinding = findVectorElement(&commandBindingList, tempMiddleIndex);
+        int32_t tempResult = strcmp((char *)(tempCommandBinding->commandName), (char *)commandName);
+        if (tempResult < 0) {
+            tempMaximumIndex = tempMiddleIndex;
+        } else if (tempResult > 0) {
+            tempMinimumIndex = tempMiddleIndex + 1;
+        } else {
+            output = tempCommandBinding;
+            break;
         }
-        index += 1;
     }
-    return NULL;
+    if (insertIndex != NULL) {
+        if (output == NULL) {
+            *insertIndex = tempMinimumIndex;
+        } else {
+            *insertIndex = -1;
+        }
+    }
+    return output;
 }
 
 void storeValueInExpressionResultDestination(expressionResult_t *expressionResult, scriptValue_t value) {
@@ -1505,13 +1522,17 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempCommandNameValue.data);
                 vector_t *tempText = &(tempHeapValue->data);
                 scriptBaseFunction_t *tempCallback = *(scriptBaseFunction_t **)(tempCallbackValue.data);
-                commandBinding_t *tempOldCommandBinding = findCommandBinding(tempText->data);
+                int32_t tempInsertIndex;
+                commandBinding_t *tempOldCommandBinding = findCommandBinding(
+                    &tempInsertIndex,
+                    tempText->data
+                );
                 if (tempOldCommandBinding == NULL) {
                     commandBinding_t tempNewCommandBinding;
                     tempNewCommandBinding.commandName = malloc(tempText->length);
                     strcpy((char *)(tempNewCommandBinding.commandName), (char *)(tempText->data));
                     tempNewCommandBinding.callback = tempCallback;
-                    pushVectorElement(&commandBindingList, &tempNewCommandBinding);
+                    insertVectorElement(&commandBindingList, tempInsertIndex, &tempNewCommandBinding);
                 } else {
                     tempOldCommandBinding->callback = tempCallback;
                 }
@@ -1645,7 +1666,7 @@ int32_t invokeKeyMapping(int32_t key) {
 }
 
 int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
-    commandBinding_t *tempCommandBinding = findCommandBinding(termList[0]);
+    commandBinding_t *tempCommandBinding = findCommandBinding(NULL, termList[0]);
     if (tempCommandBinding == NULL) {
         return false;
     }
