@@ -1004,8 +1004,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
     garbageCollectionDelay -= 1;
     if (garbageCollectionDelay <= 0) {
         garbageCollectScriptHeapValues();
-        // TODO: Adjust this delay.
-        garbageCollectionDelay = 100;
+        garbageCollectionDelay = 150000;
     }
     scriptBodyLine_t *tempLine = &(statement->scriptBodyLine);
     switch (statement->type) {
