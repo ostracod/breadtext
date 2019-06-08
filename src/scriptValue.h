@@ -11,10 +11,15 @@ typedef struct scriptValue {
     int8_t data[(sizeof(double) > sizeof(int8_t *)) ? sizeof(double) : sizeof(int8_t *)];
 } scriptValue_t;
 
+typedef struct scriptFrame scriptFrame_t;
+
 typedef struct scriptFrame {
+    scriptFrame_t *previous;
+    scriptFrame_t *next;
     // The order of values corresponds to that
     // of the scope of the invoked function.
     scriptValue_t *valueList; // Array of scriptValue_t.
+    int32_t valueAmount;
 } scriptFrame_t;
 
 #include "vector.h"
@@ -57,11 +62,18 @@ typedef struct commandBinding {
 } commandBinding_t;
 
 scriptHeapValue_t *firstHeapValue;
+scriptFrame_t *firstScriptFrame;
 
 scriptHeapValue_t *createScriptHeapValue();
+void deleteScriptHeapValue(scriptHeapValue_t *value);
 int8_t scriptValueIsInHeap(scriptValue_t *value);
+void addScriptFrame(scriptFrame_t *frame);
+void removeScriptFrame(scriptFrame_t *frame);
 void lockScriptValue(scriptValue_t *value);
 void unlockScriptValue(scriptValue_t *value);
+void unmarkScriptValue(scriptValue_t *value);
+void unmarkScriptHeapValue(scriptHeapValue_t *value);
+void unmarkScriptFrame(scriptFrame_t *frame);
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);

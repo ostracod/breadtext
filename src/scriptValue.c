@@ -19,9 +19,42 @@ scriptHeapValue_t *createScriptHeapValue() {
     return output;
 }
 
+void deleteScriptHeapValue(scriptHeapValue_t *value) {
+    if (value->previous == NULL) {
+        firstHeapValue = value->next;
+    } else {
+        value->previous->next = value->next;
+    }
+    if (value->next != NULL) {
+        value->next->previous = value->previous;
+    }
+    cleanUpVector(&(value->data));
+    free(value);
+}
+
 int8_t scriptValueIsInHeap(scriptValue_t *value) {
     int8_t tempType = value->type;
     return (tempType == SCRIPT_VALUE_TYPE_STRING || tempType == SCRIPT_VALUE_TYPE_LIST);
+}
+
+void addScriptFrame(scriptFrame_t *frame) {
+    frame->previous = NULL;
+    frame->next = firstScriptFrame;
+    if (firstScriptFrame != NULL) {
+        firstScriptFrame->previous = frame;
+    }
+    firstScriptFrame = frame;
+}
+
+void removeScriptFrame(scriptFrame_t *frame) {
+    if (frame->previous == NULL) {
+        firstScriptFrame = frame->next;
+    } else {
+        frame->previous->next = frame->next;
+    }
+    if (frame->next != NULL) {
+        frame->next->previous = frame->previous;
+    }
 }
 
 void lockScriptValue(scriptValue_t *value) {
@@ -35,6 +68,39 @@ void unlockScriptValue(scriptValue_t *value) {
     if (scriptValueIsInHeap(value)) {
         scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
         tempHeapValue->lockDepth -= 1;
+    }
+}
+
+void unmarkScriptValue(scriptValue_t *value) {
+    if (scriptValueIsInHeap(value)) {
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        unmarkScriptHeapValue(tempHeapValue);
+    }
+}
+
+void unmarkScriptHeapValue(scriptHeapValue_t *value) {
+    if (!value->isMarked) {
+        return;
+    }
+    value->isMarked = false;
+    int8_t tempType = value->type;
+    if (tempType == SCRIPT_VALUE_TYPE_LIST) {
+        vector_t *tempVector = &(value->data);
+        int64_t index = 0;
+        while (index < tempVector->length) {
+            scriptValue_t *tempValue = findVectorElement(tempVector, index);
+            unmarkScriptValue(tempValue);
+            index += 1;
+        }
+    }
+}
+
+void unmarkScriptFrame(scriptFrame_t *frame) {
+    int32_t index = 0;
+    while (index < frame->valueAmount) {
+        scriptValue_t *tempValue = frame->valueList + index;
+        unmarkScriptValue(tempValue);
+        index += 1;
     }
 }
 

@@ -45,12 +45,14 @@ int8_t scriptErrorMessage[1000];
 vector_t keyBindingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t keyMappingHashTable[KEY_HASH_TABLE_SIZE];
 vector_t commandBindingList;
-scriptFrame_t globalFrame;
-scriptFrame_t localFrame;
+scriptFrame_t *globalFrame;
+scriptFrame_t *localFrame;
+int32_t garbageCollectionDelay = 0;
 
 void initializeScriptingEnvironment() {
     initializeScriptParsingEnvironment();
     firstHeapValue = NULL;
+    firstScriptFrame = NULL;
     createEmptyVector(&scriptList, sizeof(script_t *));
     createEmptyVector(&commandBindingList, sizeof(commandBinding_t));
     createEmptyVector(&scriptTestLogMessageList, sizeof(int8_t *));
@@ -67,6 +69,38 @@ void addScriptTestLogMessage(int8_t *text) {
     int8_t *tempText = malloc(strlen((char *)text) + 1);
     strcpy((char *)tempText, (char *)text);
     pushVectorElement(&scriptTestLogMessageList, &tempText);
+}
+
+void garbageCollectScriptHeapValues() {
+    // Mark all heap values for deletion.
+    scriptHeapValue_t *tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        tempHeapValue->isMarked = true;
+        tempHeapValue = tempHeapValue->next;
+    }
+    // Unmark all reachable values.
+    scriptFrame_t *tempFrame = firstScriptFrame;
+    while (tempFrame != NULL) {
+        unmarkScriptFrame(tempFrame);
+        tempFrame = tempFrame->next;
+    }
+    // Unmark all locked values.
+    tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        if (tempHeapValue->lockDepth > 0) {
+            unmarkScriptHeapValue(tempHeapValue);
+        }
+        tempHeapValue = tempHeapValue->next;
+    }
+    // Delete all values which are still marked.
+    tempHeapValue = firstHeapValue;
+    while (tempHeapValue != NULL) {
+        scriptHeapValue_t *tempNextHeapValue = tempHeapValue->next;
+        if (tempHeapValue->isMarked) {
+            deleteScriptHeapValue(tempHeapValue);
+        }
+        tempHeapValue = tempNextHeapValue;
+    }
 }
 
 void resetScriptError() {
@@ -801,8 +835,8 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             scriptListExpression_t *tempExpression = (scriptListExpression_t *)expression;
             vector_t tempValueList;
             createEmptyVector(&tempValueList, sizeof(scriptValue_t));
-            // TODO: Lock script values.
-            int32_t index = 0;
+            int32_t index;
+            index = 0;
             while (index < tempExpression->expressionList.length) {
                 scriptBaseExpression_t *tempElementExpression;
                 getVectorElement(&tempElementExpression, &(tempExpression->expressionList), index);
@@ -810,7 +844,15 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 if (scriptHasError) {
                     return output;
                 }
-                pushVectorElement(&tempValueList, &tempResult.value);
+                lockScriptValue(&(tempResult.value));
+                pushVectorElement(&tempValueList, &(tempResult.value));
+                index += 1;
+            }
+            index = 0;
+            while (index < tempValueList.length) {
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, &tempValueList, index);
+                unlockScriptValue(&tempValue);
                 index += 1;
             }
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
@@ -830,13 +872,13 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
         case SCRIPT_EXPRESSION_TYPE_VARIABLE:
         {
             scriptVariableExpression_t *tempExpression = (scriptVariableExpression_t *)expression;
-            scriptFrame_t tempFrame;
+            scriptFrame_t *tempFrame;
             if (tempExpression->variable.isGlobal) {
                 tempFrame = globalFrame;
             } else {
                 tempFrame = localFrame;
             }
-            scriptValue_t *tempValuePointer = tempFrame.valueList + tempExpression->variable.scopeIndex;
+            scriptValue_t *tempValuePointer = tempFrame->valueList + tempExpression->variable.scopeIndex;
             output.value = *tempValuePointer;
             output.destinationType = DESTINATION_TYPE_VARIABLE;
             output.destination = tempValuePointer;
@@ -919,8 +961,8 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             scriptBaseFunction_t *tempFunction = *(scriptBaseFunction_t **)(tempResult.value.data);
             int32_t tempArgumentAmount = tempExpression->argumentList.length;
             scriptValue_t tempArgumentList[tempArgumentAmount];
-            // TODO: Lock script values.
-            int32_t index = 0;
+            int32_t index;
+            index = 0;
             while (index < tempArgumentAmount) {
                 scriptBaseExpression_t *tempArgumentExpression;
                 getVectorElement(&tempArgumentExpression, &(tempExpression->argumentList), index);
@@ -928,10 +970,16 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 if (scriptHasError) {
                     return output;
                 }
+                lockScriptValue(&(tempResult.value));
                 tempArgumentList[index] = tempResult.value;
                 index += 1;
             }
             output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
+            index = 0;
+            while (index < tempArgumentAmount) {
+                unlockScriptValue(tempArgumentList + index);
+                index += 1;
+            }
             break;
         }
         default:
@@ -946,8 +994,11 @@ int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList
 script_t *importScript(int8_t *path);
 
 int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
-    // TODO: Garbage collection.
-    
+    garbageCollectionDelay -= 1;
+    if (garbageCollectionDelay <= 0) {
+        garbageCollectScriptHeapValues();
+        garbageCollectionDelay = 100;
+    }
     scriptBodyLine_t *tempLine = &(statement->scriptBodyLine);
     switch (statement->type) {
         case SCRIPT_STATEMENT_TYPE_EXPRESSION:
@@ -1075,7 +1126,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                     return STATEMENT_JUMP_ERROR;
                 }
                 scriptValue_t tempValue = tempScript->globalFrame.valueList[tempScopeIndex];
-                localFrame.valueList[tempVariable.scopeIndex] = tempValue;
+                localFrame->valueList[tempVariable.scopeIndex] = tempValue;
                 index += 1;
             }
             break;
@@ -1109,6 +1160,7 @@ int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList
     return STATEMENT_JUMP_NONE;
 }
 
+// All argument values must be locked.
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -1118,9 +1170,9 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
     }
     if (function->type == SCRIPT_FUNCTION_TYPE_CUSTOM) {
         scriptCustomFunction_t *tempFunction = (scriptCustomFunction_t *)function;
-        scriptFrame_t lastGlobalFrame = globalFrame;
-        scriptFrame_t lastLocalFrame = localFrame;
-        globalFrame = tempFunction->script->globalFrame;
+        scriptFrame_t *lastGlobalFrame = globalFrame;
+        scriptFrame_t *lastLocalFrame = localFrame;
+        globalFrame = &(tempFunction->script->globalFrame);
         if (tempFunction->isEntryPoint) {
             localFrame = globalFrame;
             evaluateStatementList(&output, &tempFunction->statementList);
@@ -1136,8 +1188,13 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 index += 1;
             }
-            localFrame.valueList = frameValueList;
+            scriptFrame_t tempFrame;
+            tempFrame.valueList = frameValueList;
+            tempFrame.valueAmount = tempLength;
+            addScriptFrame(&tempFrame);
+            localFrame = &tempFrame;
             evaluateStatementList(&output, &tempFunction->statementList);
+            removeScriptFrame(&tempFrame);
         }
         globalFrame = lastGlobalFrame;
         localFrame = lastLocalFrame;
@@ -1661,6 +1718,8 @@ void evaluateScript(script_t *script) {
         index += 1;
     }
     script->globalFrame.valueList = frameValueList;
+    script->globalFrame.valueAmount = tempLength;
+    addScriptFrame(&(script->globalFrame));
     invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), NULL, 0);
 }
 
@@ -1786,7 +1845,9 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     scriptValue_t tempSingleArgumentList[1];
     tempSingleArgumentList[0] = tempListValue;
     resetScriptError();
+    lockScriptValue(&tempListValue);
     scriptValue_t tempResult = invokeFunction(tempCommandBinding->callback, tempSingleArgumentList, 1);
+    unlockScriptValue(&tempListValue);
     if (scriptHasError) {
         displayScriptError();
     }
