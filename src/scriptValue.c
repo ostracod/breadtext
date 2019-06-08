@@ -20,7 +20,9 @@ scriptHeapValue_t *createScriptHeapValue() {
     return output;
 }
 
-void deleteScriptHeapValue(scriptHeapValue_t *value) {
+void removeScriptValueReferenceHelper(scriptValue_t *value, int8_t shouldRecur);
+
+void deleteScriptHeapValue(scriptHeapValue_t *value, int8_t shouldRecur) {
     if (value->previous == NULL) {
         firstHeapValue = value->next;
     } else {
@@ -34,7 +36,7 @@ void deleteScriptHeapValue(scriptHeapValue_t *value) {
         int64_t index = 0;
         while (index < tempVector->length) {
             scriptValue_t *tempValue = findVectorElement(tempVector, index);
-            removeScriptValueReference(tempValue);
+            removeScriptValueReferenceHelper(tempValue, shouldRecur);
             index += 1;
         }
     }
@@ -69,7 +71,7 @@ void removeScriptFrame(scriptFrame_t *frame) {
 
 void deleteScriptHeapValueIfUnreferenced(scriptHeapValue_t *value) {
     if (value->referenceCount <= 0 && value->lockDepth <= 0) {
-        deleteScriptHeapValue(value);
+        deleteScriptHeapValue(value, true);
     }
 }
 
@@ -98,13 +100,19 @@ void addScriptValueReference(scriptValue_t *value) {
     tempHeapValue->referenceCount += 1;
 }
 
-void removeScriptValueReference(scriptValue_t *value) {
+void removeScriptValueReferenceHelper(scriptValue_t *value, int8_t shouldRecur) {
     if (!scriptValueIsInHeap(value)) {
         return;
     }
     scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
     tempHeapValue->referenceCount -= 1;
-    deleteScriptHeapValueIfUnreferenced(tempHeapValue);
+    if (shouldRecur) {
+        deleteScriptHeapValueIfUnreferenced(tempHeapValue);
+    }
+}
+
+void removeScriptValueReference(scriptValue_t *value) {
+    removeScriptValueReferenceHelper(value, true);
 }
 
 void swapScriptValueReference(scriptValue_t *destination, scriptValue_t *source) {

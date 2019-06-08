@@ -66,7 +66,7 @@ scriptHeapValue_t *firstHeapValue;
 scriptFrame_t *firstScriptFrame;
 
 scriptHeapValue_t *createScriptHeapValue();
-void deleteScriptHeapValue(scriptHeapValue_t *value);
+void deleteScriptHeapValue(scriptHeapValue_t *value, int8_t shouldRecur);
 int8_t scriptValueIsInHeap(scriptValue_t *value);
 void addScriptFrame(scriptFrame_t *frame);
 void removeScriptFrame(scriptFrame_t *frame);

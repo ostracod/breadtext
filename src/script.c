@@ -97,7 +97,7 @@ void garbageCollectScriptHeapValues() {
     while (tempHeapValue != NULL) {
         scriptHeapValue_t *tempNextHeapValue = tempHeapValue->next;
         if (tempHeapValue->isMarked) {
-            deleteScriptHeapValue(tempHeapValue);
+            deleteScriptHeapValue(tempHeapValue, false);
         }
         tempHeapValue = tempNextHeapValue;
     }
