@@ -197,7 +197,7 @@ void storeValueInExpressionResultDestination(expressionResult_t *expressionResul
         return;
     }
     if (tempType == DESTINATION_TYPE_VARIABLE) {
-        *(scriptValue_t *)(expressionResult->destination) = value;
+        swapScriptValueReference((scriptValue_t *)(expressionResult->destination), &value);
         return;
     }
     int64_t index = expressionResult->destinationIndex;
@@ -207,7 +207,8 @@ void storeValueInExpressionResultDestination(expressionResult_t *expressionResul
         return;
     }
     if (tempType == DESTINATION_TYPE_LIST) {
-        setVectorElement(tempVector, index, &value);
+        scriptValue_t *destination = findVectorElement(tempVector, index);
+        swapScriptValueReference(destination, &value);
     } else if (tempType == DESTINATION_TYPE_STRING) {
         if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
             int8_t tempCharacter = (int8_t)*(double *)(value.data);
@@ -854,6 +855,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                     return output;
                 }
                 pushVectorElement(&tempValueList, &(tempResult.value));
+                addScriptValueReference(&(tempResult.value));
                 index += 1;
             }
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
@@ -1002,6 +1004,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
     garbageCollectionDelay -= 1;
     if (garbageCollectionDelay <= 0) {
         garbageCollectScriptHeapValues();
+        // TODO: Adjust this delay.
         garbageCollectionDelay = 100;
     }
     scriptBodyLine_t *tempLine = &(statement->scriptBodyLine);
@@ -1132,7 +1135,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                     return STATEMENT_JUMP_ERROR;
                 }
                 scriptValue_t tempValue = tempScript->globalFrame.valueList[tempScopeIndex];
-                localFrame->valueList[tempVariable.scopeIndex] = tempValue;
+                swapScriptValueReference(localFrame->valueList + tempVariable.scopeIndex, &tempValue);
                 index += 1;
             }
             unlockScriptValue(&(tempResult.value));
@@ -1186,12 +1189,15 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             localFrame = globalFrame;
             evaluateStatementList(&output, &tempFunction->statementList);
         } else {
+            int32_t index;
             int32_t tempLength = tempFunction->scope.variableNameList.length;
             scriptValue_t frameValueList[tempLength];
-            int32_t index = 0;
+            index = 0;
             while (index < tempLength) {
                 if (index < function->argumentAmount) {
-                    frameValueList[index] = argumentList[index];
+                    scriptValue_t tempValue = argumentList[index];
+                    frameValueList[index] = tempValue;
+                    addScriptValueReference(&tempValue);
                 } else {
                     (frameValueList + index)->type = SCRIPT_VALUE_TYPE_MISSING;
                 }
@@ -1203,6 +1209,11 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             addScriptFrame(&tempFrame);
             localFrame = &tempFrame;
             evaluateStatementList(&output, &tempFunction->statementList);
+            index = 0;
+            while (index < tempLength) {
+                removeScriptValueReference(frameValueList + index);
+                index += 1;
+            }
             removeScriptFrame(&tempFrame);
         }
         globalFrame = lastGlobalFrame;
@@ -1359,6 +1370,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                         return output;
                     }
                     insertVectorElement(tempList, index, &tempItemValue);
+                    addScriptValueReference(&tempItemValue);
                 } else {
                     reportScriptError((int8_t *)"Bad argument type.", NULL);
                     return output;
@@ -1382,6 +1394,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempSequenceValue.data);
                     vector_t *tempList = &(tempHeapValue->data);
                     pushVectorElement(tempList, &tempItemValue);
+                    addScriptValueReference(&tempItemValue);
                 } else {
                     reportScriptError((int8_t *)"Bad argument type.", NULL);
                     return output;
@@ -1416,6 +1429,8 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                         reportScriptError((int8_t *)"Index out of range.", NULL);
                         return output;
                     }
+                    scriptValue_t *tempItem = findVectorElement(tempList, index);
+                    removeScriptValueReference(tempItem);
                     removeVectorElement(tempList, index);
                 } else {
                     reportScriptError((int8_t *)"Bad argument type.", NULL);

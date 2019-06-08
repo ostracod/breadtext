@@ -15,6 +15,7 @@ scriptHeapValue_t *createScriptHeapValue() {
         firstHeapValue->previous = output;
     }
     output->lockDepth = 0;
+    output->referenceCount = 0;
     firstHeapValue = output;
     return output;
 }
@@ -27,6 +28,15 @@ void deleteScriptHeapValue(scriptHeapValue_t *value) {
     }
     if (value->next != NULL) {
         value->next->previous = value->previous;
+    }
+    if (value->type == SCRIPT_VALUE_TYPE_LIST) {
+        vector_t *tempVector = &(value->data);
+        int64_t index = 0;
+        while (index < tempVector->length) {
+            scriptValue_t *tempValue = findVectorElement(tempVector, index);
+            removeScriptValueReference(tempValue);
+            index += 1;
+        }
     }
     cleanUpVector(&(value->data));
     free(value);
@@ -57,23 +67,55 @@ void removeScriptFrame(scriptFrame_t *frame) {
     }
 }
 
-void lockScriptValue(scriptValue_t *value) {
-    if (scriptValueIsInHeap(value)) {
-        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
-        tempHeapValue->lockDepth += 1;
+void deleteScriptHeapValueIfUnreferenced(scriptHeapValue_t *value) {
+    if (value->referenceCount <= 0 && value->lockDepth <= 0) {
+        deleteScriptHeapValue(value);
     }
 }
 
-void unlockScriptValue(scriptValue_t *value) {
-    if (scriptValueIsInHeap(value)) {
-        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
-        tempHeapValue->lockDepth -= 1;
+void lockScriptValue(scriptValue_t *value) {
+    if (!scriptValueIsInHeap(value)) {
+        return;
     }
+    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
+    tempHeapValue->lockDepth += 1;
+}
+
+void unlockScriptValue(scriptValue_t *value) {
+    if (!scriptValueIsInHeap(value)) {
+        return;
+    }
+    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
+    tempHeapValue->lockDepth -= 1;
+    deleteScriptHeapValueIfUnreferenced(tempHeapValue);
+}
+
+void addScriptValueReference(scriptValue_t *value) {
+    if (!scriptValueIsInHeap(value)) {
+        return;
+    }
+    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
+    tempHeapValue->referenceCount += 1;
+}
+
+void removeScriptValueReference(scriptValue_t *value) {
+    if (!scriptValueIsInHeap(value)) {
+        return;
+    }
+    scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
+    tempHeapValue->referenceCount -= 1;
+    deleteScriptHeapValueIfUnreferenced(tempHeapValue);
+}
+
+void swapScriptValueReference(scriptValue_t *destination, scriptValue_t *source) {
+    addScriptValueReference(source);
+    removeScriptValueReference(destination);
+    *destination = *source;
 }
 
 void unmarkScriptValue(scriptValue_t *value) {
     if (scriptValueIsInHeap(value)) {
-        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)&(value->data);
+        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value->data);
         unmarkScriptHeapValue(tempHeapValue);
     }
 }
@@ -132,7 +174,7 @@ scriptValue_t convertScriptValueToString(scriptValue_t value) {
         return value;
     }
     if (value.type == SCRIPT_VALUE_TYPE_NUMBER) {
-        double tempNumber = *(double *)&(value.data);
+        double tempNumber = *(double *)(value.data);
         int8_t tempBuffer[50];
         sprintf((char *)tempBuffer, "%lf", tempNumber);
         int32_t tempLength = strlen((char *)tempBuffer);
@@ -209,7 +251,7 @@ scriptValue_t convertScriptValueToNumber(scriptValue_t value) {
             return output;
         }
         output.type = SCRIPT_VALUE_TYPE_NUMBER;
-        *(double *)&(output.data) = tempNumber;
+        *(double *)(output.data) = tempNumber;
         return output;
     }
     scriptValue_t output;
@@ -296,11 +338,11 @@ int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2) {
         return true;
     }
     if (type1 == SCRIPT_VALUE_TYPE_NUMBER) {
-        return (*(double *)&(value1->data) == *(double *)&(value2->data));
+        return (*(double *)(value1->data) == *(double *)(value2->data));
     }
     if (type1 == SCRIPT_VALUE_TYPE_STRING || type1 == SCRIPT_VALUE_TYPE_LIST
             || type1 == SCRIPT_VALUE_TYPE_FUNCTION) {
-        return (*(void **)&(value1->data) == *(void **)&(value2->data));
+        return (*(void **)(value1->data) == *(void **)(value2->data));
     }
     return true;
 }
@@ -333,6 +375,12 @@ scriptValue_t copyScriptValue(scriptValue_t *value) {
         copyVector(&(tempHeapValue2->data), tempList);
         output.type = SCRIPT_VALUE_TYPE_LIST;
         *(scriptHeapValue_t **)(output.data) = tempHeapValue2;
+        int64_t index = 0;
+        while (index < tempHeapValue2->data.length) {
+            scriptValue_t *tempValue = findVectorElement(&(tempHeapValue2->data), index);
+            addScriptValueReference(tempValue);
+            index += 1;
+        }
         return output;
     }
     return *value;

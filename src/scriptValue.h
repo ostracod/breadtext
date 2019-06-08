@@ -38,6 +38,7 @@ typedef struct scriptHeapValue {
     int8_t type;
     int8_t isMarked;
     int32_t lockDepth;
+    int64_t referenceCount;
     scriptHeapValue_t *previous;
     scriptHeapValue_t *next;
     // For strings, data is a vector of int8_t.
@@ -69,8 +70,12 @@ void deleteScriptHeapValue(scriptHeapValue_t *value);
 int8_t scriptValueIsInHeap(scriptValue_t *value);
 void addScriptFrame(scriptFrame_t *frame);
 void removeScriptFrame(scriptFrame_t *frame);
+void deleteScriptHeapValueIfUnreferenced(scriptHeapValue_t *value);
 void lockScriptValue(scriptValue_t *value);
 void unlockScriptValue(scriptValue_t *value);
+void addScriptValueReference(scriptValue_t *value);
+void removeScriptValueReference(scriptValue_t *value);
+void swapScriptValueReference(scriptValue_t *destination, scriptValue_t *source);
 void unmarkScriptValue(scriptValue_t *value);
 void unmarkScriptHeapValue(scriptHeapValue_t *value);
 void unmarkScriptFrame(scriptFrame_t *frame);
