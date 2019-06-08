@@ -11,7 +11,7 @@ Statements are separated by newlines.
 
 Variables are dynamically typed.
 
-Heap values are garbage-collected using mark-and-sweep.
+Heap values are garbage-collected using mark-and-sweep and automatic reference counting.
 
 Data types:
 
