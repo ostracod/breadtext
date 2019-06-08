@@ -117,6 +117,7 @@ void reportScriptError(int8_t *message, scriptBodyLine_t *line) {
     }
 }
 
+// Completely unlocks all script values.
 void displayScriptError() {
     scriptHeapValue_t *tempHeapValue = firstHeapValue;
     while (tempHeapValue != NULL) {
@@ -219,6 +220,7 @@ void storeValueInExpressionResultDestination(expressionResult_t *expressionResul
 
 expressionResult_t evaluateExpression(scriptBaseExpression_t *expression);
 
+// Output value will be locked.
 scriptValue_t evaluateUnaryExpression(scriptUnaryExpression_t *expression) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -315,9 +317,11 @@ scriptValue_t evaluateUnaryExpression(scriptUnaryExpression_t *expression) {
             break;
         }
     }
+    unlockScriptValue(&tempValue);
     return output;
 }
 
+// Output value will be locked.
 scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -325,9 +329,7 @@ scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
     if (scriptHasError) {
         return output;
     }
-    lockScriptValue(&(tempResult1.value));
     expressionResult_t tempResult2 = evaluateExpression(expression->operand2);
-    unlockScriptValue(&(tempResult1.value));
     if (scriptHasError) {
         return output;
     }
@@ -355,6 +357,7 @@ scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
                 tempHeapValue3->data = tempText3;
                 output.type = SCRIPT_VALUE_TYPE_STRING;
                 *(scriptHeapValue_t **)(output.data) = tempHeapValue3;
+                lockScriptValue(&output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -603,6 +606,7 @@ scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
         {
             output = tempValue2;
             storeValueInExpressionResultDestination(&tempResult1, output);
+            lockScriptValue(&output);
             break;
         }
         case SCRIPT_OPERATOR_ADD_ASSIGN:
@@ -619,6 +623,7 @@ scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
                 removeVectorElement(tempText1, tempText1->length - 1);
                 pushVectorOntoVector(tempText1, tempText2);
                 output = tempValue1;
+                lockScriptValue(&output);
             } else {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
@@ -800,11 +805,14 @@ scriptValue_t evaluateBinaryExpression(scriptBinaryExpression_t *expression) {
             break;
         }
     }
+    unlockScriptValue(&(tempResult1.value));
+    unlockScriptValue(&(tempResult2.value));
     return output;
 }
 
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount);
 
+// Output value will be locked.
 expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
     expressionResult_t output;
     output.value.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -828,6 +836,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             vector_t tempText;
             copyVector(&tempText, &tempExpression->text);
             output.value = convertCharacterVectorToStringValue(tempText);
+            lockScriptValue(&(output.value));
             break;
         }
         case SCRIPT_EXPRESSION_TYPE_LIST:
@@ -844,15 +853,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 if (scriptHasError) {
                     return output;
                 }
-                lockScriptValue(&(tempResult.value));
                 pushVectorElement(&tempValueList, &(tempResult.value));
-                index += 1;
-            }
-            index = 0;
-            while (index < tempValueList.length) {
-                scriptValue_t tempValue;
-                getVectorElement(&tempValue, &tempValueList, index);
-                unlockScriptValue(&tempValue);
                 index += 1;
             }
             scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
@@ -860,6 +861,14 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             tempHeapValue->data = tempValueList;
             output.value.type = SCRIPT_VALUE_TYPE_LIST;
             *(scriptHeapValue_t **)(output.value.data) = tempHeapValue;
+            lockScriptValue(&(output.value));
+            index = 0;
+            while (index < tempValueList.length) {
+                scriptValue_t tempValue;
+                getVectorElement(&tempValue, &tempValueList, index);
+                unlockScriptValue(&tempValue);
+                index += 1;
+            }
             break;
         }
         case SCRIPT_EXPRESSION_TYPE_FUNCTION:
@@ -882,6 +891,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             output.value = *tempValuePointer;
             output.destinationType = DESTINATION_TYPE_VARIABLE;
             output.destination = tempValuePointer;
+            lockScriptValue(&(output.value));
             break;
         }
         case SCRIPT_EXPRESSION_TYPE_UNARY:
@@ -901,9 +911,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             if (scriptHasError) {
                 return output;
             }
-            lockScriptValue(&(tempResult1.value));
             expressionResult_t tempResult2 = evaluateExpression(tempExpression->index);
-            unlockScriptValue(&(tempResult1.value));
             if (scriptHasError) {
                 return output;
             }
@@ -945,6 +953,9 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 reportScriptError((int8_t *)"Bad operand types.", NULL);
                 return output;
             }
+            lockScriptValue(&(output.value));
+            unlockScriptValue(&(tempResult1.value));
+            unlockScriptValue(&(tempResult2.value));
             break;
         }
         case SCRIPT_EXPRESSION_TYPE_INVOCATION:
@@ -961,8 +972,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
             scriptBaseFunction_t *tempFunction = *(scriptBaseFunction_t **)(tempResult.value.data);
             int32_t tempArgumentAmount = tempExpression->argumentList.length;
             scriptValue_t tempArgumentList[tempArgumentAmount];
-            int32_t index;
-            index = 0;
+            int32_t index = 0;
             while (index < tempArgumentAmount) {
                 scriptBaseExpression_t *tempArgumentExpression;
                 getVectorElement(&tempArgumentExpression, &(tempExpression->argumentList), index);
@@ -970,16 +980,10 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 if (scriptHasError) {
                     return output;
                 }
-                lockScriptValue(&(tempResult.value));
                 tempArgumentList[index] = tempResult.value;
                 index += 1;
             }
             output.value = invokeFunction(tempFunction, tempArgumentList, tempArgumentAmount);
-            index = 0;
-            while (index < tempArgumentAmount) {
-                unlockScriptValue(tempArgumentList + index);
-                index += 1;
-            }
             break;
         }
         default:
@@ -993,6 +997,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
 int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList);
 script_t *importScript(int8_t *path);
 
+// returnValue will be locked.
 int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *statement) {
     garbageCollectionDelay -= 1;
     if (garbageCollectionDelay <= 0) {
@@ -1005,7 +1010,8 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
         {
             scriptExpressionStatement_t *tempStatement = (scriptExpressionStatement_t *)statement;
             scriptBaseExpression_t *tempExpression = tempStatement->expression;
-            evaluateExpression(tempExpression);
+            expressionResult_t tempResult = evaluateExpression(tempExpression);
+            unlockScriptValue(&(tempResult.value));
             break;
         }
         case SCRIPT_STATEMENT_TYPE_IF:
@@ -1129,6 +1135,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                 localFrame->valueList[tempVariable.scopeIndex] = tempValue;
                 index += 1;
             }
+            unlockScriptValue(&(tempResult.value));
             break;
         }
         default:
@@ -1146,6 +1153,7 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
     return STATEMENT_JUMP_NONE;
 }
 
+// returnValue will be locked.
 int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList) {
     int32_t index = 0;
     while (index < statementList->length) {
@@ -1161,6 +1169,7 @@ int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList
 }
 
 // All argument values must be locked.
+// Output value will be locked.
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount) {
     scriptValue_t output;
     output.type = SCRIPT_VALUE_TYPE_MISSING;
@@ -1198,7 +1207,6 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
         }
         globalFrame = lastGlobalFrame;
         localFrame = lastLocalFrame;
-        return output;
     }
     if (function->type == SCRIPT_FUNCTION_TYPE_BUILT_IN) {
         scriptBuiltInFunction_t *tempFunction = (scriptBuiltInFunction_t *)function;
@@ -1703,7 +1711,11 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 break;
             }
         }
-        
+    }
+    int32_t index = 0;
+    while (index < argumentAmount) {
+        unlockScriptValue(argumentList + index);
+        index += 1;
     }
     return output;
 }
@@ -1720,7 +1732,8 @@ void evaluateScript(script_t *script) {
     script->globalFrame.valueList = frameValueList;
     script->globalFrame.valueAmount = tempLength;
     addScriptFrame(&(script->globalFrame));
-    invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), NULL, 0);
+    scriptValue_t tempResult = invokeFunction((scriptBaseFunction_t *)(script->entryPointFunction), NULL, 0);
+    unlockScriptValue(&tempResult);
 }
 
 script_t *parseAndEvaluateScript(scriptBody_t *scriptBody) {
@@ -1792,12 +1805,11 @@ int8_t invokeKeyBinding(int32_t key) {
         if (tempKeyBinding.key == key) {
             scriptValue_t tempResult = invokeFunction(tempKeyBinding.callback, NULL, 0);
             if (scriptHasError) {
-                displayScriptError();
                 output = true;
                 break;
             }
             if (tempResult.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                notifyUser((int8_t *)"ERROR: Key binding must return boolean.");
+                reportScriptError((int8_t *)"Key binding must return boolean.", NULL);
                 output = true;
                 break;
             }
@@ -1808,6 +1820,9 @@ int8_t invokeKeyBinding(int32_t key) {
             }
         }
         index += 1;
+    }
+    if (scriptHasError) {
+        displayScriptError();
     }
     return output;
 }
@@ -1820,6 +1835,7 @@ int32_t invokeKeyMapping(int32_t key) {
     return key;
 }
 
+// destination will be locked (if the pointer is not null).
 int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
     commandBinding_t *tempCommandBinding = findCommandBinding(NULL, termList[0]);
     if (tempCommandBinding == NULL) {
@@ -1847,11 +1863,12 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     resetScriptError();
     lockScriptValue(&tempListValue);
     scriptValue_t tempResult = invokeFunction(tempCommandBinding->callback, tempSingleArgumentList, 1);
-    unlockScriptValue(&tempListValue);
     if (scriptHasError) {
         displayScriptError();
     }
-    if (destination != NULL) {
+    if (destination == NULL) {
+        unlockScriptValue(&tempResult);
+    } else {
         *destination = tempResult;
     }
     return true;

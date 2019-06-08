@@ -113,6 +113,7 @@ void deleteTextCommandCharacter() {
     displayTextCommandCursor();
 }
 
+// destination will be locked (if the pointer is not null).
 void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList, int32_t termListLength) {
     if (destination != NULL) {
         destination->type = SCRIPT_VALUE_TYPE_NULL;
