@@ -1248,11 +1248,13 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             case SCRIPT_FUNCTION_COPY:
             {
                 output = copyScriptValue(argumentList + 0);
+                lockScriptValue(&output);
                 break;
             }
             case SCRIPT_FUNCTION_STR:
             {
                 output = convertScriptValueToString(argumentList[0]);
+                lockScriptValue(&output);
                 break;
             }
             case SCRIPT_FUNCTION_NUM:
@@ -1520,6 +1522,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 int8_t *tempText = allocateStringFromSelection();
                 output = convertTextToStringValue(tempText);
                 free(tempText);
+                lockScriptValue(&output);
                 break;
             }
             case SCRIPT_FUNCTION_GET_LINE_COUNT:
@@ -1547,6 +1550,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 copyData(tempBuffer, tempAllocation->text, tempAllocation->length);
                 tempBuffer[tempAllocation->length] = 0;
                 output = convertTextToStringValue(tempBuffer);
+                lockScriptValue(&output);
                 break;
             }
             case SCRIPT_FUNCTION_GET_CURSOR_CHAR_INDEX:
@@ -1864,6 +1868,7 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
     while (index < termListLength) {
         scriptValue_t tempValue = convertTextToStringValue(termList[index]);
         pushVectorElement(&tempArgumentList, &tempValue);
+        addScriptValueReference(&tempValue);
         index += 1;
     }
     scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
