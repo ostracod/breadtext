@@ -300,6 +300,10 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
             if (index >= tempWidth) {
                 index += tempOffset;
             }
+            int64_t tempLength = cursorTextPos.line->textAllocation.length;
+            if (index > tempLength) {
+                index = tempLength;
+            }
         }
         recordTextLineInserted(cursorTextPos.line);
         setTextPosIndex(&cursorTextPos, index);
