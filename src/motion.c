@@ -1108,13 +1108,46 @@ void goToMatchingCharacter() {
 }
 
 void goToStartOfWord() {
-    // TODO: Implement.
-    
+    textPos_t tempNextTextPos = cursorTextPos;
+    int64_t index = getTextPosIndex(&tempNextTextPos);
+    while (index > 0) {
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (isWordCharacter(tempCharacter)) {
+            break;
+        }
+        index -= 1;
+        setTextPosIndex(&tempNextTextPos, index);
+    }
+    while (index > 0) {
+        textPos_t tempTextPos = tempNextTextPos;
+        index -= 1;
+        setTextPosIndex(&tempTextPos, index);
+        int8_t tempCharacter = getTextPosCharacter(&tempTextPos);
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        tempNextTextPos = tempTextPos;
+    }
+    moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
+    historyFrameIsConsecutive = false;
 }
 
 void goToEndOfWord() {
-    // TODO: Implement.
-    
+    textPos_t tempNextTextPos = cursorTextPos;
+    int64_t tempLength = tempNextTextPos.line->textAllocation.length;
+    int64_t index = getTextPosIndex(&tempNextTextPos);
+    while (index < tempLength) {
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        index += 1;
+        setTextPosIndex(&tempNextTextPos, index);
+    }
+    moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
+    historyFrameIsConsecutive = false;
 }
 
 void goToPreviousWord() {
