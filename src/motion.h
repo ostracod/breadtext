@@ -68,11 +68,10 @@ int8_t goToCharacterInclusive(int8_t character);
 int8_t reverseGoToCharacterExclusive(int8_t character);
 int8_t reverseGoToCharacterInclusive(int8_t character);
 void goToMatchingCharacter();
-// TODO: Implement these.
-//void goToStartOfWord();
-//void goToEndOfWord();
-//void goToNextWord();
-//void goToPreviousWord();
+void goToStartOfWord();
+void goToEndOfWord();
+void goToPreviousWord();
+void goToNextWord();
 
 // CURSOR_MOTION_HEADER_FILE
 #endif

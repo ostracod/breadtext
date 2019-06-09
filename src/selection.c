@@ -751,7 +751,7 @@ void selectInLineHelper(int64_t cursorIndex, int64_t highlightIndex) {
     setActivityMode(HIGHLIGHT_CHARACTER_MODE);
 }
 
-void selectUntilBeginningOfLineInclusive() {
+void selectUntilBeginningOfLine() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     int64_t tempCursorIndex = 0;
     int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos);
@@ -765,37 +765,10 @@ void selectUntilBeginningOfLineInclusive() {
     selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 
-void selectUntilBeginningOfLineExclusive() {
-    int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempCursorIndex = 0;
-    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos) - 1;
-    if (tempHighlightIndex < 0) {
-        return;
-    }
-    while (tempCursorIndex < tempLength) {
-        int8_t tempCharacter = cursorTextPos.line->textAllocation.text[tempCursorIndex];
-        if (tempCharacter != ' ' && tempCharacter != '\t') {
-            break;
-        }
-        tempCursorIndex += 1;
-    }
-    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
-}
-
-void selectUntilEndOfLineInclusive() {
+void selectUntilEndOfLine() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     int64_t tempCursorIndex = tempLength - 1;
     int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos);
-    selectInLineHelper(tempCursorIndex, tempHighlightIndex);
-}
-
-void selectUntilEndOfLineExclusive() {
-    int64_t tempLength = cursorTextPos.line->textAllocation.length;
-    int64_t tempCursorIndex = tempLength - 1;
-    int64_t tempHighlightIndex = getTextPosIndex(&cursorTextPos) + 1;
-    if (tempHighlightIndex > tempLength) {
-        return;
-    }
     selectInLineHelper(tempCursorIndex, tempHighlightIndex);
 }
 

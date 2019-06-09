@@ -1107,5 +1107,24 @@ void goToMatchingCharacter() {
     }
 }
 
+void goToStartOfWord() {
+    // TODO: Implement.
+    
+}
+
+void goToEndOfWord() {
+    // TODO: Implement.
+    
+}
+
+void goToPreviousWord() {
+    // TODO: Implement.
+    
+}
+
+void goToNextWord() {
+    // TODO: Implement.
+    
+}
 
 

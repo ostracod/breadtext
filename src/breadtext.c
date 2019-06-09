@@ -480,6 +480,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     saveFile(false);
                     break;
                 }
+                case '9':
+                {
+                    goToStartOfWord();
+                    break;
+                }
+                case '0':
+                {
+                    goToEndOfWord();
+                    break;
+                }
                 case '[':
                 {
                     moveCursorToBeginningOfLine();
@@ -622,16 +632,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     }
                     break;
                 }
-                case '>':
-                {
-                    increaseSelectionIndentationLevel();
-                    break;
-                }
-                case '<':
-                {
-                    decreaseSelectionIndentationLevel();
-                    break;
-                }
                 case '/':
                 {
                     setActivityMode(TEXT_COMMAND_MODE);
@@ -640,6 +640,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case '?':
                 {
                     enterBeginningOfCommand((int8_t *)"find ");
+                    break;
+                }
+                case '>':
+                {
+                    goToNextWord();
+                    break;
+                }
+                case '<':
+                {
+                    goToPreviousWord();
                     break;
                 }
                 case 'n':
@@ -737,24 +747,14 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     insertAndEditLineBeforeCursor();
                     break;
                 }
-                case '9':
-                {
-                    selectUntilBeginningOfLineExclusive();
-                    break;
-                }
                 case '(':
                 {
-                    selectUntilBeginningOfLineInclusive();
-                    break;
-                }
-                case '0':
-                {
-                    selectUntilEndOfLineExclusive();
+                    selectUntilBeginningOfLine();
                     break;
                 }
                 case ')':
                 {
-                    selectUntilEndOfLineInclusive();
+                    selectUntilEndOfLine();
                     break;
                 }
                 case '`':

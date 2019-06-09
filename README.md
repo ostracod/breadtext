@@ -67,10 +67,8 @@ To view controls within BreadText, enter `/help`.
 `Shift + W` = Highlight word with magic  
 `E` = Exclusive enclosure highlight mode  
 `Shift + E` = Inclusive enclosure highlight mode  
-`9` = Select until beginning of line exclusive  
-`Shift + 9` = Select until beginning of line inclusive  
-`0` = Select until end of line exclusive  
-`Shift + 0` = Select until end of line inclusive  
+`Shift + 9` = Select until beginning of line  
+`Shift + 0` = Select until end of line  
 `/` = Enter command  
 `Shift + /` = Enter find command  
 `V` = Highlight line without indentation or newline  
@@ -84,17 +82,19 @@ To view controls within BreadText, enter `/help`.
 `AZ` = Scroll text one line  
 `Shift + AZ` = Scroll text 10 lines  
 `` ` `` = Scroll text to cursor  
-``Shift + ` `` = Scroll cursor to text  
-`[]` = Scroll to beginning or end of line  
-`{}` = Scroll to beginning or end of file  
-`=` = Scroll to end of indentation  
-`8` = Jump to matching delimiter  
+``Shift + ` `` = Move cursor to visible text  
+`<>` = Go to previous or next word  
+`90` = Go to beginning or end of word  
+`[]` = Go to beginning or end of line  
+`{}` = Go to beginning or end of file  
+`=` = Go to end of indentation  
+`8` = Go to matching delimiter  
 `G` = Go to character exclusive  
 `Shift + G` = Go to character inclusive  
 `R` = Reverse go to character exclusive  
 `Shift + R` = Reverse go to character inclusive  
-`N` = Find next instance  
-`Shift + N` = Find previous instance  
+`N` = Find next instance of search term  
+`Shift + N` = Find previous instance of search term  
 `F` = Find next instance of word under cursor  
 `Shift + F` = Find previous instance of word under cursor  
 `1-6` = Go to mark  
@@ -123,8 +123,8 @@ To view controls within BreadText, enter `/help`.
 
 ### Text Manipulation
 
-`<>` = Indent  
-`Tab` or `Shift + Tab` = Indent  
+`Tab` = Indent  
+`Shift + Tab` = Remove indentation  
 `.` = Replace character under cursor  
 `'` = Insert character after cursor  
 `Shift + '` = Insert character before cursor  

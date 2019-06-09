@@ -236,7 +236,7 @@ ASSERT_LINE 2 "def"
 TEST "Indent forward history"
 ADD_LINE "abc"
 SET_POS 1 0
-PRESS_KEY > u
+PRESS_KEY TAB u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc"
 PRESS_KEY U
@@ -246,7 +246,7 @@ ASSERT_LINE 1 "    abc"
 TEST "Indent backward history"
 ADD_LINE "    abc"
 SET_POS 1 0
-PRESS_KEY < u
+PRESS_KEY BTAB u
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "    abc"
 PRESS_KEY U

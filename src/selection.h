@@ -24,10 +24,8 @@ void highlightEnclosureExclusive(int8_t character);
 void highlightEnclosureInclusive(int8_t character);
 void highlightLineContents();
 void changeLine();
-void selectUntilBeginningOfLineInclusive();
-void selectUntilBeginningOfLineExclusive();
-void selectUntilEndOfLineInclusive();
-void selectUntilEndOfLineExclusive();
+void selectUntilBeginningOfLine();
+void selectUntilEndOfLine();
 void fixLineSelection();
 
 // SELECTION_HEADER_FILE

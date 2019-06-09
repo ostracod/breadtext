@@ -127,42 +127,21 @@ PRESS_KEY W SPACE
 ASSERT_POS 1 10
 ASSERT_HIGHLIGHT_POS 1 8
 
-TEST "Select until beginning of line exclusive"
-ADD_LINE "abcdef"
-SET_POS 1 3
-PRESS_KEY 9
-ASSERT_POS 1 0
-ASSERT_HIGHLIGHT_POS 1 2
-
-TEST "Select until beginning of line exclusive with indentation"
-ADD_LINE "    abcdef"
-SET_POS 1 7
-PRESS_KEY 9
-ASSERT_POS 1 4
-ASSERT_HIGHLIGHT_POS 1 6
-
-TEST "Select until beginning of line inclusive"
+TEST "Select until beginning of line"
 ADD_LINE "abcdef"
 SET_POS 1 3
 PRESS_KEY (
 ASSERT_POS 1 0
 ASSERT_HIGHLIGHT_POS 1 3
 
-TEST "Select until beginning of line exclusive with inclusive"
+TEST "Select until beginning of line with indentation"
 ADD_LINE "    abcdef"
 SET_POS 1 7
 PRESS_KEY (
 ASSERT_POS 1 4
 ASSERT_HIGHLIGHT_POS 1 7
 
-TEST "Select until end of line exclusive"
-ADD_LINE "abcdef"
-SET_POS 1 3
-PRESS_KEY 0
-ASSERT_POS 1 5
-ASSERT_HIGHLIGHT_POS 1 4
-
-TEST "Select until end of line inclusive"
+TEST "Select until end of line"
 ADD_LINE "abcdef"
 SET_POS 1 3
 PRESS_KEY )
@@ -276,7 +255,7 @@ ADD_LINE "mnopqr"
 ADD_LINE "stuvwx"
 SET_POS 2 4
 PRESS_KEY H DOWN
-PRESS_KEY >
+PRESS_KEY TAB
 ASSERT_LINE_COUNT 4
 ASSERT_LINE 1 "abcdef"
 ASSERT_LINE 2 "    ghijkl"
@@ -290,7 +269,7 @@ ADD_LINE "    mnopqr"
 ADD_LINE "stuvwx"
 SET_POS 2 4
 PRESS_KEY H DOWN
-PRESS_KEY <
+PRESS_KEY BTAB
 ASSERT_LINE_COUNT 4
 ASSERT_LINE 1 "abcdef"
 ASSERT_LINE 2 "ghijkl"
