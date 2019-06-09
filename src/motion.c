@@ -1151,13 +1151,69 @@ void goToEndOfWord() {
 }
 
 void goToPreviousWord() {
-    // TODO: Implement.
-    
+    textPos_t tempNextTextPos = cursorTextPos;
+    while (true) {
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        int8_t tempResult = moveTextPosBackward(&tempNextTextPos);
+        if (!tempResult) {
+            break;
+        }
+    }
+    while (true) {
+        int8_t tempResult = moveTextPosBackward(&tempNextTextPos);
+        if (!tempResult) {
+            break;
+        }
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (isWordCharacter(tempCharacter)) {
+            break;
+        }
+    }
+    while (true) {
+        textPos_t tempTextPos = tempNextTextPos;
+        int8_t tempResult = moveTextPosBackward(&tempTextPos);
+        if (!tempResult) {
+            break;
+        }
+        int8_t tempCharacter = getTextPosCharacter(&tempTextPos);
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        tempNextTextPos = tempTextPos;
+    }
+    moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
+    historyFrameIsConsecutive = false;
 }
 
 void goToNextWord() {
-    // TODO: Implement.
-    
+    textPos_t tempNextTextPos = cursorTextPos;
+    while (true) {
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (!isWordCharacter(tempCharacter)) {
+            break;
+        }
+        int8_t tempResult = moveTextPosForward(&tempNextTextPos);
+        if (!tempResult) {
+            break;
+        }
+    }
+    while (true) {
+        int8_t tempResult = moveTextPosForward(&tempNextTextPos);
+        if (!tempResult) {
+            break;
+        }
+        int8_t tempCharacter = getTextPosCharacter(&tempNextTextPos);
+        if (isWordCharacter(tempCharacter)) {
+            break;
+        }
+    }
+    moveCursor(&tempNextTextPos);
+    cursorSnapColumn = tempNextTextPos.column;
+    historyFrameIsConsecutive = false;
 }
 
 
