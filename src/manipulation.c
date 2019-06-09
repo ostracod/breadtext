@@ -31,7 +31,7 @@ int64_t findAndReplaceAllTerms(int8_t *replacementText) {
     while (true) {
         textPos_t tempStartTextPos;
         textPos_t tempEndTextPos;
-        findNextTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
+        findNextMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
         tempTextPos = tempStartTextPos;
         if (tempIsMissing) {
             break;

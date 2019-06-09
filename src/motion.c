@@ -307,7 +307,7 @@ void moveCursorToEndOfFile() {
     historyFrameIsConsecutive = false;
 }
 
-void findNextTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
+void findNextMatchingTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     if (searchTermIsRegex) {
@@ -342,7 +342,7 @@ void findNextTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMi
     }
 }
 
-void findPreviousTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
+void findPreviousMatchingTermInTextLine(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     if (searchTermIsRegex) {
@@ -408,7 +408,7 @@ int8_t wordAtTextPosHasLength(textPos_t *pos, int64_t length) {
     return (length == tempWordLength);
 }
 
-textPos_t findNextWordInTextLine(int8_t *isMissing, textPos_t *pos) {
+textPos_t findNextMatchingWordInTextLine(int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     while (index <= tempLength - searchTermLength) {
@@ -427,7 +427,7 @@ textPos_t findNextWordInTextLine(int8_t *isMissing, textPos_t *pos) {
     return *pos;
 }
 
-textPos_t findPreviousWordInTextLine(int8_t *isMissing, textPos_t *pos) {
+textPos_t findPreviousMatchingWordInTextLine(int8_t *isMissing, textPos_t *pos) {
     int64_t tempLength = pos->line->textAllocation.length;
     int64_t index = getTextPosIndex(pos);
     if (index > tempLength - searchTermLength) {
@@ -449,11 +449,11 @@ textPos_t findPreviousWordInTextLine(int8_t *isMissing, textPos_t *pos) {
     return *pos;
 }
 
-void findNextTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
+void findNextMatchingTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     textPos_t tempTextPos = *pos;
     while (true) {
         int8_t tempIsMissing;
-        findNextTermInTextLine(startPos, endPos, &tempIsMissing, &tempTextPos);
+        findNextMatchingTermInTextLine(startPos, endPos, &tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             tempTextPos.line = getNextTextLine(tempTextPos.line);
             if (tempTextPos.line == NULL) {
@@ -469,11 +469,11 @@ void findNextTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isMissi
     }
 }
 
-void findPreviousTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
+void findPreviousMatchingTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isMissing, textPos_t *pos) {
     textPos_t tempTextPos = *pos;
     while (true) {
         int8_t tempIsMissing;
-        findPreviousTermInTextLine(startPos, endPos, &tempIsMissing, &tempTextPos);
+        findPreviousMatchingTermInTextLine(startPos, endPos, &tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             tempTextPos.line = getPreviousTextLine(tempTextPos.line);
             if (tempTextPos.line == NULL) {
@@ -489,11 +489,11 @@ void findPreviousTermTextPos(textPos_t *startPos, textPos_t *endPos, int8_t *isM
     }
 }
 
-textPos_t findNextWordTextPos(int8_t *isMissing, textPos_t *pos) {
+textPos_t findNextMatchingWordTextPos(int8_t *isMissing, textPos_t *pos) {
     textPos_t tempTextPos = *pos;
     while (true) {
         int8_t tempIsMissing;
-        textPos_t tempTextPos2 = findNextWordInTextLine(&tempIsMissing, &tempTextPos);
+        textPos_t tempTextPos2 = findNextMatchingWordInTextLine(&tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             tempTextPos.line = getNextTextLine(tempTextPos.line);
             if (tempTextPos.line == NULL) {
@@ -509,11 +509,11 @@ textPos_t findNextWordTextPos(int8_t *isMissing, textPos_t *pos) {
     }
 }
 
-textPos_t findPreviousWordTextPos(int8_t *isMissing, textPos_t *pos) {
+textPos_t findPreviousMatchingWordTextPos(int8_t *isMissing, textPos_t *pos) {
     textPos_t tempTextPos = *pos;
     while (true) {
         int8_t tempIsMissing;
-        textPos_t tempTextPos2 = findPreviousWordInTextLine(&tempIsMissing, &tempTextPos);
+        textPos_t tempTextPos2 = findPreviousMatchingWordInTextLine(&tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             tempTextPos.line = getPreviousTextLine(tempTextPos.line);
             if (tempTextPos.line == NULL) {
@@ -529,18 +529,18 @@ textPos_t findPreviousWordTextPos(int8_t *isMissing, textPos_t *pos) {
     }
 }
 
-int8_t gotoNextTermHelper() {
+int8_t goToNextMatchingTermHelper() {
     moveCursorRight(1);
     int8_t tempIsMissing;
     textPos_t tempStartTextPos;
     textPos_t tempEndTextPos;
-    findNextTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &cursorTextPos);
+    findNextMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &cursorTextPos);
     if (tempIsMissing) {
         textPos_t tempTextPos;
         tempTextPos.line = getLeftmostTextLine(rootTextLine);
         tempTextPos.row = 0;
         tempTextPos.column = 0;
-        findNextTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
+        findNextMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             moveCursorLeft(1);
             return false;
@@ -568,7 +568,7 @@ int8_t gotoNextTermHelper() {
     return true;
 }
 
-int8_t gotoPreviousTermHelper() {
+int8_t goToPreviousMatchingTermHelper() {
     int8_t tempIsMissing;
     textPos_t tempStartTextPos;
     textPos_t tempEndTextPos;
@@ -577,19 +577,19 @@ int8_t gotoPreviousTermHelper() {
         tempTextPos.line = getRightmostTextLine(rootTextLine);
         int64_t tempLength = tempTextPos.line->textAllocation.length;
         setTextPosIndex(&tempTextPos, tempLength);
-        findPreviousTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
+        findPreviousMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             return false;
         }
     } else {
         moveCursorLeft(1);
-        findPreviousTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &cursorTextPos);
+        findPreviousMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &cursorTextPos);
         if (tempIsMissing) {
             textPos_t tempTextPos;
             tempTextPos.line = getRightmostTextLine(rootTextLine);
             int64_t tempLength = tempTextPos.line->textAllocation.length;
             setTextPosIndex(&tempTextPos, tempLength);
-            findPreviousTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
+            findPreviousMatchingTermTextPos(&tempStartTextPos, &tempEndTextPos, &tempIsMissing, &tempTextPos);
             if (tempIsMissing) {
                 moveCursorRight(1);
                 return false;
@@ -618,16 +618,16 @@ int8_t gotoPreviousTermHelper() {
     return true;
 }
 
-int8_t gotoNextWordHelper() {
+int8_t goToNextMatchingWordHelper() {
     moveCursorRight(1);
     int8_t tempIsMissing;
     textPos_t tempTextPos;
-    tempTextPos = findNextWordTextPos(&tempIsMissing, &cursorTextPos);
+    tempTextPos = findNextMatchingWordTextPos(&tempIsMissing, &cursorTextPos);
     if (tempIsMissing) {
         tempTextPos.line = getLeftmostTextLine(rootTextLine);
         tempTextPos.row = 0;
         tempTextPos.column = 0;
-        tempTextPos = findNextWordTextPos(&tempIsMissing, &tempTextPos);
+        tempTextPos = findNextMatchingWordTextPos(&tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             moveCursorLeft(1);
             return false;
@@ -637,25 +637,25 @@ int8_t gotoNextWordHelper() {
     return true;
 }
 
-int8_t gotoPreviousWordHelper() {
+int8_t goToPreviousMatchingWordHelper() {
     int8_t tempIsMissing;
     textPos_t tempTextPos;
     if (getTextLineNumber(cursorTextPos.line) <= 1 && cursorTextPos.row == 0 && cursorTextPos.column == 0) {
         tempTextPos.line = getRightmostTextLine(rootTextLine);
         int64_t tempLength = tempTextPos.line->textAllocation.length;
         setTextPosIndex(&tempTextPos, tempLength);
-        tempTextPos = findPreviousWordTextPos(&tempIsMissing, &tempTextPos);
+        tempTextPos = findPreviousMatchingWordTextPos(&tempIsMissing, &tempTextPos);
         if (tempIsMissing) {
             return false;
         }
     } else {
         moveCursorLeft(1);
-        tempTextPos = findPreviousWordTextPos(&tempIsMissing, &cursorTextPos);
+        tempTextPos = findPreviousMatchingWordTextPos(&tempIsMissing, &cursorTextPos);
         if (tempIsMissing) {
             tempTextPos.line = getRightmostTextLine(rootTextLine);
             int64_t tempLength = tempTextPos.line->textAllocation.length;
             setTextPosIndex(&tempTextPos, tempLength);
-            tempTextPos = findPreviousWordTextPos(&tempIsMissing, &tempTextPos);
+            tempTextPos = findPreviousMatchingWordTextPos(&tempIsMissing, &tempTextPos);
             if (tempIsMissing) {
                 moveCursorRight(1);
                 return false;
@@ -666,8 +666,8 @@ int8_t gotoPreviousWordHelper() {
     return true;
 }
 
-void gotoNextTerm() {
-    int8_t tempResult = gotoNextTermHelper();
+void goToNextMatchingTerm() {
+    int8_t tempResult = goToNextMatchingTermHelper();
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
@@ -675,8 +675,8 @@ void gotoNextTerm() {
     }
 }
 
-void gotoPreviousTerm() {
-    int8_t tempResult = gotoPreviousTermHelper();
+void goToPreviousMatchingTerm() {
+    int8_t tempResult = goToPreviousMatchingTermHelper();
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
@@ -684,8 +684,8 @@ void gotoPreviousTerm() {
     }
 }
 
-void gotoNextWord() {
-    int8_t tempResult = gotoNextWordHelper();
+void goToNextMatchingWord() {
+    int8_t tempResult = goToNextMatchingWordHelper();
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
@@ -693,8 +693,8 @@ void gotoNextWord() {
     }
 }
 
-void gotoPreviousWord() {
-    int8_t tempResult = gotoPreviousWordHelper();
+void goToPreviousMatchingWord() {
+    int8_t tempResult = goToPreviousMatchingWordHelper();
     cursorSnapColumn = cursorTextPos.column;
     historyFrameIsConsecutive = false;
     if (!tempResult) {
@@ -714,7 +714,7 @@ void setMark(int64_t index) {
     notifyUser((int8_t *)"Set mark.");
 }
 
-void gotoMark(int64_t index) {
+void goToMark(int64_t index) {
     if (index < 0 || index >= MARK_AMOUNT) {
         notifyUser((int8_t *)"Error: Bad mark number.");
         return;
@@ -779,19 +779,19 @@ int8_t startSearchingForWordUnderCursor() {
     return true;
 }
 
-void findNextTermUnderCursor() {
+void findNextMatchingTermUnderCursor() {
     int8_t tempResult = startSearchingForWordUnderCursor();
     if (tempResult) {
-        gotoNextWord();
+        goToNextMatchingWord();
     } else {
         notifyUser((int8_t *)"No word under cursor.");
     }
 }
 
-void findPreviousTermUnderCursor() {
+void findPreviousMatchingTermUnderCursor() {
     int8_t tempResult = startSearchingForWordUnderCursor();
     if (tempResult) {
-        gotoPreviousWord();
+        goToPreviousMatchingWord();
     } else {
         notifyUser((int8_t *)"No word under cursor.");
     }

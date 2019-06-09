@@ -644,22 +644,22 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 }
                 case 'n':
                 {
-                    gotoNextTerm();
+                    goToNextMatchingTerm();
                     break;
                 }
                 case 'N':
                 {
-                    gotoPreviousTerm();
+                    goToPreviousMatchingTerm();
                     break;
                 }
                 case 'f':
                 {
-                    findNextTermUnderCursor();
+                    findNextMatchingTermUnderCursor();
                     break;
                 }
                 case 'F':
                 {
-                    findPreviousTermUnderCursor();
+                    findPreviousMatchingTermUnderCursor();
                     break;
                 }
                 case 'b':
@@ -779,7 +779,7 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 }
                 case 'V':
                 {
-                    enterBeginningOfCommand((int8_t *)"gotoLine ");
+                    enterBeginningOfCommand((int8_t *)"goToLine ");
                     break;
                 }
                 case '8':
@@ -794,32 +794,32 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 }
                 case '1':
                 {
-                    gotoMark(0);
+                    goToMark(0);
                     break;
                 }
                 case '2':
                 {
-                    gotoMark(1);
+                    goToMark(1);
                     break;
                 }
                 case '3':
                 {
-                    gotoMark(2);
+                    goToMark(2);
                     break;
                 }
                 case '4':
                 {
-                    gotoMark(3);
+                    goToMark(3);
                     break;
                 }
                 case '5':
                 {
-                    gotoMark(4);
+                    goToMark(4);
                     break;
                 }
                 case '6':
                 {
-                    gotoMark(5);
+                    goToMark(5);
                     break;
                 }
                 case '!':

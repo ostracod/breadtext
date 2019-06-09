@@ -3,32 +3,32 @@ TEST "Enter command"
 ADD_LINE "abc"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY / g o t o L i n e " " 2 NEWLINE
+PRESS_KEY / g o T o L i n e " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "Enter command with backspace"
 ADD_LINE "abc"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY / g o t o x BACKSPACE L i n e " " 2 NEWLINE
+PRESS_KEY / g o T o x BACKSPACE L i n e " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "Move cursor"
 ADD_LINE "abc"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY / g o t i n e LEFT LEFT LEFT o L RIGHT RIGHT RIGHT " " 2 NEWLINE
+PRESS_KEY / g o T i n e LEFT LEFT LEFT o L RIGHT RIGHT RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "Move cursor and delete"
 ADD_LINE "abc"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY / g o t o L i x n e LEFT LEFT BACKSPACE RIGHT RIGHT " " 2 NEWLINE
+PRESS_KEY / g o T o L i x n e LEFT LEFT BACKSPACE RIGHT RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "Internal paste command"
-ADD_LINE "gotoLine"
+ADD_LINE "goToLine"
 ADD_LINE "def"
 ADD_LINE "ghi"
 PRESS_KEY y v c
@@ -36,7 +36,7 @@ PRESS_KEY / BTAB " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "System paste command"
-ADD_LINE "gotoLine"
+ADD_LINE "goToLine"
 ADD_LINE "def"
 ADD_LINE "ghi"
 PRESS_KEY Y v c
@@ -44,7 +44,7 @@ PRESS_KEY / BTAB " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "Internal paste command with cursor motion"
-ADD_LINE "otoLin"
+ADD_LINE "oToLin"
 ADD_LINE "def"
 ADD_LINE "ghi"
 PRESS_KEY y v c
@@ -52,18 +52,18 @@ PRESS_KEY / g e LEFT BTAB RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 
 TEST "System paste command with cursor motion"
-ADD_LINE "otoLin"
+ADD_LINE "oToLin"
 ADD_LINE "def"
 ADD_LINE "ghi"
 PRESS_KEY Y v c
 PRESS_KEY / g e LEFT BTAB RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 
-TEST "Goto line"
+TEST "Go to line"
 ADD_LINE "abc"
 ADD_LINE "def"
 ADD_LINE "ghi"
-TEXT_COMMAND "gotoLine 2"
+TEXT_COMMAND "goToLine 2"
 ASSERT_POS 2 0
 
 TEST "Regex on same line"

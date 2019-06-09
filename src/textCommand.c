@@ -130,7 +130,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
     if (tempResult) {
         return;
     }
-    if (strcmp((char *)(termList[0]), "gotoLine") == 0) {
+    if (strcmp((char *)(termList[0]), "goToLine") == 0) {
         if (termListLength != 2) {
             setActivityMode(PREVIOUS_MODE);
             notifyUser((int8_t *)"Error: Wrong number of arguments.");
@@ -162,7 +162,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
-        int8_t tempResult = gotoNextTermHelper();
+        int8_t tempResult = goToNextMatchingTermHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
@@ -181,7 +181,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
-        int8_t tempResult = gotoPreviousTermHelper();
+        int8_t tempResult = goToPreviousMatchingTermHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
@@ -200,7 +200,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
-        int8_t tempResult = gotoNextWordHelper();
+        int8_t tempResult = goToNextMatchingWordHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
@@ -219,7 +219,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
         searchTermLength = strlen((char *)searchTerm);
         searchTermIsRegex = false;
         setActivityMode(PREVIOUS_MODE);
-        int8_t tempResult = gotoPreviousWordHelper();
+        int8_t tempResult = goToPreviousMatchingWordHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
@@ -243,7 +243,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
             notifyUser((int8_t *)"Invalid regex.");
             return;
         }
-        tempResult = gotoNextTermHelper();
+        tempResult = goToNextMatchingTermHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
@@ -267,7 +267,7 @@ void executeTextCommandByTermList(scriptValue_t *destination, int8_t **termList,
             notifyUser((int8_t *)"Invalid regex.");
             return;
         }
-        tempResult = gotoPreviousTermHelper();
+        tempResult = goToPreviousMatchingTermHelper();
         cursorSnapColumn = cursorTextPos.column;
         historyFrameIsConsecutive = false;
         if (!tempResult) {
