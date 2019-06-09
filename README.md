@@ -74,7 +74,7 @@ To view controls within BreadText, enter `/help`.
 `/` = Enter command  
 `Shift + /` = Enter find command  
 `V` = Highlight line without indentation or newline  
-`Shift + V` = Enter gotoLine command  
+`Shift + V` = Enter goToLine command  
 `Shift + Tab` = Paste in text command entry
 
 ### Movement
@@ -142,7 +142,7 @@ To view controls within BreadText, enter `/help`.
 
 ### Commands
 
-`/gotoLine (line number)`  
+`/goToLine (line number)`  
 `/find (pattern)`  
 `/reverseFind (pattern)`  
 `/findWord (word)`  
