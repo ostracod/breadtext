@@ -124,7 +124,7 @@ void displayScriptError() {
         tempHeapValue->lockDepth = 0;
         tempHeapValue = tempHeapValue->next;
     }
-    int8_t tempText[1000];
+    int8_t tempText[1200];
     if (scriptErrorLine.number < 0) {
         sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
     } else {

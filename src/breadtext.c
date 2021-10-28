@@ -1389,7 +1389,7 @@ void resetApplication() {
 
 int main(int argc, const char *argv[]) {
     
-    strcpy((char *)applicationVersion, "1.4.0");
+    strcpy((char *)applicationVersion, "1.5.0");
     
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);

@@ -1,7 +1,7 @@
 
 # BreadText
 
-**Version 1.4.0**
+**Version 1.5.0**
 
 <img src="logo.png" alt="BreadText logo" width="110" />
 
@@ -37,8 +37,6 @@ Then compile and install BreadText:
 make
 sudo make install
 ```
-
-Hint: You may want to adjust the brightness levels of ANSI colors in your terminal.
 
 ## Controls
 
