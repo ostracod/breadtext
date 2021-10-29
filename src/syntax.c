@@ -35,21 +35,21 @@ void removeAllSyntax() {
 int8_t syntaxFileMatchesExtension(int8_t *fileName, int8_t *extension) {
     int32_t tempFileNameLength = strlen((char *)fileName);
     int32_t tempExtensionLength = strlen((char *)extension);
-    int32_t index = 7;
-    while (true) {
-        if (index + tempExtensionLength > tempFileNameLength) {
-            break;
-        }
-        if (equalData(fileName + index, extension, tempExtensionLength)) {
-            return true;
-        }
+    int32_t startIndex = 7;
+    while (startIndex < tempFileNameLength) {
+        int32_t endIndex = startIndex;
         while (true) {
-            int8_t tempCharacter = fileName[index];
-            index += 1;
+            int8_t tempCharacter = fileName[endIndex];
             if (tempCharacter == '_' || tempCharacter == 0) {
                 break;
             }
+            endIndex += 1;
         }
+        if (endIndex - startIndex == tempExtensionLength
+                && equalData(fileName + startIndex, extension, tempExtensionLength)) {
+            return true;
+        }
+        startIndex = endIndex + 1;
     }
     return false;
 }
@@ -264,7 +264,7 @@ void generateSyntaxHighlighting(textAllocation_t *allocation) {
             tempLastCharacter = 0;
         }
         int8_t tempNextCharacter;
-        if (index < allocation->length) {
+        if (index < allocation->length - 1) {
             tempNextCharacter = allocation->text[index + 1];
         } else {
             tempNextCharacter = 0;
