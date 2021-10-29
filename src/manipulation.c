@@ -250,7 +250,9 @@ void addToNumberUnderCursor(int64_t offset) {
             }
             tempHasFoundDigit = true;
         } else if ((tempCharacter >= 'A' && tempCharacter <= 'F') || (tempCharacter >= 'a' && tempCharacter <= 'f')) {
-            if (!tempIsHexadecimal) {
+            if (tempIsHexadecimal) {
+                tempDigitStartIndex = tempNextIndex;
+            } else {
                 break;
             }
         } else {

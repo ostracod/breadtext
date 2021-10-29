@@ -169,6 +169,13 @@ PRESS_KEY +
 ASSERT_LINE_COUNT 1
 ASSERT_LINE 1 "abc 0x00 def"
 
+TEST "Increment big hexadecimal number from end"
+ADD_LINE "abc 0xEF def"
+SET_POS 1 7
+PRESS_KEY +
+ASSERT_LINE_COUNT 1
+ASSERT_LINE 1 "abc 0xF0 def"
+
 TEST "Increment number at start of line"
 ADD_LINE "5 abc"
 SET_POS 1 0
