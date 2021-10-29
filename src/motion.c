@@ -49,9 +49,8 @@ void moveCursor(textPos_t *pos) {
             adjustLineSelectionBoundaries(&tempNextPos);
         }
         if (tempNextPos.line != tempPreviousTextPos.line) {
-            eraseLineNumber();
             cursorTextPos.line = tempNextPos.line;
-            displayLineNumber();
+            redrawLineNumber();
         }
         cursorTextPos.row = tempNextPos.row;
         cursorTextPos.column = tempNextPos.column;
@@ -554,9 +553,8 @@ int8_t goToNextMatchingTermHelper() {
         if (tempEndIndex > tempStartIndex) {
             tempEndIndex -= 1;
         }
-        eraseLineNumber();
         cursorTextPos.line = tempStartTextPos.line;
-        displayLineNumber();
+        redrawLineNumber();
         setTextPosIndex(&cursorTextPos, tempStartIndex);
         highlightTextPos.line = tempEndTextPos.line;
         setTextPosIndex(&highlightTextPos, tempEndIndex);
@@ -604,9 +602,8 @@ int8_t goToPreviousMatchingTermHelper() {
         if (tempEndIndex > tempStartIndex) {
             tempEndIndex -= 1;
         }
-        eraseLineNumber();
         cursorTextPos.line = tempStartTextPos.line;
-        displayLineNumber();
+        redrawLineNumber();
         setTextPosIndex(&cursorTextPos, tempStartIndex);
         highlightTextPos.line = tempEndTextPos.line;
         setTextPosIndex(&highlightTextPos, tempEndIndex);

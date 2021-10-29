@@ -62,6 +62,7 @@ void eraseActivityMode();
 void displayActivityMode();
 void eraseLineNumber();
 void displayLineNumber();
+void redrawLineNumber();
 void eraseNotification();
 void displayNotification(int8_t *message);
 void eraseActivityModeOrNotification();

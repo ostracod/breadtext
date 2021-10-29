@@ -631,6 +631,11 @@ void displayLineNumber() {
     attroff(COLOR_PAIR(STATUS_BAR_COLOR));
 }
 
+void redrawLineNumber() {
+    eraseLineNumber();
+    displayLineNumber();
+}
+
 void eraseNotification() {
     int8_t tempBuffer[notificationTextLength + 1];
     tempBuffer[notificationTextLength] = 0;

@@ -180,8 +180,7 @@ void deleteSelectionHelper() {
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstTextPos.line), tempFirstTextPos.line);
         displayCursor();
     }
-    eraseLineNumber();
-    displayLineNumber();
+    redrawLineNumber();
     textBufferIsDirty = true;
 }
 
@@ -319,8 +318,7 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
         displayTextLinesUnderAndIncludingTextLine(getTextLinePosY(tempFirstLine), tempFirstLine);
         displayCursor();
     }
-    eraseLineNumber();
-    displayLineNumber();
+    redrawLineNumber();
     textBufferIsDirty = true;
 }
 
@@ -735,8 +733,7 @@ void changeLine() {
     if (!tempResult) {
         displayAllTextLines();
     }
-    eraseLineNumber();
-    displayLineNumber();
+    redrawLineNumber();
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
 }

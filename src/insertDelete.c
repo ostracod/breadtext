@@ -146,8 +146,7 @@ void deleteCharacterBeforeCursorHelper(int8_t shouldAddHistoryFrame, int8_t shou
             displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
             displayCursor();
         }
-        eraseLineNumber();
-        displayLineNumber();
+        redrawLineNumber();
         if (shouldRecordHistory) {
             historyFrameIsConsecutive = false;
         }
@@ -224,8 +223,7 @@ void deleteCharacterAfterCursorHelper(int8_t shouldAddHistoryFrame, int8_t shoul
         int64_t tempPosY = getTextLinePosY(cursorTextPos.line);
         displayTextLinesUnderAndIncludingTextLine(tempPosY, cursorTextPos.line);
         displayCursor();
-        eraseLineNumber();
-        displayLineNumber();
+        redrawLineNumber();
     } else {
         int64_t tempOldRowCount = getTextLineRowCount(cursorTextPos.line);
         if (!historyFrameIsConsecutive) {
@@ -381,8 +379,7 @@ void insertNewlineBeforeCursorHelper(int32_t baseIndentationLevel, int8_t should
         displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine2);
         displayCursor();
     }
-    eraseLineNumber();
-    displayLineNumber();
+    redrawLineNumber();
     if (shouldRecordHistory) {
         textBufferIsDirty = true;
     }
@@ -454,70 +451,68 @@ void replaceCharacterUnderCursorSimple(int8_t character) {
     moveCursorLeft(1);
 }
 
-void insertLineBeforeCursor() {
+textLine_t *insertLineBeforeCursor() {
     addHistoryFrame();
-    textLine_t *tempLine = createEmptyTextLine();
+    textLine_t *output = createEmptyTextLine();
     int32_t tempIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
     int32_t tempCount = 0;
     while (tempCount < tempIndentationLevel) {
-        increaseTextLineIndentationLevelHelper(tempLine, false);
+        increaseTextLineIndentationLevelHelper(output, false);
         tempCount += 1;
     }
-    insertTextLineLeft(cursorTextPos.line, tempLine);
-    recordTextLineInserted(tempLine);
+    insertTextLineLeft(cursorTextPos.line, output);
+    recordTextLineInserted(output);
     int8_t tempResult = scrollCursorOntoScreen();
     if (!tempResult) {
-        int64_t tempPosY = getTextLinePosY(tempLine);
-        displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine);
+        int64_t tempPosY = getTextLinePosY(output);
+        displayTextLinesUnderAndIncludingTextLine(tempPosY, output);
         displayCursor();
     }
-    eraseLineNumber();
-    displayLineNumber();
+    redrawLineNumber();
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
+    return output;
 }
 
-void insertLineAfterCursor() {
+textLine_t *insertLineAfterCursor() {
     addHistoryFrame();
-    textLine_t *tempLine = createEmptyTextLine();
+    textLine_t *output = createEmptyTextLine();
     int32_t tempIndentationLevel = getTextLineIndentationLevel(cursorTextPos.line);
     int32_t tempCount = 0;
     while (tempCount < tempIndentationLevel) {
-        increaseTextLineIndentationLevelHelper(tempLine, false);
+        increaseTextLineIndentationLevelHelper(output, false);
         tempCount += 1;
     }
-    insertTextLineRight(cursorTextPos.line, tempLine);
-    recordTextLineInserted(tempLine);
-    int64_t tempPosY = getTextLinePosY(tempLine);
-    displayTextLinesUnderAndIncludingTextLine(tempPosY, tempLine);
+    insertTextLineRight(cursorTextPos.line, output);
+    recordTextLineInserted(output);
+    int64_t tempPosY = getTextLinePosY(output);
+    displayTextLinesUnderAndIncludingTextLine(tempPosY, output);
     finishCurrentHistoryFrame();
     textBufferIsDirty = true;
+    return output;
+}
+
+void insertAndEditLineHelper(textLine_t *line) {
+    setActivityMode(TEXT_ENTRY_MODE);
+    eraseCursor();
+    cursorTextPos.line = line;
+    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
+    redrawLineNumber();
+    cursorSnapColumn = cursorTextPos.column;
+    int8_t tempResult = scrollCursorOntoScreen();
+    if (!tempResult) {
+        displayCursor();
+    }
 }
 
 void insertAndEditLineBeforeCursor() {
-    insertLineBeforeCursor();
-    setActivityMode(TEXT_ENTRY_MODE);
-    eraseCursor();
-    cursorTextPos.line = getPreviousTextLine(cursorTextPos.line);
-    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
-    cursorSnapColumn = cursorTextPos.column;
-    int8_t tempResult = scrollCursorOntoScreen();
-    if (!tempResult) {
-        displayCursor();
-    }
+    textLine_t *tempLine = insertLineBeforeCursor();
+    insertAndEditLineHelper(tempLine);
 }
 
 void insertAndEditLineAfterCursor() {
-    insertLineAfterCursor();
-    setActivityMode(TEXT_ENTRY_MODE);
-    eraseCursor();
-    cursorTextPos.line = getNextTextLine(cursorTextPos.line);
-    setTextPosIndex(&cursorTextPos, cursorTextPos.line->textAllocation.length);
-    cursorSnapColumn = cursorTextPos.column;
-    int8_t tempResult = scrollCursorOntoScreen();
-    if (!tempResult) {
-        displayCursor();
-    }
+    textLine_t *tempLine = insertLineAfterCursor();
+    insertAndEditLineHelper(tempLine);
 }
 
 void removeTextLineIndentation(textLine_t *line) {
