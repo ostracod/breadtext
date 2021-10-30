@@ -7,6 +7,7 @@
 #include <float.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include "utilities.h"
 #include "vector.h"
 #include "scriptValue.h"
@@ -1174,6 +1175,14 @@ void reportBadArgType() {
     reportScriptError((int8_t *)"Bad argument type.", NULL);
 }
 
+int32_t getArgFileHandle(scriptValue_t value) {
+    if (value.type != SCRIPT_VALUE_TYPE_NUMBER) {
+        reportBadArgType();
+        return -1;
+    }
+    return (int32_t)*(double *)(value.data);
+}
+
 // All argument values must be locked.
 // Output value will be locked.
 scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argumentList, int32_t argumentAmount) {
@@ -1460,6 +1469,82 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 int8_t fileExists = (access((char *)path, F_OK) != -1);
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)(output.data) = fileExists;
+                break;
+            }
+            case SCRIPT_FUNCTION_OPEN_FILE:
+            {
+                scriptValue_t pathValue = argumentList[0];
+                if (pathValue.type != SCRIPT_VALUE_TYPE_STRING) {
+                    reportBadArgType();
+                    return output;
+                }
+                int8_t *path = getScriptValueText(pathValue);
+                int32_t fileHandle = open((char *)path, O_RDWR | O_CREAT);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fileHandle;
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_FILE_SIZE:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                int64_t fileOffset = lseek(fileHandle, 0L, SEEK_CUR);
+                int64_t fileSize = lseek(fileHandle, 0L, SEEK_END);
+                lseek(fileHandle, fileOffset, SEEK_SET);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fileSize;
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_FILE_SIZE:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                scriptValue_t sizeValue = argumentList[1];
+                if (sizeValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportBadArgType();
+                    return output;
+                }
+                int64_t size = (int64_t)*(double *)(sizeValue.data);
+                int64_t fileOffset = lseek(fileHandle, 0L, SEEK_CUR);
+                ftruncate(fileHandle, size);
+                if (fileOffset > size) {
+                    fileOffset = size;
+                }
+                lseek(fileHandle, fileOffset, SEEK_SET);
+                break;
+            }
+            case SCRIPT_FUNCTION_READ_FILE:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                scriptValue_t amountValue = argumentList[1];
+                if (amountValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportBadArgType();
+                    return output;
+                }
+                int64_t amount = (int64_t)*(double *)(amountValue.data);
+                vector_t textVector;
+                createVector(&textVector, 1, amount + 1);
+                int64_t count = read(fileHandle, textVector.data, amount);
+                textVector.data[count] = 0;
+                setVectorLength(&textVector, count + 1);
+                output = convertCharacterVectorToStringValue(textVector);
+                lockScriptValue(&output);
+                break;
+            }
+            case SCRIPT_FUNCTION_CLOSE_FILE:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                close(fileHandle);
                 break;
             }
             case SCRIPT_FUNCTION_PRESS_KEY:

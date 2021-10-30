@@ -9,6 +9,7 @@ typedef struct vector {
     int64_t length;
 } vector_t;
 
+void createVector(vector_t *destination, int64_t elementSize, int64_t length);
 void createEmptyVector(vector_t *destination, int64_t elementSize);
 void createVectorFromArray(vector_t *destination, int64_t elementSize, void *source, int64_t elementCount);
 void copyVector(vector_t *destination, vector_t *source);

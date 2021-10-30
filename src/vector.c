@@ -6,31 +6,25 @@
 #include "utilities.h"
 #include "vector.h"
 
-void createEmptyVector(vector_t *destination, int64_t elementSize) {
+void createVector(vector_t *destination, int64_t elementSize, int64_t length) {
     destination->elementSize = elementSize;
-    destination->dataSize = elementSize * 2;
+    int64_t tempLength = (length < 2) ? 2 : length;
+    destination->dataSize = elementSize * tempLength;
     destination->data = malloc(destination->dataSize);
-    destination->length = 0;
+    destination->length = length;
+}
+
+void createEmptyVector(vector_t *destination, int64_t elementSize) {
+    createVector(destination, elementSize, 0);
 }
 
 void createVectorFromArray(vector_t *destination, int64_t elementSize, void *source, int64_t elementCount) {
-    destination->elementSize = elementSize;
-    if (elementCount <= 0) {
-        destination->dataSize = elementSize;
-    } else {
-        destination->dataSize = elementSize * elementCount;
-    }
-    destination->data = malloc(destination->dataSize);
-    destination->length = elementCount;
+    createVector(destination, elementSize, elementCount);
     copyData(destination->data, source, elementSize * elementCount);
 }
 
 void copyVector(vector_t *destination, vector_t *source) {
-    destination->elementSize = source->elementSize;
-    destination->dataSize = source->dataSize;
-    destination->data = malloc(source->dataSize);
-    copyData(destination->data, source->data, source->dataSize);
-    destination->length = source->length;
+    createVectorFromArray(destination, source->elementSize, source->data, source->length);
 }
 
 void cleanUpVector(vector_t *vector) {
