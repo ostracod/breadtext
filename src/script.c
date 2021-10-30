@@ -1180,7 +1180,11 @@ int32_t getArgFileHandle(scriptValue_t value) {
         reportBadArgType();
         return -1;
     }
-    return (int32_t)*(double *)(value.data);
+    int32_t fileHandle = (int32_t)*(double *)(value.data);
+    if (fileHandle < 0) {
+        reportScriptError((int8_t *)"File handle cannot be negative.", NULL);
+    }
+    return fileHandle;
 }
 
 // All argument values must be locked.
@@ -1480,6 +1484,10 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 int8_t *path = getScriptValueText(pathValue);
                 int32_t fileHandle = open((char *)path, O_RDWR | O_CREAT);
+                if (fileHandle < 0) {
+                    reportScriptError((int8_t *)"Could not open file.", NULL);
+                    return output;
+                }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
                 *(double *)(output.data) = fileHandle;
                 break;
@@ -1509,8 +1517,16 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     return output;
                 }
                 int64_t size = (int64_t)*(double *)(sizeValue.data);
+                if (size < 0) {
+                    reportScriptError((int8_t *)"File size cannot be negative.", NULL);
+                    return output;
+                }
                 int64_t fileOffset = lseek(fileHandle, 0L, SEEK_CUR);
-                ftruncate(fileHandle, size);
+                int32_t result = ftruncate(fileHandle, size);
+                if (result < 0) {
+                    reportScriptError((int8_t *)"Could not set file size.", NULL);
+                    return output;
+                }
                 if (fileOffset > size) {
                     fileOffset = size;
                 }
@@ -1529,9 +1545,17 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     return output;
                 }
                 int64_t amount = (int64_t)*(double *)(amountValue.data);
+                if (amount < 0) {
+                    reportScriptError((int8_t *)"File read amount cannot be negative.", NULL);
+                    return output;
+                }
                 vector_t textVector;
                 createVector(&textVector, 1, amount + 1);
                 int64_t count = read(fileHandle, textVector.data, amount);
+                if (count < 0) {
+                    reportScriptError((int8_t *)"Could not read file.", NULL);
+                    return output;
+                }
                 textVector.data[count] = 0;
                 setVectorLength(&textVector, count + 1);
                 output = convertCharacterVectorToStringValue(textVector);
@@ -1551,7 +1575,11 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 scriptHeapValue_t *heapValue = *(scriptHeapValue_t **)(textValue.data);
                 vector_t *textVector = &(heapValue->data);
-                write(fileHandle, textVector->data, textVector->length);
+                int64_t result = write(fileHandle, textVector->data, textVector->length);
+                if (result < 0) {
+                    reportScriptError((int8_t *)"Could not write to file.", NULL);
+                    return output;
+                }
                 break;
             }
             case SCRIPT_FUNCTION_GET_FILE_OFFSET:
@@ -1577,6 +1605,10 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     return output;
                 }
                 int64_t offset = (int64_t)*(double *)(offsetValue.data);
+                if (offset < 0) {
+                    reportScriptError((int8_t *)"File offset cannot be negative.", NULL);
+                    return output;
+                }
                 lseek(fileHandle, offset, SEEK_SET);
                 break;
             }
@@ -1586,7 +1618,11 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 if (fileHandle < 0) {
                     return output;
                 }
-                close(fileHandle);
+                int32_t result = close(fileHandle);
+                if (result < 0) {
+                    reportScriptError((int8_t *)"Could not close file.", NULL);
+                    return output;
+                }
                 break;
             }
             case SCRIPT_FUNCTION_DELETE_FILE:
@@ -1597,7 +1633,11 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     return output;
                 }
                 int8_t *path = getScriptValueText(pathValue);
-                remove((char *)path);
+                int32_t result = remove((char *)path);
+                if (result < 0) {
+                    reportScriptError((int8_t *)"Could not delete file.", NULL);
+                    return output;
+                }
                 break;
             }
             case SCRIPT_FUNCTION_PRESS_KEY:
