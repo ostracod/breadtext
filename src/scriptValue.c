@@ -164,6 +164,12 @@ scriptValue_t convertCharacterVectorToStringValue(vector_t vector) {
     return output;
 }
 
+int8_t *getScriptValueText(scriptValue_t value) {
+    scriptHeapValue_t *heapValue = *(scriptHeapValue_t **)(value.data);
+    vector_t *textVector = &(heapValue->data);
+    return textVector->data;
+}
+
 scriptValue_t convertTextToStringValue(int8_t *text) {
     int64_t tempLength = strlen((char *)text);
     vector_t tempVector;
@@ -249,10 +255,9 @@ scriptValue_t convertScriptValueToNumber(scriptValue_t value) {
         return value;
     }
     if (value.type == SCRIPT_VALUE_TYPE_STRING) {
-        scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(value.data);
-        vector_t *tempText = &(tempHeapValue->data);
+        int8_t *tempText = getScriptValueText(value);
         double tempNumber;
-        int32_t tempResult = sscanf((char *)(tempText->data), "%lf", &tempNumber);
+        int32_t tempResult = sscanf((char *)tempText, "%lf", &tempNumber);
         scriptValue_t output;
         if (tempResult < 1) {
             output.type = SCRIPT_VALUE_TYPE_NULL;

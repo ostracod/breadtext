@@ -79,6 +79,7 @@ void swapScriptValueReference(scriptValue_t *destination, scriptValue_t *source)
 void unmarkScriptValue(scriptValue_t *value);
 void unmarkScriptHeapValue(scriptHeapValue_t *value);
 void unmarkScriptFrame(scriptFrame_t *frame);
+int8_t *getScriptValueText(scriptValue_t value);
 scriptValue_t convertCharacterVectorToStringValue(vector_t vector);
 scriptValue_t convertTextToStringValue(int8_t *text);
 scriptValue_t convertScriptValueToString(scriptValue_t value);

@@ -6,6 +6,7 @@
 #include <math.h>
 #include <float.h>
 #include <inttypes.h>
+#include <unistd.h>
 #include "utilities.h"
 #include "vector.h"
 #include "scriptValue.h"
@@ -1114,9 +1115,8 @@ int8_t evaluateStatement(scriptValue_t *returnValue, scriptBaseStatement_t *stat
                 reportScriptError((int8_t *)"Invalid path type.", tempLine);
                 break;
             }
-            scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempResult.value.data);
-            vector_t *tempPath = &(tempHeapValue->data);
-            script_t *tempScript = importScript(tempPath->data);
+            int8_t *tempPath = getScriptValueText(tempResult.value);
+            script_t *tempScript = importScript(tempPath);
             if (scriptHasError) {
                 break;
             }
@@ -1168,6 +1168,10 @@ int8_t evaluateStatementList(scriptValue_t *returnValue, vector_t *statementList
         index += 1;
     }
     return STATEMENT_JUMP_NONE;
+}
+
+void reportBadArgType() {
+    reportScriptError((int8_t *)"Bad argument type.", NULL);
 }
 
 // All argument values must be locked.
@@ -1266,7 +1270,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             {
                 scriptValue_t tempValue = argumentList[0];
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 output.type = SCRIPT_VALUE_TYPE_NUMBER;
@@ -1284,7 +1288,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempValue1 = argumentList[0];
                 scriptValue_t tempValue2 = argumentList[1];
                 if (tempValue1.type != SCRIPT_VALUE_TYPE_NUMBER || tempValue2.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 double tempNumber1 = *(double *)(tempValue1.data);
@@ -1303,7 +1307,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempValue1 = argumentList[0];
                 scriptValue_t tempValue2 = argumentList[1];
                 if (tempValue1.type != SCRIPT_VALUE_TYPE_NUMBER || tempValue2.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 double tempNumber1 = *(double *)(tempValue1.data);
@@ -1331,7 +1335,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     output.type = SCRIPT_VALUE_TYPE_NUMBER;
                     *(double *)(output.data) = (double)(tempList->length);
                 } else {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 break;
@@ -1342,7 +1346,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempIndexValue = argumentList[1];
                 scriptValue_t tempItemValue = argumentList[2];
                 if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int64_t index = (int64_t)*(double *)(tempIndexValue.data);
@@ -1352,7 +1356,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
                     if (tempItemValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                        reportScriptError((int8_t *)"Bad argument type.", NULL);
+                        reportBadArgType();
                         return output;
                     }
                     int8_t tempCharacter = (int8_t)*(double *)(tempItemValue.data);
@@ -1373,7 +1377,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     insertVectorElement(tempList, index, &tempItemValue);
                     addScriptValueReference(&tempItemValue);
                 } else {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 break;
@@ -1384,7 +1388,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempItemValue = argumentList[1];
                 if (tempSequenceValue.type == SCRIPT_VALUE_TYPE_STRING) {
                     if (tempItemValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                        reportScriptError((int8_t *)"Bad argument type.", NULL);
+                        reportBadArgType();
                         return output;
                     }
                     int8_t tempCharacter = (int8_t)*(double *)(tempItemValue.data);
@@ -1397,7 +1401,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     pushVectorElement(tempList, &tempItemValue);
                     addScriptValueReference(&tempItemValue);
                 } else {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 break;
@@ -1407,7 +1411,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempSequenceValue = argumentList[0];
                 scriptValue_t tempIndexValue = argumentList[1];
                 if (tempIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int64_t index = (int64_t)*(double *)(tempIndexValue.data);
@@ -1434,7 +1438,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     removeScriptValueReference(tempItem);
                     removeVectorElement(tempList, index);
                 } else {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 break;
@@ -1445,11 +1449,24 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 *(double *)(output.data) = getTimestamp();
                 break;
             }
+            case SCRIPT_FUNCTION_FILE_EXISTS:
+            {
+                scriptValue_t pathValue = argumentList[0];
+                if (pathValue.type != SCRIPT_VALUE_TYPE_STRING) {
+                    reportBadArgType();
+                    return output;
+                }
+                int8_t *path = getScriptValueText(pathValue);
+                int8_t fileExists = (access((char *)path, F_OK) != -1);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fileExists;
+                break;
+            }
             case SCRIPT_FUNCTION_PRESS_KEY:
             {
                 scriptValue_t tempValue = argumentList[0];
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int32_t tempKey = (int32_t)*(double *)(tempValue.data);
@@ -1485,7 +1502,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                         index += 1;
                     }
                 } else {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 break;
@@ -1500,7 +1517,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             {
                 scriptValue_t tempValue = argumentList[0];
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int32_t tempMode = (int32_t)*(double *)(tempValue.data);
@@ -1536,7 +1553,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             {
                 scriptValue_t tempValue = argumentList[0];
                 if (tempValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int64_t tempLineIndex = (int64_t)*(double *)(tempValue.data);
@@ -1570,7 +1587,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempCharIndexValue = argumentList[0];
                 scriptValue_t tempLineIndexValue = argumentList[1];
                 if (tempCharIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempLineIndexValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int64_t tempCharIndex = (int64_t)*(double *)(tempCharIndexValue.data);
@@ -1596,7 +1613,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempCommandNameValue = argumentList[0];
                 scriptValue_t tempArgumentsValue = argumentList[1];
                 if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING || tempArgumentsValue.type != SCRIPT_VALUE_TYPE_LIST) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 scriptHeapValue_t *tempHeapValue1 = *(scriptHeapValue_t **)(tempCommandNameValue.data);
@@ -1624,9 +1641,8 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             case SCRIPT_FUNCTION_NOTIFY_USER:
             {
                 scriptValue_t tempStringValue = convertScriptValueToString(argumentList[0]);
-                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempStringValue.data);
-                vector_t *tempText = &(tempHeapValue->data);
-                notifyUser(tempText->data);
+                int8_t *tempText = getScriptValueText(tempStringValue);
+                notifyUser(tempText);
                 break;
             }
             case SCRIPT_FUNCTION_PROMPT_KEY:
@@ -1652,7 +1668,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempKeyValue = argumentList[0];
                 scriptValue_t tempCallbackValue = argumentList[1];
                 if (tempKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempCallbackValue.type != SCRIPT_VALUE_TYPE_FUNCTION) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int32_t tempKey = (int32_t)*(double *)(tempKeyValue.data);
@@ -1671,7 +1687,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempModeValue = argumentList[2];
                 if (tempOldKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER || tempNewKeyValue.type != SCRIPT_VALUE_TYPE_NUMBER
                         || tempModeValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 int32_t tempOldKey = (int32_t)*(double *)(tempOldKeyValue.data);
@@ -1695,7 +1711,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 scriptValue_t tempCommandNameValue = argumentList[0];
                 scriptValue_t tempCallbackValue = argumentList[1];
                 if (tempCommandNameValue.type != SCRIPT_VALUE_TYPE_STRING || tempCallbackValue.type != SCRIPT_VALUE_TYPE_FUNCTION) {
-                    reportScriptError((int8_t *)"Bad argument type.", NULL);
+                    reportBadArgType();
                     return output;
                 }
                 scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempCommandNameValue.data);
@@ -1720,9 +1736,8 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
             case SCRIPT_FUNCTION_TEST_LOG:
             {
                 scriptValue_t tempStringValue = convertScriptValueToString(argumentList[0]);
-                scriptHeapValue_t *tempHeapValue = *(scriptHeapValue_t **)(tempStringValue.data);
-                vector_t *tempText = &(tempHeapValue->data);
-                addScriptTestLogMessage(tempText->data);
+                int8_t *tempText = getScriptValueText(tempStringValue);
+                addScriptTestLogMessage(tempText);
                 break;
             }
             default: {

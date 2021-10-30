@@ -178,6 +178,32 @@ share <name>, <name>, <name>...
 
 `getTimestamp()` - Returns the current Unix timestamp.
 
+## Input/output Built-in Functions
+
+`fileExists(path)` - Returns true iff a file or directory exists at the given path.
+
+`openFile(path)` - Opens a file for reading and writing, and returns an integer file handle. Creates a new file if no file exists at the given path.
+
+`getFileSize(fileHandle)` - Returns the size of the given file.
+
+`setFileSize(fileHandle, size)` - Changes the size of the given file.
+
+`readFile(fileHandle, amount)` - Reads text from the given file. Advances the file offset by `amount`.
+
+`writeFile(fileHandle, text)` - Writes text to the given file. Advances the file offset by the length of `text`.
+
+`getFileOffset(fileHandle)` - Returns the file offset for reading and writing.
+
+`setFileOffset(fileHandle, offset)` - Changes the file offset for reading and writing.
+
+`closeFile(fileHandle)` - Closes the given file to free system resources.
+
+`deleteFile(path)` - Deletes the file at the given path.
+
+`printToConsole(text)` - Prints the given text through standard output. Only valid in headless mode.
+
+`promptFromConsole()` - Prompts a line of text through standard input. Only valid in headless mode.
+
 ## BreadText-specific Built-in Functions
 
 `pressKey(key)` - Simulates a key press in the editor.
