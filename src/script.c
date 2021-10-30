@@ -1538,6 +1538,48 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 lockScriptValue(&output);
                 break;
             }
+            case SCRIPT_FUNCTION_WRITE_FILE:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                scriptValue_t textValue = argumentList[1];
+                if (textValue.type != SCRIPT_VALUE_TYPE_STRING) {
+                    reportBadArgType();
+                    return output;
+                }
+                scriptHeapValue_t *heapValue = *(scriptHeapValue_t **)(textValue.data);
+                vector_t *textVector = &(heapValue->data);
+                write(fileHandle, textVector->data, textVector->length);
+                break;
+            }
+            case SCRIPT_FUNCTION_GET_FILE_OFFSET:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                int64_t fileOffset = lseek(fileHandle, 0L, SEEK_CUR);
+                output.type = SCRIPT_VALUE_TYPE_NUMBER;
+                *(double *)(output.data) = fileOffset;
+                break;
+            }
+            case SCRIPT_FUNCTION_SET_FILE_OFFSET:
+            {
+                int32_t fileHandle = getArgFileHandle(argumentList[0]);
+                if (fileHandle < 0) {
+                    return output;
+                }
+                scriptValue_t offsetValue = argumentList[1];
+                if (offsetValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportBadArgType();
+                    return output;
+                }
+                int64_t offset = (int64_t)*(double *)(offsetValue.data);
+                lseek(fileHandle, offset, SEEK_SET);
+                break;
+            }
             case SCRIPT_FUNCTION_CLOSE_FILE:
             {
                 int32_t fileHandle = getArgFileHandle(argumentList[0]);
@@ -1545,6 +1587,17 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                     return output;
                 }
                 close(fileHandle);
+                break;
+            }
+            case SCRIPT_FUNCTION_DELETE_FILE:
+            {
+                scriptValue_t pathValue = argumentList[0];
+                if (pathValue.type != SCRIPT_VALUE_TYPE_STRING) {
+                    reportBadArgType();
+                    return output;
+                }
+                int8_t *path = getScriptValueText(pathValue);
+                remove((char *)path);
                 break;
             }
             case SCRIPT_FUNCTION_PRESS_KEY:
