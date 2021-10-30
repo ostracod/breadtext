@@ -70,8 +70,13 @@ int8_t *skipWhitespace(int8_t *text) {
     return text;
 }
 
-int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline) {
+int64_t removeBadCharacters(
+    int8_t *text,
+    int8_t *containsNewline,
+    int8_t *shouldDisplayWarning
+) {
     *containsNewline = false;
+    *shouldDisplayWarning = false;
     int64_t tempIndex1 = 0;
     int64_t tempIndex2 = 0;
     while (true) {
@@ -82,10 +87,11 @@ int64_t removeBadCharacters(int8_t *text, int8_t *containsNewline) {
         }
         if (tempCharacter == '\n') {
             *containsNewline = true;
-        }
-        if ((tempCharacter >= 32 && tempCharacter <= 126) || tempCharacter == '\t') {
+        } else if ((tempCharacter >= 32 && tempCharacter <= 126) || tempCharacter == '\t') {
             text[tempIndex2] = tempCharacter;
             tempIndex2 += 1;
+        } else if (tempCharacter != '\r') {
+            *shouldDisplayWarning = true;
         }
         tempIndex1 += 1;
     }

@@ -444,7 +444,8 @@ void pasteClipboardIntoTextCommand() {
         }
         getVectorElement(&tempText, tempClipboard, 0);
         int8_t tempContainsNewline;
-        removeBadCharacters(tempText, &tempContainsNewline);
+        int8_t tempHasWarning;
+        removeBadCharacters(tempText, &tempContainsNewline, &tempHasWarning);
         tempTextLength = strlen((char *)tempText);
         int64_t tempCommandLength = strlen((char *)textCommandBuffer);
         int64_t tempMaximumLength = getMaximumCommandLength();

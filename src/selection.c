@@ -264,6 +264,7 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
         &tailBaseIndentationLevel,
         clipboard
     );
+    int8_t shouldDisplayAsciiWarning = false;
     int64_t tempClipboardLineIndex = 0;
     textLine_t *tempFirstLine = cursorTextPos.line;
     while (true) {
@@ -277,7 +278,15 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
         int8_t tempBuffer[tempBufferLength];
         memcpy(tempBuffer, tempText, tempBufferLength);
         int8_t tempContainsNewline;
-        int64_t tempCount = removeBadCharacters(tempBuffer, &tempContainsNewline);
+        int8_t tempHasWarning;
+        int64_t tempCount = removeBadCharacters(
+            tempBuffer,
+            &tempContainsNewline,
+            &tempHasWarning
+        );
+        if (tempHasWarning) {
+            shouldDisplayAsciiWarning = true;
+        }
         tempText = tempBuffer;
         int64_t index = getTextPosIndex(&cursorTextPos);
         recordTextLineDeleted(cursorTextPos.line);
@@ -319,6 +328,9 @@ void pasteBeforeCursorHelper(vector_t *clipboard, int8_t shouldIndentFirstLine, 
         displayCursor();
     }
     redrawLineNumber();
+    if (shouldDisplayAsciiWarning) {
+        notifyUser((int8_t *)"WARNING: Filtered non-ASCII characters from clipboard!");
+    }
     textBufferIsDirty = true;
 }
 

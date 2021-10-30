@@ -30,7 +30,6 @@
 #define TIME_NEVER -1
 
 #define SHOULD_RUN_TEXT_LINE_TEST false
-#define IS_IN_DEBUG_MODE false
 
 textPos_t cursorTextPos;
 int64_t cursorSnapColumn;

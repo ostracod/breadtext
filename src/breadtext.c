@@ -1254,6 +1254,7 @@ int8_t isTesting() {
 }
 
 int8_t initializeApplication() {
+    int8_t shouldDisplayAsciiWarning = false;
     FILE *tempFile = fopen((char *)filePath, "r");
     if (tempFile == NULL) {
         if (errno == EACCES) {
@@ -1286,7 +1287,15 @@ int8_t initializeApplication() {
                 break;
             }
             int8_t tempContainsNewline;
-            tempCount = removeBadCharacters(tempText, &tempContainsNewline);
+            int8_t tempHasWarning;
+            tempCount = removeBadCharacters(
+                tempText,
+                &tempContainsNewline,
+                &tempHasWarning
+            );
+            if (tempHasWarning) {
+                shouldDisplayAsciiWarning = true;
+            }
             textLine_t *tempTextLine = createEmptyTextLine();
             insertTextIntoTextAllocation(&(tempTextLine->textAllocation), 0, tempText, tempCount);
             free(tempText);
@@ -1357,6 +1366,10 @@ int8_t initializeApplication() {
     updateSyntaxDefinition();
     
     handleResize();
+    
+    if (shouldDisplayAsciiWarning) {
+        notifyUser((int8_t *)"WARNING: Filtered non-ASCII characters from input file!");
+    }
     
     initializeScriptingEnvironment();
     if (!isTesting()) {
@@ -1477,30 +1490,11 @@ int main(int argc, const char *argv[]) {
     }
     
     while (true) {
-        #if IS_IN_DEBUG_MODE
-            textLine_t *tempLine1 = getLeftmostTextLine(rootTextLine);
-            int64_t tempLength = tempLine1->textAllocation.length;
-            int8_t tempBuffer[tempLength];
-            copyData(tempBuffer, tempLine1->textAllocation.text, tempLength);
-        #endif
-        
         int32_t tempKey = getch();
         int8_t tempResult = handleKey(tempKey, true, true, true);
         if (tempResult) {
             break;
         }
-        
-        #if IS_IN_DEBUG_MODE
-            textLine_t *tempLine2 = getLeftmostTextLine(rootTextLine);
-            if (tempLength != tempLine2->textAllocation.length
-                || !equalData(tempBuffer, tempLine2->textAllocation.text, tempLength)) {
-                endwin();
-                printf("FIRST LINE CHANGED.\n");
-                printf("CHARACTER TYPED: %c\n", tempKey);
-                printf("ACTIVITY MODE: %d\n", activityMode);
-                exit(0);
-            }
-        #endif
     }
     
     endwin();
