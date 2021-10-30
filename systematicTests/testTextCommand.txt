@@ -31,7 +31,8 @@ TEST "Internal paste command"
 ADD_LINE "goToLine"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY y v c
+USE_SYSTEM_CLIPBOARD 0
+PRESS_KEY v c
 PRESS_KEY / BTAB " " 2 NEWLINE
 ASSERT_POS 2 0
 
@@ -39,7 +40,8 @@ TEST "System paste command"
 ADD_LINE "goToLine"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY Y v c
+USE_SYSTEM_CLIPBOARD 1
+PRESS_KEY v c
 PRESS_KEY / BTAB " " 2 NEWLINE
 ASSERT_POS 2 0
 
@@ -47,7 +49,8 @@ TEST "Internal paste command with cursor motion"
 ADD_LINE "oToLin"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY y v c
+USE_SYSTEM_CLIPBOARD 0
+PRESS_KEY v c
 PRESS_KEY / g e LEFT BTAB RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 
@@ -55,7 +58,8 @@ TEST "System paste command with cursor motion"
 ADD_LINE "oToLin"
 ADD_LINE "def"
 ADD_LINE "ghi"
-PRESS_KEY Y v c
+USE_SYSTEM_CLIPBOARD 1
+PRESS_KEY v c
 PRESS_KEY / g e LEFT BTAB RIGHT " " 2 NEWLINE
 ASSERT_POS 2 0
 

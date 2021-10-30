@@ -127,6 +127,38 @@ PRESS_KEY W SPACE
 ASSERT_POS 1 10
 ASSERT_HIGHLIGHT_POS 1 8
 
+TEST "Select until end of word"
+ADD_LINE "abc def ghi"
+SET_POS 1 5
+PRESS_KEY y
+ASSERT_POS 1 6
+ASSERT_HIGHLIGHT_POS 1 5
+
+TEST "Select until end of word at end of line"
+ADD_LINE "123"
+ADD_LINE "abc def ghi"
+ADD_LINE "456"
+SET_POS 2 8
+PRESS_KEY y
+ASSERT_POS 2 10
+ASSERT_HIGHLIGHT_POS 2 8
+
+TEST "Select until beginning of word"
+ADD_LINE "abc def ghi"
+SET_POS 1 5
+PRESS_KEY Y
+ASSERT_POS 1 4
+ASSERT_HIGHLIGHT_POS 1 5
+
+TEST "Select until beginning of word at beginning of line"
+ADD_LINE "123"
+ADD_LINE "abc def ghi"
+ADD_LINE "456"
+SET_POS 2 2
+PRESS_KEY Y
+ASSERT_POS 2 0
+ASSERT_HIGHLIGHT_POS 2 2
+
 TEST "Select until beginning of line"
 ADD_LINE "abcdef"
 SET_POS 1 3
