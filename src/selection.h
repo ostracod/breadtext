@@ -24,6 +24,8 @@ void highlightEnclosureExclusive(int8_t character);
 void highlightEnclosureInclusive(int8_t character);
 void highlightLineContents();
 void changeLine();
+void selectUntilBeginningOfWord();
+void selectUntilEndOfWord();
 void selectUntilBeginningOfLine();
 void selectUntilEndOfLine();
 void fixLineSelection();

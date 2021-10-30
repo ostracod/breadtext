@@ -65,8 +65,10 @@ To view controls within BreadText, enter `/help`.
 `Shift + W` = Highlight word with magic  
 `E` = Exclusive enclosure highlight mode  
 `Shift + E` = Inclusive enclosure highlight mode  
-`Shift + 9` = Select until beginning of line  
+`Y` = Select until end of word  
+`Shift + Y` = Select until beginning of word  
 `Shift + 0` = Select until end of line  
+`Shift + 9` = Select until beginning of line  
 `/` = Enter command  
 `Shift + /` = Enter find command  
 `V` = Highlight line without indentation or newline  
@@ -108,9 +110,7 @@ To view controls within BreadText, enter `/help`.
 `Shift + X` = Cut and enter text-entry mode  
 `P` = Paste after cursor  
 `Shift + P` = Paste before cursor  
-`*` = Swap selection with clipboard  
-`Y` = Use internal clipboard  
-`Shift + Y` = Use system clipboard
+`*` = Swap selection with clipboard
 
 ### History
 

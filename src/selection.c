@@ -752,6 +752,35 @@ void selectInLineHelper(int64_t cursorIndex, int64_t highlightIndex) {
     setActivityMode(HIGHLIGHT_CHARACTER_MODE);
 }
 
+void selectUntilBeginningOfWord() {
+    int64_t highlightIndex = getTextPosIndex(&cursorTextPos);
+    int8_t *text = cursorTextPos.line->textAllocation.text;
+    int64_t cursorIndex = highlightIndex;
+    while (cursorIndex > 0) {
+        int8_t character = text[cursorIndex - 1];
+        if (!isWordCharacter(character)) {
+            break;
+        }
+        cursorIndex -= 1;
+    }
+    selectInLineHelper(cursorIndex, highlightIndex);
+}
+
+void selectUntilEndOfWord() {
+    int64_t highlightIndex = getTextPosIndex(&cursorTextPos);
+    int64_t length = cursorTextPos.line->textAllocation.length;
+    int8_t *text = cursorTextPos.line->textAllocation.text;
+    int64_t cursorIndex = highlightIndex;
+    while (cursorIndex < length - 1) {
+        int8_t character = text[cursorIndex + 1];
+        if (!isWordCharacter(character)) {
+            break;
+        }
+        cursorIndex += 1;
+    }
+    selectInLineHelper(cursorIndex, highlightIndex);
+}
+
 void selectUntilBeginningOfLine() {
     int64_t tempLength = cursorTextPos.line->textAllocation.length;
     int64_t tempCursorIndex = 0;

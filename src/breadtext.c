@@ -216,7 +216,6 @@ void handleResize() {
 void startRecordingMacro();
 void stopRecordingMacro();
 void playMacro();
-void setShouldUseSystemClipboard(int8_t value);
 
 // Returns true if the user has quit.
 int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings, int8_t shouldRecordInMacro) {
@@ -747,6 +746,16 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                     insertAndEditLineBeforeCursor();
                     break;
                 }
+                case 'y':
+                {
+                    selectUntilEndOfWord();
+                    break;
+                }
+                case 'Y':
+                {
+                    selectUntilBeginningOfWord();
+                    break;
+                }
                 case '(':
                 {
                     selectUntilBeginningOfLine();
@@ -765,16 +774,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case '~':
                 {
                     moveCursorToVisibleText();
-                    break;
-                }
-                case 'y':
-                {
-                    setShouldUseSystemClipboard(false);
-                    break;
-                }
-                case 'Y':
-                {
-                    setShouldUseSystemClipboard(true);
                     break;
                 }
                 case 'V':
@@ -1232,19 +1231,6 @@ int8_t checkTextBufferHygiene() {
         }
     }
     return true;
-}
-
-void setShouldUseSystemClipboard(int8_t value) {
-    if (isPerformingFuzzTest) {
-        shouldUseSystemClipboard = false;
-    } else {
-        shouldUseSystemClipboard = value;
-    }
-    if (shouldUseSystemClipboard) {
-        notifyUser((int8_t *)"Using system clipboard.");
-    } else {
-        notifyUser((int8_t *)"Using internal clipboard.");
-    }
 }
 
 void cleanUpApplication() {
