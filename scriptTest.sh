@@ -9,7 +9,7 @@ fi
 
 echo " "
 
-for FILE in ./scriptTests/*; do
+for FILE in ./scriptTests/test*.txt; do
 	DESTINATION="./scriptTestResults/testResult${TEST_COUNT}.txt"
 	echo "Running test:"
 	echo $FILE

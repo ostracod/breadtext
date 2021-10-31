@@ -1,0 +1,202 @@
+
+START_TEST "fileExists"
+testLog(fileExists("./scriptTests/fileToRead.txt"))
+testLog(fileExists("./missingFile.txt"))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+0
+END_TEST
+
+START_TEST "openFile and closeFile"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+testLog(fileHandle >= 0)
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+1
+END_TEST
+
+START_TEST "Bad openFile"
+openFile(123)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "Bad closeFile"
+closeFile(999999)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "getFileSize"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+testLog(getFileSize(fileHandle))
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+44
+END_TEST
+
+START_TEST "setFileSize"
+dec path = "./scriptTests/fileToWrite.txt"
+if fileExists(path)
+    deleteFile(path)
+end
+dec fileHandle = openFile(path)
+writeFile(fileHandle, "Hello, world!")
+setFileSize(fileHandle, 5)
+testLog(getFileSize(fileHandle))
+testLog(getFileOffset(fileHandle))
+setFileSize(fileHandle, 10)
+testLog(getFileSize(fileHandle))
+testLog(getFileOffset(fileHandle))
+testLog(readFile(fileHandle, 1)[0])
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+5
+5
+10
+5
+0
+END_TEST
+
+START_TEST "Bad setFileSize"
+dec path = "./scriptTests/fileToWrite.txt"
+if fileExists(path)
+    deleteFile(path)
+end
+dec fileHandle = openFile(path)
+writeFile(fileHandle, "Hello, world!")
+setFileSize(fileHandle, -1)
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "readFile"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+testLog(readFile(fileHandle, 9))
+testLog(readFile(fileHandle, 10))
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+The quick
+ brown fox
+END_TEST
+
+START_TEST "Bad readFile"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+readFile(fileHandle, -5)
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "writeFile"
+dec path = "./scriptTests/fileToWrite.txt"
+if fileExists(path)
+    deleteFile(path)
+end
+dec fileHandle = openFile(path)
+writeFile(fileHandle, "Hello, world!")
+testLog(getFileSize(fileHandle))
+setFileOffset(fileHandle, 0)
+testLog(readFile(fileHandle, 13))
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+13
+Hello, world!
+END_TEST
+
+START_TEST "getFileOffset"
+dec path = "./scriptTests/fileToWrite.txt"
+if fileExists(path)
+    deleteFile(path)
+end
+dec fileHandle = openFile(path)
+writeFile(fileHandle, "Hello,")
+testLog(getFileOffset(fileHandle))
+writeFile(fileHandle, " world!")
+testLog(getFileOffset(fileHandle))
+setFileOffset(fileHandle, 0)
+readFile(fileHandle, 3)
+testLog(getFileOffset(fileHandle))
+readFile(fileHandle, 5)
+testLog(getFileOffset(fileHandle))
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+6
+13
+3
+8
+END_TEST
+
+START_TEST "setFileOffset"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+setFileOffset(fileHandle, 4)
+testLog(getFileOffset(fileHandle))
+testLog(readFile(fileHandle, 5))
+setFileOffset(fileHandle, 16)
+testLog(getFileOffset(fileHandle))
+testLog(readFile(fileHandle, 3))
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+4
+quick
+16
+fox
+END_TEST
+
+START_TEST "Bad setFileOffset"
+dec fileHandle = openFile("./scriptTests/fileToRead.txt")
+setFileOffset(fileHandle, -100)
+closeFile(fileHandle)
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+START_TEST "deleteFile"
+dec path = "./scriptTests/fileToWrite.txt"
+if fileExists(path)
+    deleteFile(path)
+end
+testLog(fileExists(path))
+dec fileHandle = openFile(path)
+closeFile(fileHandle)
+testLog(fileExists(path))
+deleteFile(path)
+testLog(fileExists(path))
+RUN_SCRIPT
+ASSERT_NO_ERROR
+ASSERT_OUTPUT
+0
+1
+0
+END_TEST
+
+START_TEST "Bad deleteFile"
+deleteFile("./missingFile.txt")
+RUN_SCRIPT
+ASSERT_ERROR
+ASSERT_OUTPUT
+END_TEST
+
+

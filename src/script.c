@@ -1575,7 +1575,7 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 scriptHeapValue_t *heapValue = *(scriptHeapValue_t **)(textValue.data);
                 vector_t *textVector = &(heapValue->data);
-                int64_t result = write(fileHandle, textVector->data, textVector->length);
+                int64_t result = write(fileHandle, textVector->data, textVector->length - 1);
                 if (result < 0) {
                     reportScriptError((int8_t *)"Could not write to file.", NULL);
                     return output;
