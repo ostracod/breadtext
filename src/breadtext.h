@@ -52,6 +52,8 @@ int8_t *filePath;
 int8_t *rcFilePath;
 int8_t *rcScriptFilePath;
 int8_t *headlessScriptPath;
+int8_t **headlessModeArgs;
+int32_t headlessModeArgAmount;
 int64_t fileLastModifiedTime;
 int8_t shouldUseSystemClipboard;
 int8_t isInHeadlessMode;

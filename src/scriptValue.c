@@ -399,4 +399,14 @@ scriptValue_t copyScriptValue(scriptValue_t *value) {
     return *value;
 }
 
+scriptValue_t createScriptListValue(vector_t values) {
+    scriptHeapValue_t *heapValue = createScriptHeapValue();
+    heapValue->type = SCRIPT_VALUE_TYPE_LIST;
+    heapValue->data = values;
+    scriptValue_t output;
+    output.type = SCRIPT_VALUE_TYPE_LIST;
+    *(scriptHeapValue_t **)(output.data) = heapValue;
+    return output;
+}
+
 

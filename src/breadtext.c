@@ -614,17 +614,6 @@ int8_t handleKey(int32_t key, int8_t shouldUseMappings, int8_t shouldUseBindings
                 case 'M':
                 {
                     if (isRecordingMacro) {
-                        // Test code.
-                        /*
-                        endwin();
-                        int32_t index = 0;
-                        while (index < macroKeyListLength) {
-                            int32_t tempKey = macroKeyList[index];
-                            printf("%c\n", (char)tempKey);
-                            index += 1;
-                        }
-                        exit(0);
-                        */
                         stopRecordingMacro();
                     } else {
                         startRecordingMacro();
@@ -1428,12 +1417,17 @@ int main(int argc, const char *argv[]) {
     isPerformingSystematicTest = false;
     isPerformingScriptTest = false;
     isInHeadlessMode = false;
-    if (argc == 3) {
+    if (argc >= 3) {
         if (strcmp(argv[1], "--headless") == 0) {
             isInHeadlessMode = true;
             headlessScriptPath = mallocRealpath((int8_t *)argv[2]);
+            int32_t argsOffset = 3;
+            headlessModeArgs = (int8_t **)(argv + argsOffset);
+            headlessModeArgAmount = argc - argsOffset;
             argumentsAreValid = true;
         }
+    }
+    if (argc == 3) {
         if (strcmp(argv[1], "--test") == 0) {
             isPerformingSystematicTest = true;
             systematicTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);

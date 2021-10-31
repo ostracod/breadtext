@@ -87,6 +87,7 @@ scriptValue_t convertScriptValueToNumber(scriptValue_t value);
 int8_t scriptValuesAreEqualShallow(scriptValue_t *value1, scriptValue_t *value2);
 int8_t scriptValuesAreIdentical(scriptValue_t *value1, scriptValue_t *value2);
 scriptValue_t copyScriptValue(scriptValue_t *value);
+scriptValue_t createScriptListValue(vector_t values);
 
 // SCRIPT_VALUE_HEADER_FILE
 #endif

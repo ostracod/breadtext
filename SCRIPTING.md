@@ -8,7 +8,7 @@ Place your BreadText script in `~/.breadtextrc.btsl`. It will be evaluated whene
 Alternatively, you can run BreadText in headless mode, and provide a path to a script file:
 
 ```
-breadtext --headless <scriptPath>
+breadtext --headless <scriptPath> <arg> <arg> <arg>...
 ```
 
 ## Syntax and Semantics
@@ -209,6 +209,10 @@ share <name>, <name>, <name>...
 `printToConsole(text)` - Prints the given text through standard output. Only valid in headless mode.
 
 `promptFromConsole()` - Prompts a line of text through standard input. Only valid in headless mode.
+
+`getHeadlessArgs()` - Returns the list of arguments passed during invocation. Only valid in headless mode.
+
+`exit(exitCode)` - Terminates the interpreter with the given exit code. Only valid in headless mode.
 
 ## BreadText-specific Built-in Functions
 

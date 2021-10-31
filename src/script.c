@@ -864,11 +864,7 @@ expressionResult_t evaluateExpression(scriptBaseExpression_t *expression) {
                 addScriptValueReference(&(tempResult.value));
                 index += 1;
             }
-            scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
-            tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
-            tempHeapValue->data = tempValueList;
-            output.value.type = SCRIPT_VALUE_TYPE_LIST;
-            *(scriptHeapValue_t **)(output.value.data) = tempHeapValue;
+            output.value = createScriptListValue(tempValueList);
             lockScriptValue(&(output.value));
             index = 0;
             while (index < tempValueList.length) {
@@ -1676,6 +1672,31 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 }
                 break;
             }
+            case SCRIPT_FUNCTION_GET_HEADLESS_ARGS:
+            {
+                vector_t argVector;
+                createVector(&argVector, sizeof(scriptValue_t), headlessModeArgAmount);
+                for (int32_t index = 0; index < headlessModeArgAmount; index++) {
+                    int8_t *argText = headlessModeArgs[index];
+                    scriptValue_t argValue = convertTextToStringValue(argText);
+                    setVectorElement(&argVector, index, &argValue);
+                    addScriptValueReference(&argValue);
+                }
+                output = createScriptListValue(argVector);
+                lockScriptValue(&output);
+                break;
+            }
+            case SCRIPT_FUNCTION_EXIT:
+            {
+                scriptValue_t exitCodeValue = argumentList[0];
+                if (exitCodeValue.type != SCRIPT_VALUE_TYPE_NUMBER) {
+                    reportBadArgType();
+                    return output;
+                }
+                int32_t exitCode = (int32_t)*(double *)(exitCodeValue.data);
+                exit(exitCode);
+                break;
+            }
             case SCRIPT_FUNCTION_PRESS_KEY:
             {
                 scriptValue_t tempValue = argumentList[0];
@@ -2100,12 +2121,7 @@ int8_t invokeCommandBinding(scriptValue_t *destination, int8_t **termList, int32
         addScriptValueReference(&tempValue);
         index += 1;
     }
-    scriptHeapValue_t *tempHeapValue = createScriptHeapValue();
-    tempHeapValue->type = SCRIPT_VALUE_TYPE_LIST;
-    tempHeapValue->data = tempArgumentList;
-    scriptValue_t tempListValue;
-    tempListValue.type = SCRIPT_VALUE_TYPE_LIST;
-    *(scriptHeapValue_t **)(tempListValue.data) = tempHeapValue;
+    scriptValue_t tempListValue = createScriptListValue(tempArgumentList);
     scriptValue_t tempSingleArgumentList[1];
     tempSingleArgumentList[0] = tempListValue;
     resetScriptError();
