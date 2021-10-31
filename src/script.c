@@ -126,9 +126,9 @@ void displayScriptError() {
         tempHeapValue->lockDepth = 0;
         tempHeapValue = tempHeapValue->next;
     }
-    int8_t tempText[1200];
+    int8_t errorText[1200];
     if (scriptErrorLine.number < 0) {
-        sprintf((char *)tempText, "ERROR: %s", (char *)scriptErrorMessage);
+        sprintf((char *)errorText, "ERROR: %s", (char *)scriptErrorMessage);
     } else {
         int8_t *tempPath = scriptErrorLine.scriptBody->path;
         int64_t tempFileNameIndex = strlen((char *)tempPath);
@@ -140,14 +140,18 @@ void displayScriptError() {
             tempFileNameIndex -= 1;
         }
         sprintf(
-            (char *)tempText,
+            (char *)errorText,
             "ERROR: %s (Line %" PRId64 ", %s)",
             (char *)scriptErrorMessage,
             scriptErrorLine.number,
             (char *)(tempPath + tempFileNameIndex)
         );
     }
-    notifyUser(tempText);
+    if (isInHeadlessMode) {
+        printf("%s\n", errorText);
+    } else {
+        notifyUser(errorText);
+    }
 }
 
 keyMapping_t *findKeyMapping(int32_t oldKey, int32_t mode) {
@@ -1637,6 +1641,38 @@ scriptValue_t invokeFunction(scriptBaseFunction_t *function, scriptValue_t *argu
                 if (result < 0) {
                     reportScriptError((int8_t *)"Could not delete file.", NULL);
                     return output;
+                }
+                break;
+            }
+            case SCRIPT_FUNCTION_PRINT_TO_CONSOLE:
+            {
+                scriptValue_t textValue = convertScriptValueToString(argumentList[0]);
+                int8_t *text = getScriptValueText(textValue);
+                printf("%s\n", text);
+                break;
+            }
+            case SCRIPT_FUNCTION_PROMPT_FROM_CONSOLE:
+            {
+                int8_t *text = NULL;
+                size_t allocationSize = 0;
+                int64_t length = getline((char **)&text, &allocationSize, stdin);
+                if (length < 0) {
+                    output.type = SCRIPT_VALUE_TYPE_NULL;
+                } else {
+                    int64_t index = length - 1;
+                    while (index >= 0) {
+                        int8_t character = text[index];
+                        if (character == '\n') {
+                            text[index] = 0;
+                            break;
+                        }
+                        index -= 1;
+                    }
+                    output = convertTextToStringValue(text);
+                    lockScriptValue(&output);
+                }
+                if (text != NULL) {
+                    free(text);
                 }
                 break;
             }

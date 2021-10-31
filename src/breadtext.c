@@ -1386,6 +1386,17 @@ void resetApplication() {
     initializeApplication();
 }
 
+// Returns an exit code.
+int8_t runInHeadlessMode() {
+    if (access((char *)headlessScriptPath, F_OK) < 0) {
+        printf("ERROR: Could not find script at the given path.\n");
+        return 1;
+    }
+    initializeScriptingEnvironment();
+    int8_t result = runScript(headlessScriptPath);
+    return result ? 0 : 1;
+}
+
 int main(int argc, const char *argv[]) {
     
     strcpy((char *)applicationVersion, "1.5.0");
@@ -1412,22 +1423,28 @@ int main(int argc, const char *argv[]) {
         return 0;
     }
     
-    int8_t tempArgumentsAreValid = false;
+    int8_t argumentsAreValid = false;
     isPerformingFuzzTest = false;
     isPerformingSystematicTest = false;
     isPerformingScriptTest = false;
+    isInHeadlessMode = false;
     if (argc == 3) {
+        if (strcmp(argv[1], "--headless") == 0) {
+            isInHeadlessMode = true;
+            headlessScriptPath = mallocRealpath((int8_t *)argv[2]);
+            argumentsAreValid = true;
+        }
         if (strcmp(argv[1], "--test") == 0) {
             isPerformingSystematicTest = true;
             systematicTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
             systematicTestResultPath = mallocRealpath((int8_t *)"./systematicTestResult.txt");
-            tempArgumentsAreValid = true;
+            argumentsAreValid = true;
         }
         if (strcmp(argv[1], "--script-test") == 0) {
             isPerformingScriptTest = true;
             scriptTestDefinitionPath = mallocRealpath((int8_t *)argv[2]);
             scriptTestResultPath = mallocRealpath((int8_t *)"./scriptTestResult.txt");
-            tempArgumentsAreValid = true;
+            argumentsAreValid = true;
         }
     }
     if (argc == 2) {
@@ -1436,10 +1453,10 @@ int main(int argc, const char *argv[]) {
             return 0;
         }
         isPerformingFuzzTest = (strcmp(argv[1], "--fuzz") == 0);
-        tempArgumentsAreValid = true;
+        argumentsAreValid = true;
     }
-    if (!tempArgumentsAreValid) {
-        printf("Usage:\nbreadtext [file path]\nbreadtext --version\n");
+    if (!argumentsAreValid) {
+        printf("Usage:\nbreadtext [file path]\nbreadtext --headless [script path]\nbreadtext --version\n");
         return 0;
     }
     if (isTesting()) {
@@ -1450,6 +1467,10 @@ int main(int argc, const char *argv[]) {
     rcFilePath = mallocRealpath((int8_t *)"~/.breadtextrc");
     rcScriptFilePath = mallocRealpath((int8_t *)"~/.breadtextrc.btsl");
     syntaxDirectoryPath = mallocRealpath((int8_t *)"~/.breadtextsyntax");
+    
+    if (isInHeadlessMode) {
+        return runInHeadlessMode();
+    }
     
     window = initscr();
     noecho();

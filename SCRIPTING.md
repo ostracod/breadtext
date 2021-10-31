@@ -5,6 +5,12 @@
 
 Place your BreadText script in `~/.breadtextrc.btsl`. It will be evaluated whenever you start up BreadText.
 
+Alternatively, you can run BreadText in headless mode, and provide a path to a script file:
+
+```
+breadtext --headless <scriptPath>
+```
+
 ## Syntax and Semantics
 
 Statements are separated by newlines.
