@@ -102,6 +102,9 @@
 #define SCRIPT_FUNCTION_PRINT_TO_CONSOLE 45
 #define SCRIPT_FUNCTION_PROMPT_FROM_CONSOLE 46
 
+#define SCRIPT_MODE_RESTRICTION_EDITOR 1
+#define SCRIPT_MODE_RESTRICTION_HEADLESS 2
+
 #define SCRIPT_EXPRESSION_TYPE_NULL 1
 #define SCRIPT_EXPRESSION_TYPE_NUMBER 2
 #define SCRIPT_EXPRESSION_TYPE_STRING 3
@@ -178,6 +181,7 @@ typedef struct scriptBuiltInFunction {
     scriptBaseFunction_t base;
     int8_t *name;
     int32_t number;
+    int8_t modeRestriction;
 } scriptBuiltInFunction_t;
 
 typedef struct script script_t;
