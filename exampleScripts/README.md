@@ -25,8 +25,6 @@ After you create this config file, any new BreadText instance will load the scri
 
 ## Script Descriptions
 
-Each script adds one or more commands.
-
 **asciiArt.btsl**
 
 * `/asciiArt (text)`: Draws ASCII art text. Only compatible with letters and spaces.
@@ -42,6 +40,10 @@ Each script adds one or more commands.
 **conwayLife.btsl**
 
 * `/conwayLife`: Runs Conway's game of life. Press space to advance. Press q to quit.
+
+**createBitmap.btsl**
+
+Creates a bitmap image containing a Sierpinski triangle. Note that you can only run this script in headless mode.
 
 **cubePuzzle.btsl**
 
@@ -90,4 +92,5 @@ Each script adds one or more commands.
 * `/decode (number)`: Subtracts the given number from all highlighted letters.
 * `/factor (number?)`: Displays the prime factorization of the argument or highlighted number.
 * `/convertBase (sourceBase) (destinationBase)`: Changes the base of the highlighted text. A base may be `bin`, `oct`, `dec`, `hex`, or a numeric value.
+
 

@@ -1,0 +1,76 @@
+
+dec bitmapPath = "./bitmap.bmp"
+dec bitmapWidth = 512
+dec bitmapHeight = 512
+dec bitmapData = "BM" # Bitmap signature.
+
+func pushInt16(value)
+    push(bitmapData, value & 255)
+    push(bitmapData, (value >> 8) & 255)
+end
+
+func pushInt32(value)
+    push(bitmapData, value & 255)
+    push(bitmapData, (value >> 8) & 255)
+    push(bitmapData, (value >> 16) & 255)
+    push(bitmapData, (value >> 14) & 255)
+end
+
+func pushPixel(r, g, b)
+    push(bitmapData, b)
+    push(bitmapData, g)
+    push(bitmapData, r)
+end
+
+printToConsole("Creating bitmap file...")
+
+dec pixelDataOffset = 54
+pushInt32(pixelDataOffset + bitmapWidth * bitmapHeight * 3) # Size of the whole file.
+pushInt32(0) # Reserved bytes.
+pushInt32(pixelDataOffset)
+
+pushInt32(40) # Size of second header.
+pushInt32(bitmapWidth) # Width in pixels.
+pushInt32(bitmapHeight) # Height in pixels.
+pushInt16(1) # Color pane amount.
+pushInt16(24) # Color depth.
+pushInt32(0) # Compression method.
+pushInt32(0) # Raw bitmap data size.
+pushInt32(3780) # Horizontal resolution in pixels per meter.
+pushInt32(3780) # Vertical resolution in pixels per meter.
+pushInt32(0) # Color table entries.
+pushInt32(0) # Important colors.
+
+dec cellRow = [1]
+while len(cellRow) < bitmapWidth
+    push(cellRow, 0)
+end
+dec posY = 0
+while posY < bitmapHeight
+    dec nextCellRow = []
+    dec posX = 0
+    while posX < bitmapWidth
+        dec cell1 = cellRow[posX]
+        dec cell2
+        if posX > 0
+            cell2 = cellRow[posX - 1]
+        else
+            cell2 = 0
+        end
+        pushPixel(0, cell1 * 255, 255)
+        push(nextCellRow, cell1 ^^ cell2)
+        posX += 1
+    end
+    cellRow = nextCellRow
+    posY += 1
+end
+
+dec fileHandle = openFile(bitmapPath)
+setFileSize(fileHandle, 0)
+writeFile(fileHandle, bitmapData)
+closeFile(fileHandle)
+
+printToConsole(bitmapPath)
+printToConsole("Finished.")
+
+
