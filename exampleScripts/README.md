@@ -65,6 +65,10 @@ Creates a bitmap image containing a Sierpinski triangle. Note that you can only 
 
 * `/mineDuster`: Plays an explosive puzzle game. Press the arrow keys to move your cursor. Press space to uncover a tile. Press f to flag a tile. Press q to quit.
 
+**readCsv.btsl**
+
+Finds minimum, maximum, and average values for each column in a CSV file. Note that you can only run this script in headless mode.
+
 **slidePuzzle.btsl**
 
 * `/slidePuzzle (size?)`: Plays a sliding tile puzzle game. Press the arrow keys to move tiles. Press q to quit.

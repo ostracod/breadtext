@@ -1,0 +1,117 @@
+#!/usr/local/bin/breadtext --headless
+
+dec args = getHeadlessArgs()
+
+if len(args) != 1
+    printToConsole("Usage: ./readCsv.btsl (csvPath)")
+    exit(1)
+end
+
+dec path = args[0]
+if !fileExists(path)
+    printToConsole("Could not find file at the given path.")
+    exit(1)
+end
+
+dec file = openFile(path)
+dec fileSize = getFileSize(file)
+
+dec readSize = 100
+dec readBuffer = ""
+dec readBufferIndex = 0
+dec hasReachedEnd = false
+
+func readLine()
+    dec line = ""
+    while true
+        if readBufferIndex >= len(readBuffer)
+            dec startOffset = getFileOffset(file)
+            dec endOffset = startOffset + readSize
+            if endOffset >= fileSize
+                if startOffset == fileSize
+                    hasReachedEnd = true
+                    break
+                end
+                endOffset = fileSize
+            end
+            readBuffer = readFile(file, endOffset - startOffset)
+            readBufferIndex = 0
+        end
+        dec character = readBuffer[readBufferIndex]
+        readBufferIndex += 1
+        if character == '\n'
+            break
+        end
+        push(line, character)
+    end
+    ret line
+end
+
+func splitLine(line)
+    dec output = []
+    dec term = ""
+    dec index = 0
+    while index < len(line)
+        dec character = line[index]
+        index += 1
+        if character == ','
+            push(output, term)
+            term = ""
+        else
+            push(term, character)
+        end
+    end
+    push(output, term)
+    ret(output)
+end
+
+dec line = readLine()
+dec columnNames = splitLine(line)
+dec columnAmount = len(columnNames)
+
+dec minimumValues = []
+dec maximumValues = []
+dec valueSums = []
+dec index = 0
+while index < columnAmount
+    push(minimumValues, 9999999)
+    push(maximumValues, -9999999)
+    push(valueSums, 0)
+    index += 1
+end
+
+dec sampleCount = 0
+while !hasReachedEnd
+    dec line = readLine()
+    dec terms = splitLine(line)
+    if len(terms) != columnAmount
+        continue
+    end
+    sampleCount += 1
+    dec index = 0
+    while index < columnAmount
+        dec value = num(terms[index])
+        if value < minimumValues[index]
+            minimumValues[index] = value
+        end
+        if value > maximumValues[index]
+            maximumValues[index] = value
+        end
+        valueSums[index] += value
+        index += 1
+    end
+end
+
+closeFile(file)
+
+dec index = 0
+while index < columnAmount
+    dec columnName = columnNames[index]
+    dec minimumValue = minimumValues[index]
+    dec maximumValue = maximumValues[index]
+    dec averageValue = valueSums[index] / sampleCount
+    index += 1
+    printToConsole(columnName + " minimum = " + str(minimumValue) + "; maximum = " + str(maximumValue) + "; average = " + str(averageValue))
+end
+
+
