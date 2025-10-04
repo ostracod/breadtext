@@ -1388,7 +1388,7 @@ int8_t runInHeadlessMode() {
 
 int main(int argc, const char *argv[]) {
     
-    strcpy((char *)applicationVersion, "1.5.0");
+    strcpy((char *)applicationVersion, "1.5.1");
     
     struct timeval timeValue;
     gettimeofday(&timeValue, NULL);

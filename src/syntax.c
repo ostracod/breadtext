@@ -184,11 +184,13 @@ void updateSyntaxDefinition() {
     }
     int32_t tempLength1 = strlen((char *)syntaxDirectoryPath);
     int32_t tempLength2 = strlen((char *)tempFileName);
-    closedir(tempDirectory);
     int8_t *tempFilePath = malloc(tempLength1 + 1 + tempLength2 + 1);
     copyData(tempFilePath, syntaxDirectoryPath, tempLength1);
     tempFilePath[tempLength1] = '/';
     copyData(tempFilePath + tempLength1 + 1, tempFileName, tempLength2);
+    // We need to close tempDirectory after reading tempFileName.
+    // Otherwise, we will read tempFileName after it is deallocated.
+    closedir(tempDirectory);
     tempFilePath[tempLength1 + 1 + tempLength2] = 0;
     FILE *tempFile = fopen((char *)tempFilePath, "r");
     if (tempFile != NULL) {
